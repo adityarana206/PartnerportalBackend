@@ -1,4 +1,5 @@
 const ItemRequest = require("../models/Item.model");
+const bcService = require("../services/businessCentral.service");
 
 // ─── Create Item Request ───────────────────────────────────
 // POST /api/items
@@ -27,10 +28,26 @@ const createItemRequest = async (req, res) => {
     const userId = req.user ? req.user.id : null;
     const item = await ItemRequest.create(req.body, userId);
 
+    // ─── Send to Business Central ──────────────────────────
+    let bcResponse = null;
+    let bcError = null;
+    try {
+      bcResponse = await bcService.createItemRequest(req.body);
+      console.log("✅ Item synced to Business Central:", bcResponse);
+    } catch (bcErr) {
+      bcError = bcErr.response?.data || bcErr.message;
+      console.error("⚠️  Failed to sync to Business Central:", bcError);
+    }
+
     res.status(201).json({
       success: true,
       message: "Item request created successfully",
       data: item,
+      businessCentral: {
+        synced: !!bcResponse,
+        response: bcResponse,
+        error: bcError,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

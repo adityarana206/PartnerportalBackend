@@ -1,4 +1,5 @@
 const PurchaseOrder = require("../models/PurchaseOrder.model");
+const bcService = require("../services/businessCentral.service");
 
 // ─── Create Purchase Order ─────────────────────────────────
 const createPurchaseOrder = async (req, res) => {
@@ -22,10 +23,30 @@ const createPurchaseOrder = async (req, res) => {
     const userId = req.user ? req.user.id : null;
     const order = await PurchaseOrder.create(req.body, userId);
 
+    // ─── Send to Business Central ──────────────────────────
+    let bcResponse = null;
+    let bcError = null;
+    try {
+      const bcData = {
+        ...req.body,
+        orderType: "Purchase_x0020_Order",
+      };
+      bcResponse = await bcService.createOrderStaging(bcData);
+      console.log("✅ Purchase Order synced to Business Central:", bcResponse);
+    } catch (bcErr) {
+      bcError = bcErr.response?.data || bcErr.message;
+      console.error("⚠️  Failed to sync to Business Central:", bcError);
+    }
+
     res.status(201).json({
       success: true,
       message: "Purchase order created successfully",
       data: order,
+      businessCentral: {
+        synced: !!bcResponse,
+        response: bcResponse,
+        error: bcError,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

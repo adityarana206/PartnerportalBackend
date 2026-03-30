@@ -1,4 +1,5 @@
 const Contact = require("../models/Contact.model");
+const bcService = require("../services/businessCentral.service");
 
 // ─── Create Contact ────────────────────────────────────────
 const createContact = async (req, res) => {
@@ -22,10 +23,27 @@ const createContact = async (req, res) => {
     }
 
     const contact = await Contact.create(req.body, req.user.id);
+
+    // ─── Send to Business Central ──────────────────────────
+    let bcResponse = null;
+    let bcError = null;
+    try {
+      bcResponse = await bcService.createContactStaging(req.body);
+      console.log("✅ Contact synced to Business Central:", bcResponse);
+    } catch (bcErr) {
+      bcError = bcErr.response?.data || bcErr.message;
+      console.error("⚠️  Failed to sync to Business Central:", bcError);
+    }
+
     res.status(201).json({
       success: true,
       message: "Contact created successfully",
       data: contact,
+      businessCentral: {
+        synced: !!bcResponse,
+        response: bcResponse,
+        error: bcError,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
