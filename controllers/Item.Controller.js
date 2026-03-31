@@ -1,5 +1,6 @@
 const ItemRequest = require("../models/Item.model");
 const bcService = require("../services/businessCentral.service");
+const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
 // ─── Create Item Request ───────────────────────────────────
 // POST /api/items
@@ -60,7 +61,8 @@ const createItemRequest = async (req, res) => {
 // GET /api/items?partnerNo=VNR000001
 const getAllItemRequests = async (req, res) => {
   try {
-    const { status, partnerNo } = req.query;
+    const status = sanitizeString(req.query.status);
+    const partnerNo = sanitizeString(req.query.partnerNo);
 
     let items;
     if (status) {
@@ -85,6 +87,8 @@ const getAllItemRequests = async (req, res) => {
 // GET /api/items/:id
 const getItemRequestById = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const item = await ItemRequest.findById(req.params.id);
     if (!item) {
       return res.status(404).json({
@@ -102,7 +106,10 @@ const getItemRequestById = async (req, res) => {
 // GET /api/items/partner/:partnerNo
 const getItemsByPartner = async (req, res) => {
   try {
-    const items = await ItemRequest.findByPartnerNo(req.params.partnerNo);
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    if (!partnerNo)
+      return res.status(400).json({ success: false, message: "Invalid partner number" });
+    const items = await ItemRequest.findByPartnerNo(partnerNo);
     res.status(200).json({
       success: true,
       count: items.length,
@@ -117,7 +124,8 @@ const getItemsByPartner = async (req, res) => {
 // PUT /api/items/:id
 const updateItemRequest = async (req, res) => {
   try {
-    // ─── Check item exists ─────────────────────────────────
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const item = await ItemRequest.findById(req.params.id);
     if (!item) {
       return res.status(404).json({
@@ -160,6 +168,8 @@ const updateItemRequest = async (req, res) => {
 // PATCH /api/items/:id/status
 const updateItemStatus = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const { status, rejectionReason } = req.body;
 
     // ─── Validate status ───────────────────────────────────
@@ -215,6 +225,8 @@ const updateItemStatus = async (req, res) => {
 // PATCH /api/items/:id/block
 const updateItemBlock = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const { block } = req.body;
 
     if (typeof block !== "boolean") {
@@ -247,7 +259,8 @@ const updateItemBlock = async (req, res) => {
 // DELETE /api/items/:id
 const deleteItemRequest = async (req, res) => {
   try {
-    // ─── Check item exists ─────────────────────────────────
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const item = await ItemRequest.findById(req.params.id);
     if (!item) {
       return res.status(404).json({

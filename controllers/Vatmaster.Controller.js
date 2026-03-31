@@ -1,4 +1,5 @@
 const VatMaster = require("../models/VatMaster.model");
+const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
 const VatMasterController = {
   // ─── Create ────────────────────────────────────────────
@@ -24,7 +25,8 @@ const VatMasterController = {
   // ─── Get All ───────────────────────────────────────────
   async getAll(req, res) {
     try {
-      const { status, vatType } = req.query;
+      const status = sanitizeString(req.query.status);
+      const vatType = sanitizeString(req.query.vatType);
 
       let data;
       if (status) {
@@ -54,6 +56,8 @@ const VatMasterController = {
   async getById(req, res) {
     try {
       const { id } = req.params;
+      if (!isValidId(id))
+        return res.status(400).json({ success: false, message: "Invalid ID" });
       const vatMaster = await VatMaster.findById(id);
 
       if (!vatMaster) {
@@ -80,7 +84,9 @@ const VatMasterController = {
   // ─── Get by VAT Code ───────────────────────────────────
   async getByVatCode(req, res) {
     try {
-      const { vatCode } = req.params;
+      const vatCode = sanitizeString(req.params.vatCode);
+      if (!vatCode)
+        return res.status(400).json({ success: false, message: "Invalid VAT code" });
       const vatMaster = await VatMaster.findByVatCode(vatCode);
 
       if (!vatMaster) {
@@ -108,6 +114,8 @@ const VatMasterController = {
   async update(req, res) {
     try {
       const { id } = req.params;
+      if (!isValidId(id))
+        return res.status(400).json({ success: false, message: "Invalid ID" });
       const existing = await VatMaster.findById(id);
 
       if (!existing) {
@@ -137,6 +145,8 @@ const VatMasterController = {
   async updateStatus(req, res) {
     try {
       const { id } = req.params;
+      if (!isValidId(id))
+        return res.status(400).json({ success: false, message: "Invalid ID" });
       const { status } = req.body;
 
       if (!status) {
@@ -174,6 +184,8 @@ const VatMasterController = {
   async delete(req, res) {
     try {
       const { id } = req.params;
+      if (!isValidId(id))
+        return res.status(400).json({ success: false, message: "Invalid ID" });
       const existing = await VatMaster.findById(id);
 
       if (!existing) {
@@ -200,4 +212,4 @@ const VatMasterController = {
   },
 };
 
-module.exports = VatMasterController;s
+module.exports = VatMasterController;

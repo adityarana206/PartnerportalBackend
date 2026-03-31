@@ -1,4 +1,5 @@
 const Invoice = require("../models/Invoice.model");
+const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
 // ─── Create Invoice ────────────────────────────────────────
 const createInvoice = async (req, res) => {
@@ -34,7 +35,8 @@ const createInvoice = async (req, res) => {
 // ─── Get All Invoices ──────────────────────────────────────
 const getAllInvoices = async (req, res) => {
   try {
-    const { status, partnerNo } = req.query;
+    const status = sanitizeString(req.query.status);
+    const partnerNo = sanitizeString(req.query.partnerNo);
     let invoices;
 
     if (status) {
@@ -58,6 +60,8 @@ const getAllInvoices = async (req, res) => {
 // ─── Get Invoice by ID ─────────────────────────────────────
 const getInvoiceById = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
       return res.status(404).json({
@@ -74,7 +78,10 @@ const getInvoiceById = async (req, res) => {
 // ─── Get Invoice by Invoice No ─────────────────────────────
 const getInvoiceByNo = async (req, res) => {
   try {
-    const invoice = await Invoice.findByInvoiceNo(req.params.invoiceNo);
+    const invoiceNo = sanitizeString(req.params.invoiceNo);
+    if (!invoiceNo)
+      return res.status(400).json({ success: false, message: "Invalid invoice number" });
+    const invoice = await Invoice.findByInvoiceNo(invoiceNo);
     if (!invoice) {
       return res.status(404).json({
         success: false,
@@ -90,7 +97,10 @@ const getInvoiceByNo = async (req, res) => {
 // ─── Get Invoices by Partner No ────────────────────────────
 const getInvoicesByPartner = async (req, res) => {
   try {
-    const invoices = await Invoice.findByPartnerNo(req.params.partnerNo);
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    if (!partnerNo)
+      return res.status(400).json({ success: false, message: "Invalid partner number" });
+    const invoices = await Invoice.findByPartnerNo(partnerNo);
     res.status(200).json({
       success: true,
       count: invoices.length,
@@ -104,6 +114,8 @@ const getInvoicesByPartner = async (req, res) => {
 // ─── Update Invoice ────────────────────────────────────────
 const updateInvoice = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
       return res.status(404).json({
@@ -136,6 +148,8 @@ const updateInvoice = async (req, res) => {
 // ─── Update Status ─────────────────────────────────────────
 const updateInvoiceStatus = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const { status } = req.body;
 
     const validStatuses = [
@@ -174,6 +188,8 @@ const updateInvoiceStatus = async (req, res) => {
 // ─── Delete Invoice ────────────────────────────────────────
 const deleteInvoice = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
       return res.status(404).json({

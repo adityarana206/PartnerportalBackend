@@ -1,5 +1,6 @@
 const PurchaseOrder = require("../models/PurchaseOrder.model");
 const bcService = require("../services/businessCentral.service");
+const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
 // ─── Create Purchase Order ─────────────────────────────────
 const createPurchaseOrder = async (req, res) => {
@@ -56,7 +57,8 @@ const createPurchaseOrder = async (req, res) => {
 // ─── Get All Purchase Orders ───────────────────────────────
 const getAllPurchaseOrders = async (req, res) => {
   try {
-    const { status, partnerNo } = req.query;
+    const status = sanitizeString(req.query.status);
+    const partnerNo = sanitizeString(req.query.partnerNo);
 
     let orders;
     if (status) {
@@ -80,6 +82,8 @@ const getAllPurchaseOrders = async (req, res) => {
 // ─── Get Purchase Order by ID ──────────────────────────────
 const getPurchaseOrderById = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const order = await PurchaseOrder.findById(req.params.id);
     if (!order) {
       return res.status(404).json({
@@ -96,7 +100,10 @@ const getPurchaseOrderById = async (req, res) => {
 // ─── Get Orders by Partner No ──────────────────────────────
 const getOrdersByPartner = async (req, res) => {
   try {
-    const orders = await PurchaseOrder.findByPartnerNo(req.params.partnerNo);
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    if (!partnerNo)
+      return res.status(400).json({ success: false, message: "Invalid partner number" });
+    const orders = await PurchaseOrder.findByPartnerNo(partnerNo);
     res.status(200).json({
       success: true,
       count: orders.length,
@@ -110,6 +117,8 @@ const getOrdersByPartner = async (req, res) => {
 // ─── Update Purchase Order ─────────────────────────────────
 const updatePurchaseOrder = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const order = await PurchaseOrder.findById(req.params.id);
     if (!order) {
       return res.status(404).json({
@@ -142,6 +151,8 @@ const updatePurchaseOrder = async (req, res) => {
 // ─── Update Status Only ────────────────────────────────────
 const updateOrderStatus = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const { status } = req.body;
 
     const validStatuses = [
@@ -180,6 +191,8 @@ const updateOrderStatus = async (req, res) => {
 // ─── Delete Purchase Order ─────────────────────────────────
 const deletePurchaseOrder = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const order = await PurchaseOrder.findById(req.params.id);
     if (!order) {
       return res.status(404).json({

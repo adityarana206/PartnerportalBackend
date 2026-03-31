@@ -1,5 +1,6 @@
 const Contact = require("../models/Contact.model");
 const bcService = require("../services/businessCentral.service");
+const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
 // ─── Create Contact ────────────────────────────────────────
 const createContact = async (req, res) => {
@@ -53,7 +54,9 @@ const createContact = async (req, res) => {
 // ─── Get All Contacts ──────────────────────────────────────
 const getAllContacts = async (req, res) => {
   try {
-    const { syncStatus, partnerNo, companyNo } = req.query;
+    const syncStatus = sanitizeString(req.query.syncStatus);
+    const partnerNo = sanitizeString(req.query.partnerNo);
+    const companyNo = sanitizeString(req.query.companyNo);
     const { role } = req.user;
 
     let contacts;
@@ -86,6 +89,8 @@ const getAllContacts = async (req, res) => {
 // ─── Get Contact by ID ─────────────────────────────────────
 const getContactById = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const contact = await Contact.findById(req.params.id);
     if (!contact) {
       return res.status(404).json({
@@ -111,7 +116,10 @@ const getContactById = async (req, res) => {
 // ─── Get Contacts by Partner No ────────────────────────────
 const getContactsByPartner = async (req, res) => {
   try {
-    const contacts = await Contact.findByPartnerNo(req.params.partnerNo);
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    if (!partnerNo)
+      return res.status(400).json({ success: false, message: "Invalid partner number" });
+    const contacts = await Contact.findByPartnerNo(partnerNo);
     res.status(200).json({
       success: true,
       count: contacts.length,
@@ -125,6 +133,8 @@ const getContactsByPartner = async (req, res) => {
 // ─── Update Contact ────────────────────────────────────────
 const updateContact = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const contact = await Contact.findById(req.params.id);
     if (!contact) {
       return res.status(404).json({
@@ -166,6 +176,8 @@ const updateContact = async (req, res) => {
 // ─── Update Sync Status (customer_admin + super_admin) ─────
 const updateSyncStatus = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const { syncStatus } = req.body;
 
     const validStatuses = ["Pending", "Synced", "Failed"];
@@ -198,6 +210,8 @@ const updateSyncStatus = async (req, res) => {
 // ─── Update Portal Access (customer_admin + super_admin) ───
 const updatePortalAccess = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const { portalUser, portalAdmin } = req.body;
 
     if (typeof portalUser !== "boolean" || typeof portalAdmin !== "boolean") {
@@ -233,6 +247,8 @@ const updatePortalAccess = async (req, res) => {
 // ─── Delete Contact (customer_admin + super_admin) ─────────
 const deleteContact = async (req, res) => {
   try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     const contact = await Contact.findById(req.params.id);
     if (!contact) {
       return res.status(404).json({
