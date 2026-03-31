@@ -8,7 +8,7 @@ router.get("/code/:code",        NoSeriesController.getByCode);      // GET    /
 
 // ─── Collection routes ────────────────────────────────────────────────────────
 router.get("/getall",                  NoSeriesController.getAll);          // GET    /api/no-series
-router.post("/",                 NoSeriesController.create);          // POST   /api/no-series
+router.post("/create",                 NoSeriesController.create);          // POST   /api/no-series
 
 // ─── Single resource routes ───────────────────────────────────────────────────
 router.get("/:id",               NoSeriesController.getOne);          // GET    /api/no-series/:id
