@@ -7,7 +7,7 @@ const router = Router();
 router.get("/code/:code",        NoSeriesController.getByCode);      // GET    /api/no-series/code/:code
 
 // ─── Collection routes ────────────────────────────────────────────────────────
-router.get("/",                  NoSeriesController.getAll);          // GET    /api/no-series
+router.get("/getall",                  NoSeriesController.getAll);          // GET    /api/no-series
 router.post("/",                 NoSeriesController.create);          // POST   /api/no-series
 
 // ─── Single resource routes ───────────────────────────────────────────────────
