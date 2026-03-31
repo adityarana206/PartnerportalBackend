@@ -9,9 +9,7 @@ const { login } = require("../controllers/Customer.controller"); // ← fixed im
 let currentSecretKey = null;
 let secretKeyExpiry = null;
 
-// ─── 1. Get Register Token ─────────────────────────────────
-// POST /api/auth/get-register-token
-// Used before register to get a short-lived token
+
 router.post("/get-register-token", (req, res) => {
   try {
     currentSecretKey = crypto.randomBytes(32).toString("hex");
@@ -34,32 +32,15 @@ router.post("/get-register-token", (req, res) => {
   }
 });
 
-// ─── 2. Single Login for ALL roles ────────────────────────
-// POST /api/auth/login
-// customer | vendor | customer_admin | vendor_admin | super_admin
+
 router.post("/login", login);
 
-// ─── 3. Create Super Admin (one time only) ─────────────────
-// POST /api/auth/create-super-admin
+
 router.post("/create-super-admin", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // ─── Validate super admin secret ──────────────────────
-    // if (!superAdminSecret) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Super admin secret key is required",
-    //   });
-    // }
-
-    // if (superAdminSecret !== process.env.SUPER_ADMIN_SECRET_KEY) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: "Invalid super admin secret key",
-    //   });
-    // }
-
+   
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,

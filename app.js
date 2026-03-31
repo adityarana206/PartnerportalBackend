@@ -17,6 +17,7 @@ const PurchaseInvoiceRoutes = require("./routes/purchaseInvoice.routes");
 const PurchaseReceiptRoutes = require("./routes/purchaseReceipt.routes");
 const PartnerLocationLinkRoutes = require("./routes/partnerLocationLink.routes");
 const NoSeirs = require("./routes/NoSeries.route.js")
+const VatMasterRoutes = require("./routes/Vatmaster.router.js");
 const app = express();
 
 /* =======================
@@ -60,6 +61,7 @@ app.use("/api/purchase-receipts", PurchaseReceiptRoutes);
 
 app.use("/api/partner-location-links", PartnerLocationLinkRoutes);
 app.use("/api/no-series", NoSeirs);
+app.use("/api/vat-master",VatMasterRoutes)
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

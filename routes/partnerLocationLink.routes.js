@@ -13,7 +13,6 @@ const {
 } = require("../controllers/PartnerLocationLink.controller");
 const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
 
-// ─── All roles ────────────────────────────────────────────
 router.post(
   "/",
   protect,
