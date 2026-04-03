@@ -9,6 +9,9 @@ const {
   updateItemStatus,
   updateItemBlock,
   deleteItemRequest,
+  createItemRequestfrombc,
+  createItemChangeRequest,
+  createPriceChange,
 } = require("../controllers/Item.Controller");
 const {
   protect,
@@ -26,7 +29,9 @@ router.post(
   createItemRequest,
 );
 
-router.post("/businesscentral", protectRegister, createItemRequest);
+router.post("/businesscentral", protectRegister, createItemRequestfrombc);
+router.post("/price-change", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), createPriceChange);
+router.post("/change-request", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), createItemChangeRequest);
 router.get(
   "/",
   protect,

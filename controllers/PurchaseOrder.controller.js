@@ -1,4 +1,5 @@
 const PurchaseOrder = require("../models/PurchaseOrder.model");
+const PartnerLocationLink = require("../models/PartnerLocationLink.model");
 const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
@@ -22,16 +23,11 @@ const createPurchaseOrder = async (req, res) => {
       });
     }
     const userId = req.user ? req.user.id : null;
-    const order = await PurchaseOrder.create(req.body, userId);
 
-    // ─── Send to Business Central ──────────────────────────
     let bcResponse = null;
     let bcError = null;
     try {
-      const bcData = {
-        ...req.body,
-        orderType: "Purchase_x0020_Order",
-      };
+      const bcData = { ...req.body, orderType: "Purchase_x0020_Order" };
       bcResponse = await bcService.createOrderStaging(bcData);
       console.log("✅ Purchase Order synced to Business Central:", bcResponse);
     } catch (bcErr) {
@@ -42,13 +38,65 @@ const createPurchaseOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Purchase order created successfully",
-      data: order,
-      businessCentral: {
-        synced: !!bcResponse,
-        response: bcResponse,
-        error: bcError,
-      },
+      businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const createPurchaseOrderbc = async (req, res) => {
+  try {
+    if (!req.body.partnerNo) {
+      return res.status(400).json({ success: false, message: "Partner number is required" });
+    }
+    if (!req.body.orderStagingLines || req.body.orderStagingLines.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one order line is required" });
+    }
+
+    const userId = req.user ? req.user.id : null;
+    const order = await PurchaseOrder.create(req.body, userId);
+
+    res.status(201).json({ success: true, message: "Purchase order created successfully", data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+const getLocationsForPartner = async (req, res) => {
+  try {
+    const all = await PartnerLocationLink.findAll();
+    const locations = all.filter(l => !l.blocked);
+    res.status(200).json({ success: true, count: locations.length, data: locations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getApprovedItemsForPartner = async (req, res) => {
+  try {
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    if (!partnerNo)
+      return res.status(400).json({ success: false, message: "Invalid partner number" });
+    const items = await PurchaseOrder.findApprovedItemsByPartner(partnerNo);
+    res.status(200).json({ success: true, count: items.length, data: items });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getApprovedItemDetail = async (req, res) => {
+  try {
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    const batchNo = sanitizeString(req.params.batchNo);
+    const item = await PurchaseOrder.findApprovedItemDetail(partnerNo, batchNo);
+    if (!item)
+      return res.status(404).json({ success: false, message: "Approved item not found" });
+    res.status(200).json({ success: true, data: item });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -220,4 +268,8 @@ module.exports = {
   updatePurchaseOrder,
   updateOrderStatus,
   deletePurchaseOrder,
+  createPurchaseOrderbc,
+  getApprovedItemsForPartner,
+  getApprovedItemDetail,
+  getLocationsForPartner,
 };

@@ -1,0 +1,118 @@
+const Payment = require("../models/Payment.model");
+const { isValidId, sanitizeString } = require("../utils/validation.utils");
+
+const VALID_STATUSES = ["Pending", "Completed", "Failed", "Cancelled"];
+
+const getAllPayments = async (req, res) => {
+  try {
+    const partnerNo = sanitizeString(req.query.partnerNo);
+    const status = sanitizeString(req.query.status);
+
+    let payments;
+    if (status) payments = await Payment.findByStatus(status);
+    else if (partnerNo) payments = await Payment.findByPartnerNo(partnerNo);
+    else payments = await Payment.findAll();
+
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getPaymentById = async (req, res) => {
+  try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
+    const payment = await Payment.findById(req.params.id);
+    if (!payment)
+      return res.status(404).json({ success: false, message: "Payment not found" });
+    res.status(200).json({ success: true, data: payment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getPaymentsByPartner = async (req, res) => {
+  try {
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    if (!partnerNo)
+      return res.status(400).json({ success: false, message: "Invalid partner number" });
+    const payments = await Payment.findByPartnerNo(partnerNo);
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const createPayment = async (req, res) => {
+  try {
+    if (!req.body.paymentNumber)
+      return res.status(400).json({ success: false, message: "Payment number is required" });
+    if (req.body.amount === undefined || req.body.amount === null)
+      return res.status(400).json({ success: false, message: "Amount is required" });
+
+    const userId = req.user ? req.user.id : null;
+    const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
+    const payment = await Payment.create({ ...req.body, partnerNo }, userId);
+    res.status(201).json({ success: true, message: "Payment created successfully", data: payment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updatePayment = async (req, res) => {
+  try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
+    const existing = await Payment.findById(req.params.id);
+    if (!existing)
+      return res.status(404).json({ success: false, message: "Payment not found" });
+
+    const updated = await Payment.update(req.params.id, req.body);
+    res.status(200).json({ success: true, message: "Payment updated successfully", data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updatePaymentStatus = async (req, res) => {
+  try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
+    const { status } = req.body;
+    if (!status || !VALID_STATUSES.includes(status))
+      return res.status(400).json({ success: false, message: `Invalid status. Allowed: ${VALID_STATUSES.join(", ")}` });
+
+    const existing = await Payment.findById(req.params.id);
+    if (!existing)
+      return res.status(404).json({ success: false, message: "Payment not found" });
+
+    const updated = await Payment.updateStatus(req.params.id, status);
+    res.status(200).json({ success: true, message: `Payment status updated to ${status}`, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const deletePayment = async (req, res) => {
+  try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
+    const deleted = await Payment.delete(req.params.id);
+    if (!deleted)
+      return res.status(404).json({ success: false, message: "Payment not found" });
+    res.status(200).json({ success: true, message: "Payment deleted successfully", data: deleted });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = {
+  getAllPayments,
+  getPaymentById,
+  getPaymentsByPartner,
+  createPayment,
+  updatePayment,
+  updatePaymentStatus,
+  deletePayment,
+};

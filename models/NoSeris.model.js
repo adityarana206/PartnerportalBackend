@@ -98,6 +98,21 @@ const NoSeries = {
     return result.rows[0] || null;
   },
 
+  // ─── Atomic increment by code → returns formatted number string ───────────
+  async getNextNumberByCode(code) {
+    const result = await pool.query(
+      `UPDATE no_series
+         SET last_no_used = last_no_used + increment_by_no,
+             updated_at   = NOW()
+       WHERE code = $1 AND last_no_used < ending_no
+       RETURNING code, last_no_used`,
+      [code]
+    );
+    if (!result.rows[0]) throw new Error(`Number series '${code}' not found or has reached its limit`);
+    const { code: seriesCode, last_no_used } = result.rows[0];
+    return `${seriesCode}${String(last_no_used).padStart(6, "0")}`;
+  },
+
   // ─── RESET last_no_used TO starting_no - increment_by_no ─────────────────
   async reset(id) {
     const result = await pool.query(

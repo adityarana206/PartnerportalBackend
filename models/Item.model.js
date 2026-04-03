@@ -70,6 +70,14 @@ const Item = {
     return result.rows[0] || null;
   },
 
+  async checkPartnerExists(partnerNo) {
+    const result = await pool.query(
+      "SELECT 1 FROM users WHERE ref_no = $1",
+      [partnerNo],
+    );
+    return result.rows.length > 0;
+  },
+
   async findByStatus(status) {
     const result = await pool.query(
       "SELECT * FROM item_requests WHERE status = $1 ORDER BY created_at DESC",

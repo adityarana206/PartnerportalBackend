@@ -148,6 +148,7 @@ const login = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      refNo: user.ref_no || null,
     });
 
     const { password: pwd, ...userWithoutPassword } = user;

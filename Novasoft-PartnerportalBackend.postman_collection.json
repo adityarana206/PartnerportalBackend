@@ -1,0 +1,1258 @@
+{
+  "info": {
+    "name": "Novasoft Partner Portal Backend",
+    "description": "Full API collection for the Novasoft Partner Portal Backend. Base URL stored in {{baseUrl}} variable (default: http://localhost:3000). JWT token stored in {{token}} variable.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "registerToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] }
+          }
+        },
+        {
+          "name": "List All Routes (Dev Only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/routes", "host": ["{{baseUrl}}"], "path": ["api", "routes"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get Register Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/get-register-token", "host": ["{{baseUrl}}"], "path": ["api", "auth", "get-register-token"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) { pm.collectionVariables.set('token', json.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Create Super Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Super Admin\",\n  \"email\": \"superadmin@example.com\",\n  \"password\": \"superadmin123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/create-super-admin", "host": ["{{baseUrl}}"], "path": ["api", "auth", "create-super-admin"] }
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/verify-token", "host": ["{{baseUrl}}"], "path": ["api", "auth", "verify-token"] }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"oldpassword123\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/change-password", "host": ["{{baseUrl}}"], "path": ["api", "auth", "change-password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"name2\": null,\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"customer\",\n  \"partnerno\": \"CUST001\",\n  \"address\": \"123 Main St\",\n  \"address2\": null,\n  \"city\": \"Dubai\",\n  \"postCode\": \"12345\",\n  \"countryRegionCode\": \"AE\",\n  \"phoneNo\": \"+971501234567\",\n  \"vatRegistrationNo\": \"VAT123456\",\n  \"currencyCode\": \"AED\",\n  \"paymentTermsCode\": \"NET30\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users/register", "host": ["{{baseUrl}}"], "path": ["api", "users", "register"] }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/:id", "host": ["{{baseUrl}}"], "path": ["api", "users", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Updated\",\n  \"name2\": null,\n  \"address\": \"456 New St\",\n  \"address2\": null,\n  \"city\": \"Abu Dhabi\",\n  \"postCode\": \"54321\",\n  \"countryRegionCode\": \"AE\",\n  \"phoneNo\": \"+971509876543\",\n  \"email\": \"john.updated@example.com\",\n  \"vatRegistrationNo\": \"VAT654321\",\n  \"currencyCode\": \"AED\",\n  \"paymentTermsCode\": \"NET60\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users/:id", "host": ["{{baseUrl}}"], "path": ["api", "users", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/:id", "host": ["{{baseUrl}}"], "path": ["api", "users", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Items (Vendor)",
+      "item": [
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Product A\",\n  \"batchNo\": \"BATCH001\",\n  \"description\": \"A sample product description\",\n  \"itemCategoryCode\": \"FOOD\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 1.5,\n  \"grossWeight\": 1.8,\n  \"specifications\": \"High quality product\",\n  \"ingredients\": \"Water, Salt\",\n  \"allergenDeclaration\": \"Contains no allergens\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"1234567890123\",\n  \"eanCode\": \"1234567890123\",\n  \"unitPrice\": 25.50,\n  \"priceCurrencyCode\": \"AED\",\n  \"partnerNo\": \"VEND001\",\n  \"block\": false,\n  \"status\": \"Created\",\n  \"rejectionReason\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", ""] }
+          }
+        },
+        {
+          "name": "Create Item (Business Central)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Product A\",\n  \"batchNo\": \"BATCH001\",\n  \"description\": \"A sample product description\",\n  \"itemCategoryCode\": \"FOOD\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 1.5,\n  \"grossWeight\": 1.8,\n  \"specifications\": \"High quality product\",\n  \"ingredients\": \"Water, Salt\",\n  \"allergenDeclaration\": \"Contains no allergens\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"1234567890123\",\n  \"eanCode\": \"1234567890123\",\n  \"unitPrice\": 25.50,\n  \"priceCurrencyCode\": \"AED\",\n  \"partnerNo\": \"VEND001\",\n  \"block\": false,\n  \"status\": \"Created\",\n  \"rejectionReason\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/businesscentral", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", "businesscentral"] }
+          }
+        },
+        {
+          "name": "Get All Items",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor/item/?status=Created&partnerNo=VEND001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor", "item", ""],
+              "query": [
+                { "key": "status", "value": "Created", "description": "Filter by status" },
+                { "key": "partnerNo", "value": "VEND001", "description": "Filter by partner number" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Items by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "VEND001" }] }
+          }
+        },
+        {
+          "name": "Get Item by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/:id", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Product A Updated\",\n  \"batchNo\": \"BATCH001\",\n  \"description\": \"Updated description\",\n  \"itemCategoryCode\": \"FOOD\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 2.0,\n  \"grossWeight\": 2.3,\n  \"specifications\": \"Updated specifications\",\n  \"ingredients\": \"Water, Salt, Sugar\",\n  \"allergenDeclaration\": \"Contains no allergens\",\n  \"shelfLifeDays\": 180,\n  \"gtin\": \"1234567890123\",\n  \"eanCode\": \"1234567890123\",\n  \"unitPrice\": 30.00,\n  \"priceCurrencyCode\": \"AED\",\n  \"partnerNo\": \"VEND001\",\n  \"block\": false,\n  \"status\": \"Created\",\n  \"rejectionReason\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/:id", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Item Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"rejectionReason\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", ":id", "status"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Block/Unblock Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blocked\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/:id/block", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", ":id", "block"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/vendor/item/:id", "host": ["{{baseUrl}}"], "path": ["api", "vendor", "item", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contacts",
+      "item": [
+        {
+          "name": "Create Contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactName\": \"Jane Smith\",\n  \"contactNo\": \"CT001\",\n  \"eMail\": \"jane@example.com\",\n  \"phoneNo\": \"+971501234567\",\n  \"mobilePhoneNo\": \"+971551234567\",\n  \"companyNo\": \"COMP001\",\n  \"companyName\": \"Acme Corp\",\n  \"portalUser\": true,\n  \"portalAdmin\": false,\n  \"partnerType\": \"Customer\",\n  \"partnerNo\": \"CUST001\",\n  \"shipToCode\": \"SHIP001\",\n  \"vendorLocationCode\": null,\n  \"locationCode\": \"LOC001\",\n  \"address\": \"123 Business Blvd\",\n  \"address2\": \"Floor 5\",\n  \"city\": \"Dubai\",\n  \"postCode\": \"12345\",\n  \"countryRegionCode\": \"AE\",\n  \"jobTitle\": \"Procurement Manager\",\n  \"languageCode\": \"ENU\",\n  \"syncStatus\": \"Pending\",\n  \"lastSyncedDateTime\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/contact/", "host": ["{{baseUrl}}"], "path": ["api", "contact", ""] }
+          }
+        },
+        {
+          "name": "Get All Contacts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/contact/?syncStatus=Pending&partnerNo=CUST001&companyNo=COMP001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contact", ""],
+              "query": [
+                { "key": "syncStatus", "value": "Pending" },
+                { "key": "partnerNo", "value": "CUST001" },
+                { "key": "companyNo", "value": "COMP001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Contacts by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/contact/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "contact", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "CUST001" }] }
+          }
+        },
+        {
+          "name": "Get Contact by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/contact/:id", "host": ["{{baseUrl}}"], "path": ["api", "contact", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactName\": \"Jane Smith Updated\",\n  \"contactNo\": \"CT001\",\n  \"eMail\": \"jane.updated@example.com\",\n  \"phoneNo\": \"+971501234567\",\n  \"mobilePhoneNo\": \"+971551234567\",\n  \"companyNo\": \"COMP001\",\n  \"companyName\": \"Acme Corp\",\n  \"portalUser\": true,\n  \"portalAdmin\": false,\n  \"partnerType\": \"Customer\",\n  \"partnerNo\": \"CUST001\",\n  \"shipToCode\": \"SHIP001\",\n  \"vendorLocationCode\": null,\n  \"locationCode\": \"LOC001\",\n  \"address\": \"456 Updated Blvd\",\n  \"address2\": \"Floor 6\",\n  \"city\": \"Dubai\",\n  \"postCode\": \"12345\",\n  \"countryRegionCode\": \"AE\",\n  \"jobTitle\": \"Senior Procurement Manager\",\n  \"languageCode\": \"ENU\",\n  \"syncStatus\": \"Synced\",\n  \"lastSyncedDateTime\": \"2024-01-15T10:00:00Z\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/contact/:id", "host": ["{{baseUrl}}"], "path": ["api", "contact", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Contact Sync Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"syncStatus\": \"Synced\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/contact/:id/sync", "host": ["{{baseUrl}}"], "path": ["api", "contact", ":id", "sync"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Contact Portal Access",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"portalAccess\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/contact/:id/portal", "host": ["{{baseUrl}}"], "path": ["api", "contact", ":id", "portal"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/contact/:id", "host": ["{{baseUrl}}"], "path": ["api", "contact", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchase Orders",
+      "item": [
+        {
+          "name": "Create Purchase Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"orderType\": \"Purchase\",\n  \"partnerType\": \"Vendor\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2024-01-15\",\n  \"requestedDeliveryDate\": \"2024-01-30\",\n  \"currencyCode\": \"AED\",\n  \"externalDocumentNo\": \"EXT-PO-001\",\n  \"status\": \"Pending\",\n  \"direction\": \"Inbound\",\n  \"submittedDate\": null,\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 100,\n      \"unitOfMeasureCode\": \"KG\",\n      \"unitPrice\": 25.50,\n      \"lineDiscountPercent\": 5,\n      \"lineDiscountAmount\": 127.50,\n      \"lineAmount\": 2422.50,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-01-30\",\n      \"variantCode\": null\n    },\n    {\n      \"lineNo\": 20000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Product B\",\n      \"quantity\": 50,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 10.00,\n      \"lineDiscountPercent\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 500.00,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-01-30\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders/", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders", ""] }
+          }
+        },
+        {
+          "name": "Create Purchase Order (Business Central)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"orderType\": \"Purchase\",\n  \"partnerType\": \"Vendor\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2024-01-15\",\n  \"requestedDeliveryDate\": \"2024-01-30\",\n  \"currencyCode\": \"AED\",\n  \"externalDocumentNo\": \"EXT-PO-001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"submittedDate\": \"2024-01-15\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 100,\n      \"unitOfMeasureCode\": \"KG\",\n      \"unitPrice\": 25.50,\n      \"lineDiscountPercent\": 5,\n      \"lineDiscountAmount\": 127.50,\n      \"lineAmount\": 2422.50,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-01-30\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders/businesscentral", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders", "businesscentral"] }
+          }
+        },
+        {
+          "name": "Get All Purchase Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/purchase-orders/?status=Pending&partnerNo=VEND001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "purchase-orders", ""],
+              "query": [
+                { "key": "status", "value": "Pending" },
+                { "key": "partnerNo", "value": "VEND001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Purchase Orders by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "VEND001" }] }
+          }
+        },
+        {
+          "name": "Get Purchase Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Purchase Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"orderType\": \"Purchase\",\n  \"partnerType\": \"Vendor\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2024-01-15\",\n  \"requestedDeliveryDate\": \"2024-02-15\",\n  \"currencyCode\": \"AED\",\n  \"externalDocumentNo\": \"EXT-PO-001\",\n  \"status\": \"Approved\",\n  \"direction\": \"Inbound\",\n  \"submittedDate\": \"2024-01-15\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A Updated\",\n      \"quantity\": 150,\n      \"unitOfMeasureCode\": \"KG\",\n      \"unitPrice\": 25.50,\n      \"lineDiscountPercent\": 10,\n      \"lineDiscountAmount\": 382.50,\n      \"lineAmount\": 3442.50,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-02-15\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Purchase Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders", ":id", "status"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Purchase Order",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales Orders",
+      "item": [
+        {
+          "name": "Create Sales Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"orderType\": \"Sales\",\n  \"partnerType\": \"Customer\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2024-01-15\",\n  \"requestedDeliveryDate\": \"2024-01-30\",\n  \"currencyCode\": \"AED\",\n  \"externalDocumentNo\": \"EXT-SO-001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Outbound\",\n  \"submittedDate\": null,\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 20,\n      \"unitOfMeasureCode\": \"KG\",\n      \"unitPrice\": 30.00,\n      \"lineDiscountPercent\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 600.00,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-01-30\",\n      \"variantCode\": null\n    },\n    {\n      \"lineNo\": 20000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Product B\",\n      \"quantity\": 10,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 15.00,\n      \"lineDiscountPercent\": 5,\n      \"lineDiscountAmount\": 7.50,\n      \"lineAmount\": 142.50,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-01-30\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/sales-orders/", "host": ["{{baseUrl}}"], "path": ["api", "sales-orders", ""] }
+          }
+        },
+        {
+          "name": "Create Sales Order (Business Central)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"orderType\": \"Sales\",\n  \"partnerType\": \"Customer\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2024-01-15\",\n  \"requestedDeliveryDate\": \"2024-01-30\",\n  \"currencyCode\": \"AED\",\n  \"externalDocumentNo\": \"EXT-SO-001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Outbound\",\n  \"submittedDate\": \"2024-01-15\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 20,\n      \"unitOfMeasureCode\": \"KG\",\n      \"unitPrice\": 30.00,\n      \"lineDiscountPercent\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 600.00,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-01-30\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/sales-orders/businesscentral", "host": ["{{baseUrl}}"], "path": ["api", "sales-orders", "businesscentral"] }
+          }
+        },
+        {
+          "name": "Get All Sales Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sales-orders/?status=Processed&partnerNo=CUST001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales-orders", ""],
+              "query": [
+                { "key": "status", "value": "Processed" },
+                { "key": "partnerNo", "value": "CUST001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Sales Orders by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/sales-orders/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "sales-orders", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "CUST001" }] }
+          }
+        },
+        {
+          "name": "Get Sales Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/sales-orders/:id", "host": ["{{baseUrl}}"], "path": ["api", "sales-orders", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Sales Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"orderType\": \"Sales\",\n  \"partnerType\": \"Customer\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2024-01-15\",\n  \"requestedDeliveryDate\": \"2024-02-15\",\n  \"currencyCode\": \"AED\",\n  \"externalDocumentNo\": \"EXT-SO-001\",\n  \"status\": \"Approved\",\n  \"direction\": \"Outbound\",\n  \"submittedDate\": \"2024-01-15\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A Updated\",\n      \"quantity\": 25,\n      \"unitOfMeasureCode\": \"KG\",\n      \"unitPrice\": 30.00,\n      \"lineDiscountPercent\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 750.00,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2024-02-15\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/sales-orders/:id", "host": ["{{baseUrl}}"], "path": ["api", "sales-orders", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Sales Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/sales-orders/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "sales-orders", ":id", "status"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Sales Order",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/sales-orders/:id", "host": ["{{baseUrl}}"], "path": ["api", "sales-orders", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales Invoices",
+      "item": [
+        {
+          "name": "Create Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"invoiceType\": \"Sales\",\n  \"invoiceNo\": \"INV-2024-001\",\n  \"invoiceDate\": \"2024-01-15\",\n  \"dueDate\": \"2024-02-15\",\n  \"partnerType\": \"Customer\",\n  \"totalAmount\": 742.50,\n  \"currencyCode\": \"AED\",\n  \"outstandingAmount\": 742.50,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": null,\n  \"linkedOrderNo\": \"SO-001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 20,\n      \"unitPrice\": 30.00,\n      \"unitOfMeasureCode\": \"KG\",\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 600.00,\n      \"vat\": 5,\n      \"vatAmount\": 30.00,\n      \"variantCode\": null\n    },\n    {\n      \"lineNo\": 20000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Product B\",\n      \"quantity\": 10,\n      \"unitPrice\": 15.00,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"lineDiscount\": 5,\n      \"lineDiscountAmount\": 7.50,\n      \"lineAmount\": 142.50,\n      \"vat\": 5,\n      \"vatAmount\": 7.13,\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/invoices/", "host": ["{{baseUrl}}"], "path": ["api", "invoices", ""] }
+          }
+        },
+        {
+          "name": "Create Invoice (Business Central)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"invoiceType\": \"Sales\",\n  \"invoiceNo\": \"INV-2024-001\",\n  \"invoiceDate\": \"2024-01-15\",\n  \"dueDate\": \"2024-02-15\",\n  \"partnerType\": \"Customer\",\n  \"totalAmount\": 742.50,\n  \"currencyCode\": \"AED\",\n  \"outstandingAmount\": 742.50,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-INV-001\",\n  \"linkedOrderNo\": \"SO-001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 20,\n      \"unitPrice\": 30.00,\n      \"unitOfMeasureCode\": \"KG\",\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 600.00,\n      \"vat\": 5,\n      \"vatAmount\": 30.00,\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/invoices/businesscentral", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "businesscentral"] }
+          }
+        },
+        {
+          "name": "Get All Invoices",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/?status=Pending&partnerNo=CUST001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", ""],
+              "query": [
+                { "key": "status", "value": "Pending" },
+                { "key": "partnerNo", "value": "CUST001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoices by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "CUST001" }] }
+          }
+        },
+        {
+          "name": "Get Invoice by Invoice No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/no/:invoiceNo", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "no", ":invoiceNo"], "variable": [{ "key": "invoiceNo", "value": "INV-2024-001" }] }
+          }
+        },
+        {
+          "name": "Get Invoice by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/:id", "host": ["{{baseUrl}}"], "path": ["api", "invoices", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Invoice",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"invoiceType\": \"Sales\",\n  \"invoiceNo\": \"INV-2024-001\",\n  \"invoiceDate\": \"2024-01-15\",\n  \"dueDate\": \"2024-03-15\",\n  \"partnerType\": \"Customer\",\n  \"totalAmount\": 750.00,\n  \"currencyCode\": \"AED\",\n  \"outstandingAmount\": 750.00,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": null,\n  \"linkedOrderNo\": \"SO-001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A Updated\",\n      \"quantity\": 25,\n      \"unitPrice\": 30.00,\n      \"unitOfMeasureCode\": \"KG\",\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 750.00,\n      \"vat\": 5,\n      \"vatAmount\": 37.50,\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/invoices/:id", "host": ["{{baseUrl}}"], "path": ["api", "invoices", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Invoice Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Paid\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/invoices/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "invoices", ":id", "status"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Invoice",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/:id", "host": ["{{baseUrl}}"], "path": ["api", "invoices", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchase Invoices",
+      "item": [
+        {
+          "name": "Create Purchase Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"invoiceType\": \"Purchase\",\n  \"invoiceNo\": \"PINV-2024-001\",\n  \"invoiceDate\": \"2024-01-15\",\n  \"dueDate\": \"2024-02-15\",\n  \"partnerType\": \"Vendor\",\n  \"totalAmount\": 2550.00,\n  \"currencyCode\": \"AED\",\n  \"outstandingAmount\": 2550.00,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": null,\n  \"linkedOrderNo\": \"PO-001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 100,\n      \"unitPrice\": 25.50,\n      \"unitOfMeasureCode\": \"KG\",\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 2550.00,\n      \"vat\": 5,\n      \"vatAmount\": 127.50,\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", ""] }
+          }
+        },
+        {
+          "name": "Create Purchase Invoice (Business Central)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"invoiceType\": \"Purchase\",\n  \"invoiceNo\": \"PINV-2024-001\",\n  \"invoiceDate\": \"2024-01-15\",\n  \"dueDate\": \"2024-02-15\",\n  \"partnerType\": \"Vendor\",\n  \"totalAmount\": 2550.00,\n  \"currencyCode\": \"AED\",\n  \"outstandingAmount\": 2550.00,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-PINV-001\",\n  \"linkedOrderNo\": \"PO-001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"quantity\": 100,\n      \"unitPrice\": 25.50,\n      \"unitOfMeasureCode\": \"KG\",\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 2550.00,\n      \"vat\": 5,\n      \"vatAmount\": 127.50,\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/businesscentral", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", "businesscentral"] }
+          }
+        },
+        {
+          "name": "Get All Purchase Invoices",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/purchase-invoices/?status=Pending&partnerNo=VEND001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "purchase-invoices", ""],
+              "query": [
+                { "key": "status", "value": "Pending" },
+                { "key": "partnerNo", "value": "VEND001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Purchase Invoices by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "VEND001" }] }
+          }
+        },
+        {
+          "name": "Get Purchase Invoice by Invoice No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/no/:invoiceNo", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", "no", ":invoiceNo"], "variable": [{ "key": "invoiceNo", "value": "PINV-2024-001" }] }
+          }
+        },
+        {
+          "name": "Get Purchase Invoice by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Purchase Invoice",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"invoiceType\": \"Purchase\",\n  \"invoiceNo\": \"PINV-2024-001\",\n  \"invoiceDate\": \"2024-01-15\",\n  \"dueDate\": \"2024-03-15\",\n  \"partnerType\": \"Vendor\",\n  \"totalAmount\": 2550.00,\n  \"currencyCode\": \"AED\",\n  \"outstandingAmount\": 2550.00,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": null,\n  \"linkedOrderNo\": \"PO-001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A Updated\",\n      \"quantity\": 100,\n      \"unitPrice\": 25.50,\n      \"unitOfMeasureCode\": \"KG\",\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 2550.00,\n      \"vat\": 5,\n      \"vatAmount\": 127.50,\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Purchase Invoice Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Paid\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", ":id", "status"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Purchase Invoice",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-invoices/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-invoices", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchase Receipts",
+      "item": [
+        {
+          "name": "Create Purchase Receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"deliveryType\": \"Standard\",\n  \"partnerType\": \"Vendor\",\n  \"linkedOrderNo\": \"PO-001\",\n  \"shipmentNo\": \"SHIP-2024-001\",\n  \"trackingNo\": \"TRACK123456\",\n  \"carrierCode\": \"DHL\",\n  \"shipmentDate\": \"2024-01-20\",\n  \"expectedDeliveryDate\": \"2024-01-25\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"bcDocumentNo\": null,\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"expirationDate\": \"2025-01-20\",\n      \"lotNo\": \"LOT001\",\n      \"orderedQuantity\": 100,\n      \"remainingQuantity\": 100,\n      \"serialNo\": null,\n      \"shippedQuantity\": 100,\n      \"unitOfMeasureCode\": \"KG\",\n      \"variantCode\": null\n    },\n    {\n      \"lineNo\": 20000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Product B\",\n      \"expirationDate\": \"2025-06-30\",\n      \"lotNo\": \"LOT002\",\n      \"orderedQuantity\": 50,\n      \"remainingQuantity\": 50,\n      \"serialNo\": null,\n      \"shippedQuantity\": 50,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", ""] }
+          }
+        },
+        {
+          "name": "Create Purchase Receipt (Business Central)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"deliveryType\": \"Standard\",\n  \"partnerType\": \"Vendor\",\n  \"linkedOrderNo\": \"PO-001\",\n  \"shipmentNo\": \"SHIP-2024-001\",\n  \"trackingNo\": \"TRACK123456\",\n  \"carrierCode\": \"DHL\",\n  \"shipmentDate\": \"2024-01-20\",\n  \"expectedDeliveryDate\": \"2024-01-25\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"bcDocumentNo\": \"BC-RCPT-001\",\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"expirationDate\": \"2025-01-20\",\n      \"lotNo\": \"LOT001\",\n      \"orderedQuantity\": 100,\n      \"remainingQuantity\": 100,\n      \"serialNo\": null,\n      \"shippedQuantity\": 100,\n      \"unitOfMeasureCode\": \"KG\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/businesscentral", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", "businesscentral"] }
+          }
+        },
+        {
+          "name": "Get All Purchase Receipts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/purchase-receipts/?status=Processed&partnerNo=VEND001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "purchase-receipts", ""],
+              "query": [
+                { "key": "status", "value": "Processed" },
+                { "key": "partnerNo", "value": "VEND001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Purchase Receipts by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "VEND001" }] }
+          }
+        },
+        {
+          "name": "Get Purchase Receipt by Shipment No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/shipment/:shipmentNo", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", "shipment", ":shipmentNo"], "variable": [{ "key": "shipmentNo", "value": "SHIP-2024-001" }] }
+          }
+        },
+        {
+          "name": "Get Purchase Receipt by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Purchase Receipt",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"deliveryType\": \"Express\",\n  \"partnerType\": \"Vendor\",\n  \"linkedOrderNo\": \"PO-001\",\n  \"shipmentNo\": \"SHIP-2024-001\",\n  \"trackingNo\": \"TRACK654321\",\n  \"carrierCode\": \"FedEx\",\n  \"shipmentDate\": \"2024-01-20\",\n  \"expectedDeliveryDate\": \"2024-01-22\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Delivered\",\n  \"direction\": \"Inbound\",\n  \"bcDocumentNo\": null,\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Product A\",\n      \"expirationDate\": \"2025-01-20\",\n      \"lotNo\": \"LOT001\",\n      \"orderedQuantity\": 100,\n      \"remainingQuantity\": 0,\n      \"serialNo\": null,\n      \"shippedQuantity\": 100,\n      \"unitOfMeasureCode\": \"KG\",\n      \"variantCode\": null\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Purchase Receipt Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Delivered\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", ":id", "status"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Purchase Receipt",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/purchase-receipts/:id", "host": ["{{baseUrl}}"], "path": ["api", "purchase-receipts", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Partner Location Links",
+      "item": [
+        {
+          "name": "Create Partner Location Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerType\": \"Customer\",\n  \"partnerNo\": \"CUST001\",\n  \"description\": \"Main Warehouse\",\n  \"addressCode\": \"ADDR001\",\n  \"addressName\": \"Main Office\",\n  \"locationCode\": \"LOC001\",\n  \"address\": \"123 Business Blvd\",\n  \"address2\": \"Floor 5\",\n  \"city\": \"Dubai\",\n  \"postCode\": \"12345\",\n  \"countryRegionCode\": \"AE\",\n  \"contact\": \"Jane Smith\",\n  \"phoneNo\": \"+971501234567\",\n  \"isDefault\": true,\n  \"blocked\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", ""] }
+          }
+        },
+        {
+          "name": "Create Partner Location Link (Business Central)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-register-token", "value": "{{registerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerType\": \"Customer\",\n  \"partnerNo\": \"CUST001\",\n  \"description\": \"Warehouse B\",\n  \"addressCode\": \"ADDR002\",\n  \"addressName\": \"Secondary Office\",\n  \"locationCode\": \"LOC002\",\n  \"address\": \"456 Trade St\",\n  \"address2\": null,\n  \"city\": \"Abu Dhabi\",\n  \"postCode\": \"54321\",\n  \"countryRegionCode\": \"AE\",\n  \"contact\": \"John Doe\",\n  \"phoneNo\": \"+971509876543\",\n  \"isDefault\": false,\n  \"blocked\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/businesscentral", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", "businesscentral"] }
+          }
+        },
+        {
+          "name": "Get All Partner Location Links",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/partner-location-links/?partnerNo=CUST001&partnerType=Customer&locationCode=LOC001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "partner-location-links", ""],
+              "query": [
+                { "key": "partnerNo", "value": "CUST001" },
+                { "key": "partnerType", "value": "Customer" },
+                { "key": "locationCode", "value": "LOC001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Partner Location Links by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/partner/:partnerNo", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", "partner", ":partnerNo"], "variable": [{ "key": "partnerNo", "value": "CUST001" }] }
+          }
+        },
+        {
+          "name": "Get Default Partner Location Link",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/partner/:partnerNo/default", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", "partner", ":partnerNo", "default"], "variable": [{ "key": "partnerNo", "value": "CUST001" }] }
+          }
+        },
+        {
+          "name": "Get Partner Location Link by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/:id", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Partner Location Link",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerType\": \"Customer\",\n  \"partnerNo\": \"CUST001\",\n  \"description\": \"Main Warehouse Updated\",\n  \"addressCode\": \"ADDR001\",\n  \"addressName\": \"Main Office Updated\",\n  \"locationCode\": \"LOC001\",\n  \"address\": \"789 New Blvd\",\n  \"address2\": \"Floor 3\",\n  \"city\": \"Sharjah\",\n  \"postCode\": \"11111\",\n  \"countryRegionCode\": \"AE\",\n  \"contact\": \"Jane Smith Updated\",\n  \"phoneNo\": \"+971501111111\",\n  \"isDefault\": true,\n  \"blocked\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/:id", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Block/Unblock Partner Location Link",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blocked\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/:id/block", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", ":id", "block"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Set Default Partner Location Link",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isDefault\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/:id/default", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", ":id", "default"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete Partner Location Link",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/partner-location-links/:id", "host": ["{{baseUrl}}"], "path": ["api", "partner-location-links", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "No Series",
+      "item": [
+        {
+          "name": "Create No Series",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PO\",\n  \"description\": \"Purchase Order Series\",\n  \"startingNo\": 1,\n  \"endingNo\": 999999,\n  \"lastNoUsed\": 0,\n  \"warningNo\": 999900,\n  \"incrementByNo\": 1,\n  \"allowGaps\": false,\n  \"dateOrder\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/no-series/create", "host": ["{{baseUrl}}"], "path": ["api", "no-series", "create"] }
+          }
+        },
+        {
+          "name": "Get All No Series",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/no-series/getall", "host": ["{{baseUrl}}"], "path": ["api", "no-series", "getall"] }
+          }
+        },
+        {
+          "name": "Get No Series by Code",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/no-series/code/:code", "host": ["{{baseUrl}}"], "path": ["api", "no-series", "code", ":code"], "variable": [{ "key": "code", "value": "PO" }] }
+          }
+        },
+        {
+          "name": "Get No Series by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/no-series/:id", "host": ["{{baseUrl}}"], "path": ["api", "no-series", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update No Series",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PO\",\n  \"description\": \"Purchase Order Series Updated\",\n  \"startingNo\": 1,\n  \"endingNo\": 9999999,\n  \"lastNoUsed\": 100,\n  \"warningNo\": 9999900,\n  \"incrementByNo\": 1,\n  \"allowGaps\": false,\n  \"dateOrder\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/no-series/:id", "host": ["{{baseUrl}}"], "path": ["api", "no-series", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Get Next Number",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/api/no-series/:id/next-number", "host": ["{{baseUrl}}"], "path": ["api", "no-series", ":id", "next-number"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Reset No Series",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/api/no-series/:id/reset", "host": ["{{baseUrl}}"], "path": ["api", "no-series", ":id", "reset"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete No Series",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/no-series/:id", "host": ["{{baseUrl}}"], "path": ["api", "no-series", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "VAT Master",
+      "item": [
+        {
+          "name": "Create VAT Master",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vatCode\": \"VAT5\",\n  \"description\": \"Standard VAT 5%\",\n  \"vatPercent\": 5,\n  \"vatType\": \"Standard\",\n  \"status\": \"Active\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vat-master/", "host": ["{{baseUrl}}"], "path": ["api", "vat-master", ""] }
+          }
+        },
+        {
+          "name": "Get All VAT Masters",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/vat-master/?status=Active&vatType=Standard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vat-master", ""],
+              "query": [
+                { "key": "status", "value": "Active" },
+                { "key": "vatType", "value": "Standard" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get VAT Master by Code",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/vat-master/code/:vatCode", "host": ["{{baseUrl}}"], "path": ["api", "vat-master", "code", ":vatCode"], "variable": [{ "key": "vatCode", "value": "VAT5" }] }
+          }
+        },
+        {
+          "name": "Get VAT Master by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/vat-master/:id", "host": ["{{baseUrl}}"], "path": ["api", "vat-master", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update VAT Master",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vatCode\": \"VAT5\",\n  \"description\": \"Standard VAT 5% Updated\",\n  \"vatPercent\": 5,\n  \"vatType\": \"Standard\",\n  \"status\": \"Active\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vat-master/:id", "host": ["{{baseUrl}}"], "path": ["api", "vat-master", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update VAT Master Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/vat-master/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "vat-master", ":id", "status"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Delete VAT Master",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/vat-master/:id", "host": ["{{baseUrl}}"], "path": ["api", "vat-master", ":id"], "variable": [{ "key": "id", "value": "1" }] }
+          }
+        }
+      ]
+    }
+  ]
+}
