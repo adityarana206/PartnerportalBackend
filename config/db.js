@@ -11,6 +11,10 @@ const pool = new Pool({
   },
 });
 
+pool.on("error", (err) => {
+  console.error("Unexpected pg pool error:", err.message);
+});
+
 const connectDB = async () => {
   try {
     console.log("Attempting to connect to PostgreSQL...");

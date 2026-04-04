@@ -63,55 +63,19 @@ const createItemRequestfrombc = async (req, res) => {
 };
 
 
+
 const createItemRequest = async (req, res) => {
   try {
-    // ─── Validate required fields ──────────────────────────
-    if (!req.body.itemName) {
-      return res.status(400).json({
-        success: false,
-        message: "Item name is required",
-      });
-    }
+    if (!req.body.itemName)
+      return res.status(400).json({ success: false, message: "Item name is required" });
 
-    // ─── Check duplicate batchNo ───────────────────────────
-    if (req.body.batchNo) {
-      const existing = await ItemRequest.findByBatchNo(req.body.batchNo);
-      if (existing) {
-        return res.status(400).json({
-          success: false,
-          message: "Batch number already exists",
-        });
-      }
-    }
+    const batchNo = await NoSeries.getNextNumberByCode("BATCH");
+    const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
 
-    // ─── Create item ───────────────────────────────────────
-  //   const userId = req.user ? req.user.id : null;
-  //   const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
-  //  if (req.body.status != req.body.status==="Approved"){
-  //   return res.status(400).json({
-  //     success: false,
-  //     message: "Item is not approved by the admin",
-  //   })
-  //  }
-
-    // ─── Validate partnerNo exists in users table ──────────
-    // if (partnerNo) {
-    //   const partnerExists = await ItemRequest.checkPartnerExists(partnerNo);
-    //   if (!partnerExists) {
-    //     return res.status(400).json({
-    //       success: false,
-    //       message: `Partner number '${partnerNo}' does not exist`,
-    //     });
-    //   }
-    // }
-
-    // const item = await ItemRequest.create({ ...req.body, partnerNo, batchNo }, userId);
-
-    // // ─── Send to Business Central ──────────────────────────
     let bcResponse = null;
     let bcError = null;
     try {
-      bcResponse = await bcService.createItemRequest(req.body);
+      bcResponse = await bcService.createItemRequest({ ...req.body, batchNo, partnerNo, status: "Created" });
       console.log("✅ Item synced to Business Central:", bcResponse);
     } catch (bcErr) {
       bcError = bcErr.response?.data || bcErr.message;
@@ -121,20 +85,13 @@ const createItemRequest = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Item request created successfully",
-      
-    //   businessCentral: {
-    //     synced: !!bcResponse,
-    //     response: bcResponse,
-    //     error: bcError,
-    //   },
+      businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ─── Get All Item Requests ─────────────────────────────────
-// GET /api/items
 // GET /api/items?status=Created
 // GET /api/items?partnerNo=VNR000001
 const getAllItemRequests = async (req, res) => {
