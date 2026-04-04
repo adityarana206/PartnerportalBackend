@@ -173,7 +173,7 @@ class BusinessCentralService {
       requestedDeliveryDate: orderData.requestedDeliveryDate || null,
       currencyCode: orderData.currencyCode || "",
       externalDocumentNo: orderData.externalDocumentNo || "",
-      status: "Submitted",
+      status: "Created",
       direction: orderData.direction || "Portal_x002D_to_x002D_BC",
       submittedDate: orderData.submittedDate || new Date().toISOString(),
       orderStagingLines: (orderData.orderStagingLines || []).map(line => ({
@@ -209,7 +209,7 @@ class BusinessCentralService {
       expectedDeliveryDate: deliveryData.expectedDeliveryDate || null,
       locationCode: deliveryData.locationCode || "",
       shipToCode: deliveryData.shipToCode || "",
-      status: deliveryData.status || "Processed",
+      status: deliveryData.status || "Created",
       direction: deliveryData.direction || "Portal_x002D_to_x002D_BC",
       bcDocumentNo: deliveryData.bcDocumentNo || "",
       deliveryStagingsLine: (deliveryData.deliveryStagingsLine || []).map(line => ({
@@ -279,7 +279,7 @@ class BusinessCentralService {
       changeDetails: messageData.changeDetails || "",
       messageTimestamp: messageData.messageTimestamp || new Date().toISOString(),
       direction: messageData.direction || "Portal-to-BC",
-      status: messageData.status || "Open",
+      status: messageData.status || "Created",
       returnItemNo: messageData.returnItemNo || "",
       returnQuantity: messageData.returnQuantity || 0,
       returnReasonCode: messageData.returnReasonCode || "",
