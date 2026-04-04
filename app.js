@@ -21,6 +21,7 @@ const VatMasterRoutes = require("./routes/Vatmaster.router.js");
 const PurchasePriceRoutes = require("./routes/purchasePrice.routes");
 const ItemCategoryRoutes = require("./routes/itemCategory.routes");
 const PaymentRoutes = require("./routes/payment.routes");
+const UnitOfMeasureRoutes = require("./routes/unitOfMeasure.routes");
 const app = express();
 
 /* =======================
@@ -73,6 +74,7 @@ app.use("/api/purchase-receipts", PurchaseReceiptRoutes);
 app.use("/api/purchase-prices", PurchasePriceRoutes);
 app.use("/api/item-categories", ItemCategoryRoutes);
 app.use("/api/payments", PaymentRoutes);
+app.use("/api/unit-of-measures", UnitOfMeasureRoutes);
 
 app.use("/api/partner-location-links", PartnerLocationLinkRoutes);
 app.use("/api/no-series", NoSeirs);

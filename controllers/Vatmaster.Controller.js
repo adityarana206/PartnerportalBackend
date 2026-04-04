@@ -148,35 +148,25 @@ const VatMasterController = {
       if (!isValidId(id))
         return res.status(400).json({ success: false, message: "Invalid ID" });
       const { status } = req.body;
+      const isInclusive = req.body.isInclusive !== undefined
+        ? req.body.isInclusive === true || req.body.isInclusive === 'true'
+        : undefined;
 
-      if (!status) {
-        return res.status(400).json({
-          success: false,
-          message: "Status field is required",
-        });
-      }
+      if (status === undefined && isInclusive === undefined)
+        return res.status(400).json({ success: false, message: "status or isInclusive is required" });
 
       const existing = await VatMaster.findById(id);
-      if (!existing) {
-        return res.status(404).json({
-          success: false,
-          message: `VAT Master with ID ${id} not found`,
-        });
-      }
+      if (!existing)
+        return res.status(404).json({ success: false, message: `VAT Master with ID ${id} not found` });
 
-      const vatMaster = await VatMaster.updateStatus(id, status);
+      const vatMaster = await VatMaster.updateStatus(id, status, isInclusive);
       return res.status(200).json({
         success: true,
-        message: "VAT Master status updated successfully",
+        message: "VAT Master updated successfully",
         data: vatMaster,
       });
     } catch (error) {
-      console.error("Update VatMaster status error:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to update VAT Master status",
-        error: error.message,
-      });
+      return res.status(500).json({ success: false, message: error.message });
     }
   },
 

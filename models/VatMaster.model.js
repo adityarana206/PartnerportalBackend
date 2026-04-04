@@ -6,20 +6,20 @@ const VatMaster = {
     const query = `
       INSERT INTO vat_masters (
         vat_code, description, vat_percent,
-        vat_type, status, created_by
+        vat_type, is_inclusive, status, created_by
       ) VALUES (
-        $1,$2,$3,$4,$5,$6
+        $1,$2,$3,$4,$5,$6,$7
       ) RETURNING *;
     `;
     const values = [
-      data.vatCode       || null,       // $1
-      data.description   || null,       // $2
-      data.vatPercent    ?? 0,          // $3
-      data.vatType       || null,       // $4
-      data.status        || "Active",   // $5
-      userId             || null,       // $6
+      data.vatCode       || null,
+      data.description   || null,
+      data.vatPercent    ?? 0,
+      data.vatType       || null,
+      data.isInclusive   ?? false,
+      data.status        || "Active",
+      userId             || null,
     ];
-
     const result = await pool.query(query, values);
     return result.rows[0];
   },
@@ -73,29 +73,35 @@ const VatMaster = {
     const query = `
       UPDATE vat_masters SET
         vat_code=$1, description=$2, vat_percent=$3,
-        vat_type=$4, status=$5,
+        vat_type=$4, is_inclusive=$5, status=$6,
         updated_at=NOW()
-      WHERE id=$6 RETURNING *;
+      WHERE id=$7 RETURNING *;
     `;
     const values = [
       data.vatCode     || null,
       data.description || null,
       data.vatPercent  ?? 0,
       data.vatType     || null,
+      data.isInclusive ?? false,
       data.status      || "Active",
       id,
     ];
-
     const result = await pool.query(query, values);
     return result.rows[0] || null;
   },
 
   // ─── Update Status Only ────────────────────────────────
-  async updateStatus(id, status) {
+  async updateStatus(id, status, isInclusive) {
+    const fields = [];
+    const values = [];
+    let i = 1;
+    if (status !== undefined) { fields.push(`status=$${i++}`); values.push(status); }
+    if (isInclusive !== undefined) { fields.push(`is_inclusive=$${i++}`); values.push(isInclusive); }
+    fields.push(`updated_at=NOW()`);
+    values.push(id);
     const result = await pool.query(
-      `UPDATE vat_masters SET status=$1, updated_at=NOW()
-       WHERE id=$2 RETURNING *`,
-      [status, id]
+      `UPDATE vat_masters SET ${fields.join(", ")} WHERE id=$${i} RETURNING *`,
+      values
     );
     return result.rows[0] || null;
   },

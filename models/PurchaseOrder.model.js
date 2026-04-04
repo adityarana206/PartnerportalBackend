@@ -41,14 +41,40 @@ const PurchaseOrder = {
       const lines = [];
       if (data.orderStagingLines && data.orderStagingLines.length > 0) {
         for (const line of data.orderStagingLines) {
+          // ─── Fetch VAT if vatCode provided ─────────────
+          let vatPercent = 0;
+          let vatAmount = 0;
+          let lineAmountInclVat = 0;
+          const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
+
+          if (line.vatCode) {
+            const vat = await client.query(
+              "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
+              [line.vatCode]
+            );
+            if (vat.rows[0]) {
+              vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
+              if (vat.rows[0].is_inclusive) {
+                // VAT included in price: extract it
+                vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
+                lineAmountInclVat = lineAmount;
+              } else {
+                // VAT exclusive: add on top
+                vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
+                lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
+              }
+            }
+          }
+
           const lineQuery = `
             INSERT INTO purchase_order_lines (
               order_id, line_no, item_no, description,
               quantity, unit_of_measure_code, unit_price,
               line_discount_percent, line_discount_amount,
-              line_amount, location_code, delivery_date, variant_code
+              line_amount, location_code, delivery_date, variant_code,
+              vat_code, vat_percent, vat_amount, line_amount_incl_vat
             ) VALUES (
-              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
             ) RETURNING *;
           `;
           const lineValues = [
@@ -61,10 +87,14 @@ const PurchaseOrder = {
             line.unitPrice || 0,
             line.lineDiscountPercent || 0,
             line.lineDiscountAmount || 0,
-            line.lineAmount || 0,
+            lineAmount,
             line.locationCode || null,
             line.deliveryDate || null,
             line.variantCode || null,
+            line.vatCode || null,
+            vatPercent,
+            vatAmount,
+            lineAmountInclVat,
           ];
           const lineResult = await client.query(lineQuery, lineValues);
           lines.push(lineResult.rows[0]);
@@ -192,14 +222,37 @@ const PurchaseOrder = {
       const lines = [];
       if (data.orderStagingLines && data.orderStagingLines.length > 0) {
         for (const line of data.orderStagingLines) {
+          let vatPercent = 0;
+          let vatAmount = 0;
+          let lineAmountInclVat = 0;
+          const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
+
+          if (line.vatCode) {
+            const vat = await client.query(
+              "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
+              [line.vatCode]
+            );
+            if (vat.rows[0]) {
+              vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
+              if (vat.rows[0].is_inclusive) {
+                vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
+                lineAmountInclVat = lineAmount;
+              } else {
+                vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
+                lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
+              }
+            }
+          }
+
           const lineQuery = `
             INSERT INTO purchase_order_lines (
               order_id, line_no, item_no, description,
               quantity, unit_of_measure_code, unit_price,
               line_discount_percent, line_discount_amount,
-              line_amount, location_code, delivery_date, variant_code
+              line_amount, location_code, delivery_date, variant_code,
+              vat_code, vat_percent, vat_amount, line_amount_incl_vat
             ) VALUES (
-              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
             ) RETURNING *;
           `;
           const lineValues = [
@@ -212,10 +265,14 @@ const PurchaseOrder = {
             line.unitPrice || 0,
             line.lineDiscountPercent || 0,
             line.lineDiscountAmount || 0,
-            line.lineAmount || 0,
+            lineAmount,
             line.locationCode || null,
             line.deliveryDate || null,
             line.variantCode || null,
+            line.vatCode || null,
+            vatPercent,
+            vatAmount,
+            lineAmountInclVat,
           ];
           const lineResult = await client.query(lineQuery, lineValues);
           lines.push(lineResult.rows[0]);

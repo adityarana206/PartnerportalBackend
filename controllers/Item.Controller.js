@@ -1,5 +1,6 @@
 const ItemRequest = require("../models/Item.model");
 const NoSeries = require("../models/NoSeris.model");
+const UnitOfMeasure = require("../models/UnitOfMeasure.model");
 const bcService = require("../services/businessCentral.service");
 const { pool } = require("../config/db");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
@@ -323,6 +324,15 @@ const deleteItemRequest = async (req, res) => {
   }
 };
 
+const getUnitOfMeasures = async (req, res) => {
+  try {
+    const units = await UnitOfMeasure.findAll();
+    res.status(200).json({ success: true, count: units.length, data: units });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const createItemChangeRequest = async (req, res) => {
   try {
     const {
@@ -456,4 +466,5 @@ module.exports = {
   createItemRequestfrombc,
   createItemChangeRequest,
   createPriceChange,
+  getUnitOfMeasures,
 };

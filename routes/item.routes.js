@@ -12,6 +12,7 @@ const {
   createItemRequestfrombc,
   createItemChangeRequest,
   createPriceChange,
+  getUnitOfMeasures,
 } = require("../controllers/Item.Controller");
 const {
   protect,
@@ -32,6 +33,7 @@ router.post(
 router.post("/businesscentral", protectRegister, createItemRequestfrombc);
 router.post("/price-change", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), createPriceChange);
 router.post("/change-request", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), createItemChangeRequest);
+router.get("/unit-of-measures", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), getUnitOfMeasures);
 router.get(
   "/",
   protect,
