@@ -22,6 +22,8 @@ const PurchasePriceRoutes = require("./routes/purchasePrice.routes");
 const ItemCategoryRoutes = require("./routes/itemCategory.routes");
 const PaymentRoutes = require("./routes/payment.routes");
 const UnitOfMeasureRoutes = require("./routes/unitOfMeasure.routes");
+const PermissionRoutes = require("./routes/permission.routes");
+const PermissionGroupRoutes = require("./routes/permissionGroup.routes");
 const app = express();
 
 /* =======================
@@ -79,6 +81,8 @@ app.use("/api/unit-of-measures", UnitOfMeasureRoutes);
 app.use("/api/partner-location-links", PartnerLocationLinkRoutes);
 app.use("/api/no-series", NoSeirs);
 app.use("/api/vat-master",VatMasterRoutes)
+app.use("/api/permissions", PermissionRoutes);
+app.use("/api/permission-groups", PermissionGroupRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

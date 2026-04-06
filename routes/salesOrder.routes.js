@@ -9,57 +9,23 @@ const {
   updateSalesOrderStatus,
   deleteSalesOrder,
 } = require("../controllers/SalesOrder.controller");
-const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
+const { protect, protectRegister } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-// ─── Customer + Customer Admin + Super Admin ──────────────
-router.post(
-  "/",
-  protect,
-  authorizeRoles("customer", "customer_admin", "super_admin"),
-  createSalesOrder,
-);
-router.post(
-  "/businesscentral",
-  protectRegister,
-  createSalesOrder,
-);
-router.get(
-  "/",
-  protect,
-  authorizeRoles("customer", "customer_admin", "super_admin"),
-  getAllSalesOrders,
-);
-router.get(
-  "/partner/:partnerNo",
-  protect,
-  authorizeRoles("customer", "customer_admin", "super_admin"),
-  getOrdersByPartner,
-);
-router.get(
-  "/:id",
-  protect,
-  authorizeRoles("customer", "customer_admin", "super_admin"),
-  getSalesOrderById,
-);
-router.put(
-  "/:id",
-  protect,
-  authorizeRoles("customer", "customer_admin", "super_admin"),
-  updateSalesOrder,
-);
+// ─── READ ──────────────────────────────────────────────────
+router.get("/", protect, canRead("SALES_ORDERS"), getAllSalesOrders);
+router.get("/partner/:partnerNo", protect, canRead("SALES_ORDERS"), getOrdersByPartner);
+router.get("/:id", protect, canRead("SALES_ORDERS"), getSalesOrderById);
 
-// ─── Customer Admin + Super Admin Only ────────────────────
-router.patch(
-  "/:id/status",
-  protect,
-  authorizeRoles("customer_admin", "super_admin"),
-  updateSalesOrderStatus,
-);
-router.delete(
-  "/:id",
-  protect,
-  authorizeRoles("customer_admin", "super_admin"),
-  deleteSalesOrder,
-);
+// ─── WRITE (Create) ────────────────────────────────────────
+router.post("/", protect, canWrite("SALES_ORDERS"), createSalesOrder);
+router.post("/businesscentral", protectRegister, createSalesOrder);
+
+// ─── MODIFY (Update) ───────────────────────────────────────
+router.put("/:id", protect, canModify("SALES_ORDERS"), updateSalesOrder);
+router.patch("/:id/status", protect, canModify("SALES_ORDERS"), updateSalesOrderStatus);
+
+// ─── DELETE ────────────────────────────────────────────────
+router.delete("/:id", protect, canDelete("SALES_ORDERS"), deleteSalesOrder);
 
 module.exports = router;

@@ -35,14 +35,43 @@ const User = {
 
   async findAll(role) {
     const query = role
-      ? `SELECT id, ref_no, name, name2, address, address2, city, post_code,
-         country_region_code, phone_no, email, vat_registration_no, currency_code,
-         payment_terms_code, role, created_at, updated_at
-         FROM users WHERE role = $1 ORDER BY created_at DESC`
-      : `SELECT id, ref_no, name, name2, address, address2, city, post_code,
-         country_region_code, phone_no, email, vat_registration_no, currency_code,
-         payment_terms_code, role, created_at, updated_at
-         FROM users ORDER BY created_at DESC`;
+      ? `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+         u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+         u.payment_terms_code, u.role, u.created_at, u.updated_at,
+         COALESCE(
+           json_agg(
+             json_build_object(
+               'id', pg.id,
+               'group_name', pg.group_name,
+               'description', pg.description,
+               'assigned_at', uga.assigned_at
+             )
+           ) FILTER (WHERE pg.id IS NOT NULL), '[]'
+         ) as permission_groups
+         FROM users u
+         LEFT JOIN user_group_assignments uga ON u.id = uga.user_id
+         LEFT JOIN permission_groups pg ON uga.group_id = pg.id
+         WHERE u.role = $1
+         GROUP BY u.id
+         ORDER BY u.created_at DESC`
+      : `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+         u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+         u.payment_terms_code, u.role, u.created_at, u.updated_at,
+         COALESCE(
+           json_agg(
+             json_build_object(
+               'id', pg.id,
+               'group_name', pg.group_name,
+               'description', pg.description,
+               'assigned_at', uga.assigned_at
+             )
+           ) FILTER (WHERE pg.id IS NOT NULL), '[]'
+         ) as permission_groups
+         FROM users u
+         LEFT JOIN user_group_assignments uga ON u.id = uga.user_id
+         LEFT JOIN permission_groups pg ON uga.group_id = pg.id
+         GROUP BY u.id
+         ORDER BY u.created_at DESC`;
     const values = role ? [role] : [];
     const result = await pool.query(query, values);
     return result.rows;
@@ -50,10 +79,24 @@ const User = {
 
   async findById(id) {
     const result = await pool.query(
-      `SELECT id, ref_no, name, name2, address, address2, city, post_code,
-       country_region_code, phone_no, email, vat_registration_no, currency_code,
-       payment_terms_code, role, created_at, updated_at
-       FROM users WHERE id = $1`,
+      `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+       u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+       u.payment_terms_code, u.role, u.created_at, u.updated_at,
+       COALESCE(
+         json_agg(
+           json_build_object(
+             'id', pg.id,
+             'group_name', pg.group_name,
+             'description', pg.description,
+             'assigned_at', uga.assigned_at
+           )
+         ) FILTER (WHERE pg.id IS NOT NULL), '[]'
+       ) as permission_groups
+       FROM users u
+       LEFT JOIN user_group_assignments uga ON u.id = uga.user_id
+       LEFT JOIN permission_groups pg ON uga.group_id = pg.id
+       WHERE u.id = $1
+       GROUP BY u.id`,
       [id],
     );
     return result.rows[0] || null;

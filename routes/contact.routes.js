@@ -10,100 +10,23 @@ const {
   updatePortalAccess,
   deleteContact,
 } = require("../controllers/ContactController");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const { protect } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-// ─── Customer + Customer Admin + Super Admin ──────────────
-router.post(
-  "/",
-  protect,
-  authorizeRoles(
-    "customer",
-    "customer_admin",
-    "vendor",
-    "vendor_admin",
-    "super_admin",
-  ),
-  createContact,
-);
-router.get(
-  "/",
-  protect,
-  authorizeRoles(
-    "customer",
-    "customer_admin",
-    "vendor",
-    "vendor_admin",
-    "super_admin",
-  ),
-  getAllContacts,
-);
-router.get(
-  "/partner/:partnerNo",
-  protect,
-  authorizeRoles("customer", "vendor"),
-  getContactsByPartner,
-);
-router.get(
-  "/:id",
-  protect,
-  authorizeRoles(
-    "customer",
-    "customer_admin",
-    "vendor",
-    "vendor_admin",
-    "super_admin",
-  ),
-  getContactById,
-);
-router.put(
-  "/:id",
-  protect,
-  authorizeRoles(
-    "customer",
-    "customer_admin",
-    "vendor",
-    "vendor_admin",
-    "super_admin",
-  ),
-  updateContact,
-);
+// ─── READ ──────────────────────────────────────────────────
+router.get("/", protect, canRead("CONTACTS"), getAllContacts);
+router.get("/partner/:partnerNo", protect, canRead("CONTACTS"), getContactsByPartner);
+router.get("/:id", protect, canRead("CONTACTS"), getContactById);
 
-// ─── Customer Admin + Super Admin Only ────────────────────
-router.patch(
-  "/:id/sync",
-  protect,
-  authorizeRoles(
-    "customer_admin",
-    "vendor",
-    "vendor_admin",
-    "customer",
-    "super_admin",
-  ),
-  updateSyncStatus,
-);
-router.patch(
-  "/:id/portal",
-  protect,
-  authorizeRoles(
-    "customer_admin",
-    "vendor",
-    "vendor_admin",
-    "customer",
-    "super_admin",
-  ),
-  updatePortalAccess,
-);
-router.delete(
-  "/:id",
-  protect,
-  authorizeRoles(
-    "customer_admin",
-    "vendor",
-    "vendor_admin",
-    "customer",
-    "super_admin",
-  ),
-  deleteContact,
-);
+// ─── WRITE (Create) ────────────────────────────────────────
+router.post("/", protect, canWrite("CONTACTS"), createContact);
+
+// ─── MODIFY (Update) ───────────────────────────────────────
+router.put("/:id", protect, canModify("CONTACTS"), updateContact);
+router.patch("/:id/sync", protect, canModify("CONTACTS"), updateSyncStatus);
+router.patch("/:id/portal", protect, canModify("CONTACTS"), updatePortalAccess);
+
+// ─── DELETE ────────────────────────────────────────────────
+router.delete("/:id", protect, canDelete("CONTACTS"), deleteContact);
 
 module.exports = router;

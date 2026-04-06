@@ -8,44 +8,21 @@ const {
   update,
   remove,
 } = require("../controllers/Customer.controller");
-const {
-  protect,
-  protectRegister,
-  isSuperAdmin,
-  authorizeRoles,
-} = require("../middleware/auth.middleware");
+const { protect, protectRegister, isSuperAdmin } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-// ─── 1. Register (customer | vendor | customer_admin | vendor_admin) ──
-// POST /api/users/register
-// Requires x-register-token in header
+// ─── WRITE (Register) ──────────────────────────────────────
 router.post("/register", protectRegister, register);
 
-// ─── 2. Get All Users ──────────────────────────────────────
-// GET /api/users
-// super_admin    → all users
-// customer_admin → all customers + customer_admins
-// vendor_admin   → all vendors + vendor_admins
-// customer       → own role only
-// vendor         → own role only
-router.get("/", protect, getAll);
-
-// ─── 3. Get My Profile ────────────────────────────────────
-// GET /api/users/me
+// ─── READ ──────────────────────────────────────────────────
+router.get("/", protect, canRead("USERS"), getAll);
 router.get("/me", protect, getMe);
+router.get("/:id", protect, canRead("USERS"), getById);
 
-// ─── 4. Get User by ID ────────────────────────────────────
-// GET /api/users/:id
-router.get("/:id", protect, getById);
+// ─── MODIFY (Update) ───────────────────────────────────────
+router.put("/:id", protect, canModify("USERS"), update);
 
-// ─── 5. Update User ───────────────────────────────────────
-// PUT /api/users/:id
-// super_admin/customer_admin/vendor_admin → any user
-// customer/vendor → own profile only
-router.put("/:id", protect, update);
-
-// ─── 6. Delete User ───────────────────────────────────────
-// DELETE /api/users/:id
-// super_admin only
+// ─── DELETE ────────────────────────────────────────────────
 router.delete("/:id", protect, isSuperAdmin, remove);
 
 module.exports = router;
