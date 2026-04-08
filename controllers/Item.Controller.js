@@ -9,7 +9,6 @@ const { isValidId, sanitizeString } = require("../utils/validation.utils");
 // POST /api/items
 const createItemRequestfrombc = async (req, res) => {
   try {
-    // ─── Validate required fields ──────────────────────────
     if (!req.body.itemName) {
       return res.status(400).json({
         success: false,
@@ -17,14 +16,16 @@ const createItemRequestfrombc = async (req, res) => {
       });
     }
 
-    // ─── Auto-generate batchNo from BATCH no series ────────
-    // const batchNo = await NoSeries.getNextNumberByCode("BATCH");
+    if (!req.body.partnerPortalNo || !req.body.partnerNo || !req.body.batchNo) {
+      return res.status(400).json({
+        success: false,
+        message: "partnerPortalNo, partnerNo, and batchNo are required",
+      });
+    }
 
-    // ─── Create item ───────────────────────────────────────
     const userId = req.user ? req.user.id : null;
     const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
 
-    // ─── Validate partnerNo exists in users table ──────────
     if (partnerNo) {
       const partnerExists = await ItemRequest.checkPartnerExists(partnerNo);
       if (!partnerExists) {
@@ -35,28 +36,12 @@ const createItemRequestfrombc = async (req, res) => {
       }
     }
 
-     const item = await ItemRequest.create({ ...req.body, partnerNo }, userId);
-
-    // ─── Send to Business Central ──────────────────────────
-    // let bcResponse = null;
-    // let bcError = null;
-    // try {
-    //   bcResponse = await bcService.createItemRequest({ ...req.body, batchNo });
-    //   console.log("✅ Item synced to Business Central:", bcResponse);
-    // } catch (bcErr) {
-    //   bcError = bcErr.response?.data || bcErr.message;
-    //   console.error("⚠️  Failed to sync to Business Central:", bcError);
-    // }
+    const item = await ItemRequest.create({ ...req.body, partnerNo }, userId);
 
     res.status(201).json({
       success: true,
       message: "Item request created successfully",
       data: item,
-      // businessCentral: {
-      //   synced: !!bcResponse,
-      //   response: bcResponse,
-      //   error: bcError,
-      // },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -151,6 +136,38 @@ const getItemsByPartner = async (req, res) => {
       count: items.length,
       data: items,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getItemsByPartnerPortalNo = async (req, res) => {
+  try {
+    const partnerPortalNo = sanitizeString(req.params.partnerPortalNo);
+    if (!partnerPortalNo)
+      return res.status(400).json({ success: false, message: "Invalid partner portal number" });
+    const items = await ItemRequest.findByPartnerPortalNo(partnerPortalNo);
+    res.status(200).json({
+      success: true,
+      count: items.length,
+      data: items,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getItemByKey = async (req, res) => {
+  try {
+    const { partnerPortalNo, partnerNo, batchNo } = req.params;
+    const item = await ItemRequest.findByKey(partnerPortalNo, partnerNo, batchNo);
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Item request not found",
+      });
+    }
+    res.status(200).json({ success: true, data: item });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -459,6 +476,8 @@ module.exports = {
   getAllItemRequests,
   getItemRequestById,
   getItemsByPartner,
+  getItemsByPartnerPortalNo,
+  getItemByKey,
   updateItemRequest,
   updateItemStatus,
   updateItemBlock,

@@ -10,7 +10,7 @@ const {
   updatePortalAccess,
   deleteContact,
 } = require("../controllers/ContactController");
-const { protect } = require("../middleware/auth.middleware");
+const { protect, protectRegister } = require("../middleware/auth.middleware");
 const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
@@ -20,6 +20,7 @@ router.get("/:id", protect, canRead("CONTACTS"), getContactById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
 router.post("/", protect, canWrite("CONTACTS"), createContact);
+router.post("/businesscentral",protectRegister , createContact);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
 router.put("/:id", protect, canModify("CONTACTS"), updateContact);

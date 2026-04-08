@@ -5,6 +5,8 @@ const {
   getAllItemRequests,
   getItemRequestById,
   getItemsByPartner,
+  getItemsByPartnerPortalNo,
+  getItemByKey,
   updateItemRequest,
   updateItemStatus,
   updateItemBlock,
@@ -20,6 +22,8 @@ const { canRead, canWrite, canModify, canDelete } = require("../middleware/permi
 // ─── READ ──────────────────────────────────────────────────
 router.get("/", protect, canRead("ITEMS"), getAllItemRequests);
 router.get("/partner/:partnerNo", protect, canRead("ITEMS"), getItemsByPartner);
+router.get("/portal/:partnerPortalNo", protect, canRead("ITEMS"), getItemsByPartnerPortalNo);
+router.get("/key/:partnerPortalNo/:partnerNo/:batchNo", protect, canRead("ITEMS"), getItemByKey);
 router.get("/unit-of-measures", protect, canRead("ITEMS"), getUnitOfMeasures);
 router.get("/:id", protect, canRead("ITEMS"), getItemRequestById);
 
