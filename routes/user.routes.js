@@ -12,7 +12,7 @@ const { protect, protectRegister, isSuperAdmin } = require("../middleware/auth.m
 const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── WRITE (Register) ──────────────────────────────────────
-router.post("/register", protectRegister, register);
+router.post("/register", register);
 
 // ─── READ ──────────────────────────────────────────────────
 router.get("/", protect, canRead("USERS"), getAll);

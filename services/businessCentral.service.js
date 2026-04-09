@@ -407,6 +407,71 @@ class BusinessCentralService {
     return response.data;
   }
 
+  // ─── Partner Registration ──────────────────────────────
+  async createPartnerRegistration(data) {
+    const bcData = {
+      partnerType:           data.partnerType           || "Customer",
+      regType:               data.regType               || "Create",
+      scope:                 data.scope                 || "Current_x0020_Company",
+      status:                data.status                || "Draft",
+      partnerNo:             data.partnerNo             || "",
+      centralPartnerNo:      data.centralPartnerNo      || "",
+      resultPartnerNo:       data.resultPartnerNo       || "",
+      requesterUserId:       data.requesterUserId        || "",
+      businessJustification: data.businessJustification || "",
+      name:                  data.name                  || "",
+      name2:                 data.name2                 || "",
+      address:               data.address               || "",
+      address2:              data.address2              || "",
+      city:                  data.city                  || "",
+      postCode:              data.postCode              || "",
+      countryRegionCode:     data.countryRegionCode     || "",
+      phoneNo:               data.phoneNo               || "",
+      email:                 data.email                 || "",
+      vatRegistrationNo:     data.vatRegistrationNo     || "",
+      currencyCode:          data.currencyCode          || "",
+      paymentTermsCode:      data.paymentTermsCode      || "",
+      paymentMethodCode:     data.paymentMethodCode     || "",
+      partnerPostingGroup:   data.partnerPostingGroup   || "",
+      genBusPostingGroup:    data.genBusPostingGroup    || "",
+      vatBusPostingGroup:    data.vatBusPostingGroup    || "",
+      partnerEmail:          data.partnerEmail          || "",
+      tradeName:             data.tradeName             || "",
+      tradeLicenseNumber:    data.tradeLicenseNumber    || "",
+      tradeLicenseExpiryDate: data.tradeLicenseExpiryDate || "0001-01-01",
+      companyRegNumber:      data.companyRegNumber      || "",
+      entityType:            data.entityType            || "",
+      countryOfIncorporation: data.countryOfIncorporation || "",
+      placeOfRegistration:   data.placeOfRegistration   || "",
+      website:               data.website               || "",
+      partnerCategory:       data.partnerCategory       || "",
+      partnerRegContactLines: (data.partnerRegContactLines || []).map(c => ({
+        lineNo:       c.lineNo       || 0,
+        fullName:     c.fullName     || "",
+        designation:  c.designation  || "",
+        mobileNumber: c.mobileNumber || "",
+        emailAddress: c.emailAddress || "",
+      })),
+      partnerRegBankLines: (data.partnerRegBankLines || []).map(b => ({
+        lineNo:         b.lineNo         || 0,
+        bankCode:       b.bankCode       || "",
+        name:           b.name           || "",
+        bankBranchNo:   b.bankBranchNo   || "",
+        bankAccountNo:  b.bankAccountNo  || "",
+        iban:           b.iban           || "",
+        swiftCode:      b.swiftCode      || "",
+        currencyCode:   b.currencyCode   || "",
+        isPrimary:      b.isPrimary      || false,
+      })),
+    };
+
+    return await this.callAPI(
+      "partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines",
+      "POST",
+      bcData
+    );
+  }
+
   // ─── Customer Registration ─────────────────────────────
   async createCustomerRegistration(customerData) {
     const bcData = {

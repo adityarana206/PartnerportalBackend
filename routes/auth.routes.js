@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { pool } = require("../config/db");
-const { login } = require("../controllers/Customer.controller"); // ← fixed import
+const { login } = require("../controllers/Customer.controller");
 
 let currentSecretKey = null;
 let secretKeyExpiry = null;

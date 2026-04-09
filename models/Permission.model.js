@@ -76,32 +76,26 @@ const Permission = {
     );
     
     if (userCheck.rows[0]?.role === 'super_admin') {
-      return true; // Super admin has all permissions
+      return true;
     }
     
     const query = `
       SELECT 
-        CASE 
-          WHEN up.id IS NOT NULL THEN 
-            CASE $3
-              WHEN 'read' THEN up.can_read
-              WHEN 'write' THEN up.can_write
-              WHEN 'modify' THEN up.can_modify
-              WHEN 'delete' THEN up.can_delete
-            END
-          ELSE 
-            CASE $3
-              WHEN 'read' THEN COALESCE(p.can_read, false)
-              WHEN 'write' THEN COALESCE(p.can_write, false)
-              WHEN 'modify' THEN COALESCE(p.can_modify, false)
-              WHEN 'delete' THEN COALESCE(p.can_delete, false)
-            END
+        CASE $3
+          WHEN 'read'   THEN bool_or(COALESCE(up.can_read,   gp.can_read,   p.can_read,   false))
+          WHEN 'write'  THEN bool_or(COALESCE(up.can_write,  gp.can_write,  p.can_write,  false))
+          WHEN 'modify' THEN bool_or(COALESCE(up.can_modify, gp.can_modify, p.can_modify, false))
+          WHEN 'delete' THEN bool_or(COALESCE(up.can_delete, gp.can_delete, p.can_delete, false))
         END as has_permission
       FROM screens s
       LEFT JOIN users u ON u.id = $1
       LEFT JOIN permissions p ON s.id = p.screen_id AND p.role = u.role
       LEFT JOIN user_permissions up ON s.id = up.screen_id AND up.user_id = $1
+      LEFT JOIN user_group_assignments uga ON uga.user_id = $1
+      LEFT JOIN permission_groups pg ON uga.group_id = pg.id AND pg.is_active = true
+      LEFT JOIN group_permissions gp ON s.id = gp.screen_id AND gp.group_id = pg.id
       WHERE s.screen_code = $2
+      GROUP BY s.id
     `;
     const result = await pool.query(query, [userId, screenCode, permissionType]);
     return result.rows[0]?.has_permission || false;
