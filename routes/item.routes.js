@@ -15,11 +15,15 @@ const {
   createItemChangeRequest,
   createPriceChange,
   getUnitOfMeasures,
+  importItems,
+  downloadImportTemplate,
 } = require("../controllers/Item.Controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
+const { upload } = require("../middleware/upload.middleware");
 const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
+router.get("/import/template", protect, canRead("ITEMS"), downloadImportTemplate);
 router.get("/", protect, canRead("ITEMS"), getAllItemRequests);
 router.get("/partner/:partnerNo", protect, canRead("ITEMS"), getItemsByPartner);
 router.get("/portal/:partnerPortalNo", protect, canRead("ITEMS"), getItemsByPartnerPortalNo);
@@ -28,6 +32,7 @@ router.get("/unit-of-measures", protect, canRead("ITEMS"), getUnitOfMeasures);
 router.get("/:id", protect, canRead("ITEMS"), getItemRequestById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
+router.post("/import", protect, canWrite("ITEMS"), upload.single("file"), importItems);
 router.post("/", protect, canWrite("ITEMS"), createItemRequest);
 router.post("/businesscentral", protectRegister, createItemRequestfrombc);
 router.post("/price-change", protect, canWrite("ITEMS"), createPriceChange);

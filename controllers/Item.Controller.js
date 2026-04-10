@@ -487,3 +487,277 @@ module.exports = {
   createPriceChange,
   getUnitOfMeasures,
 };
+
+const XLSX = require("xlsx");
+const csv = require("csv-parser");
+const { Readable } = require("stream");
+
+// ─── Import Items from CSV/Excel ───────────────────────────
+// POST /api/items/import
+const importItems = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const fileBuffer = req.file.buffer;
+    const fileExtension = req.file.originalname.split(".").pop().toLowerCase();
+    let items = [];
+
+    // Parse Excel file
+    if (fileExtension === "xlsx" || fileExtension === "xls") {
+      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      items = XLSX.utils.sheet_to_json(worksheet);
+    }
+    // Parse CSV file
+    else if (fileExtension === "csv") {
+      const stream = Readable.from(fileBuffer.toString());
+      items = await new Promise((resolve, reject) => {
+        const results = [];
+        stream
+          .pipe(csv())
+          .on("data", (data) => results.push(data))
+          .on("end", () => resolve(results))
+          .on("error", (error) => reject(error));
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid file format. Only CSV and Excel files are supported",
+      });
+    }
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No data found in the file",
+      });
+    }
+
+    // Validate and process items
+    const results = {
+      total: items.length,
+      success: 0,
+      failed: 0,
+      errors: [],
+    };
+
+    const userId = req.user ? req.user.id : null;
+
+    for (let i = 0; i < items.length; i++) {
+      const row = items[i];
+      const rowNumber = i + 2; // +2 because row 1 is header and array is 0-indexed
+
+      try {
+        // Validate required fields
+        if (!row.itemName && !row.item_name) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: "Item name is required",
+            data: row,
+          });
+          continue;
+        }
+
+        if (!row.partnerPortalNo && !row.partner_portal_no) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: "Partner portal number is required",
+            data: row,
+          });
+          continue;
+        }
+
+        if (!row.partnerNo && !row.partner_no) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: "Partner number is required",
+            data: row,
+          });
+          continue;
+        }
+
+        if (!row.batchNo && !row.batch_no) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: "Batch number is required",
+            data: row,
+          });
+          continue;
+        }
+
+        // Map CSV/Excel columns to database fields
+        const itemData = {
+          partnerPortalNo: row.partnerPortalNo || row.partner_portal_no,
+          partnerNo: row.partnerNo || row.partner_no,
+          batchNo: row.batchNo || row.batch_no,
+          variantCode: row.variantCode || row.variant_code || null,
+          itemName: row.itemName || row.item_name,
+          description: row.description || null,
+          itemCategoryCode: row.itemCategoryCode || row.item_category_code || null,
+          baseUnitOfMeasure: row.baseUnitOfMeasure || row.base_unit_of_measure || null,
+          netWeight: row.netWeight || row.net_weight || null,
+          grossWeight: row.grossWeight || row.gross_weight || null,
+          specifications: row.specifications || null,
+          ingredients: row.ingredients || null,
+          allergenDeclaration: row.allergenDeclaration || row.allergen_declaration || null,
+          shelfLifeDays: row.shelfLifeDays || row.shelf_life_days || null,
+          gtin: row.gtin || null,
+          eanCode: row.eanCode || row.ean_code || null,
+          unitPrice: row.unitPrice || row.unit_price || null,
+          priceCurrencyCode: row.priceCurrencyCode || row.price_currency_code || null,
+          block: row.block === "true" || row.block === true || false,
+          status: row.status || "Created",
+          rejectionReason: row.rejectionReason || row.rejection_reason || null,
+        };
+
+        // Check if partner exists
+        const partnerExists = await ItemRequest.checkPartnerExists(itemData.partnerNo);
+        if (!partnerExists) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: `Partner number '${itemData.partnerNo}' does not exist`,
+            data: row,
+          });
+          continue;
+        }
+
+        // Check for duplicate
+        const existing = await ItemRequest.findByKey(
+          itemData.partnerPortalNo,
+          itemData.partnerNo,
+          itemData.batchNo
+        );
+
+        if (existing) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: "Item with this key already exists",
+            data: row,
+          });
+          continue;
+        }
+
+        // Create item
+        await ItemRequest.create(itemData, userId);
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push({
+          row: rowNumber,
+          error: error.message,
+          data: row,
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Import completed. ${results.success} items imported successfully, ${results.failed} failed`,
+      data: results,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ─── Download Sample Import Template ───────────────────────
+// GET /api/items/import/template
+const downloadImportTemplate = async (req, res) => {
+  try {
+    const format = req.query.format || "csv";
+
+    const sampleData = [
+      {
+        partner_portal_no: "PORTAL000001",
+        partner_no: "CUST001",
+        batch_no: "BATCH001",
+        variant_code: "",
+        item_name: "Sample Product",
+        description: "Sample product description",
+        item_category_code: "COFFEE",
+        base_unit_of_measure: "KG",
+        net_weight: "1.5",
+        gross_weight: "1.6",
+        specifications: "Premium quality",
+        ingredients: "Coffee beans, sugar",
+        allergen_declaration: "None",
+        shelf_life_days: "365",
+        gtin: "1234567890123",
+        ean_code: "1234567890123",
+        unit_price: "25.50",
+        price_currency_code: "AED",
+        block: "false",
+        status: "Created",
+        rejection_reason: "",
+      },
+    ];
+
+    if (format === "xlsx" || format === "xls") {
+      const worksheet = XLSX.utils.json_to_sheet(sampleData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
+
+      const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=items_import_template.xlsx"
+      );
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.send(buffer);
+    } else {
+      // CSV format
+      const headers = Object.keys(sampleData[0]);
+      const csvContent = [
+        headers.join(","),
+        sampleData.map((row) => headers.map((h) => row[h]).join(",")).join("\n"),
+      ].join("\n");
+
+      res.setHeader("Content-Disposition", "attachment; filename=items_import_template.csv");
+      res.setHeader("Content-Type", "text/csv");
+      res.send(csvContent);
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = {
+  createItemRequest,
+  getAllItemRequests,
+  getItemRequestById,
+  getItemsByPartner,
+  getItemsByPartnerPortalNo,
+  getItemByKey,
+  updateItemRequest,
+  updateItemStatus,
+  updateItemBlock,
+  deleteItemRequest,
+  createItemRequestfrombc,
+  createItemChangeRequest,
+  createPriceChange,
+  getUnitOfMeasures,
+  importItems,
+  downloadImportTemplate,
+};

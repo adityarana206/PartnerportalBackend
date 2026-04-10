@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { pool } = require("../config/db");
 
 const VALID_ROLES = [
   "customer",
@@ -10,7 +11,7 @@ const VALID_ROLES = [
 ];
 
 // ─── Protect any logged in user ───────────────────────────
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   try {
     let token;
     if (req.headers.authorization?.startsWith("Bearer")) {
@@ -26,8 +27,26 @@ const protect = (req, res, next) => {
       });
     }
 
+    // ─── Reject blacklisted tokens ────────────────────────
+    try {
+      const blacklisted = await pool.query(
+        "SELECT 1 FROM blacklisted_tokens WHERE token = $1 AND expires_at > NOW()",
+        [token]
+      );
+      if (blacklisted.rows.length > 0) {
+        return res.status(401).json({
+          success: false,
+          message: "Token has been invalidated. Please log in again",
+        });
+      }
+    } catch (err) {
+      // Table may not exist yet — skip blacklist check, do not block the request
+      console.error("⚠️  Blacklist check skipped:", err.message);
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
+    req.token = token; // attach raw token for logout use
     next();
   } catch (error) {
     return res.status(401).json({

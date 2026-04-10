@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { pool } = require("../config/db");
 const { login } = require("../controllers/Customer.controller");
+const { protect } = require("../middleware/auth.middleware");
 
 let currentSecretKey = null;
 let secretKeyExpiry = null;
@@ -144,7 +145,107 @@ router.post("/verify-token", async (req, res) => {
   }
 });
 
-// ─── 5. Change Password ────────────────────────────────────
+// ─── 5. Refresh Token ─────────────────────────────────────
+// POST /api/auth/refresh-token
+// Body: { refreshToken: "..." }
+// Returns a new access token if the refresh token is valid and not expired.
+// The frontend should call this on every page load to restore the session.
+router.post("/refresh-token", async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required",
+      });
+    }
+
+    // ─── Look up refresh token in DB ──────────────────────
+    const result = await pool.query(
+      `SELECT rt.*, u.id as user_id, u.name, u.email, u.role, u.ref_no
+       FROM refresh_tokens rt
+       JOIN users u ON rt.user_id = u.id
+       WHERE rt.token = $1`,
+      [refreshToken]
+    );
+
+    const row = result.rows[0];
+
+    if (!row) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+
+    // ─── Check expiry ──────────────────────────────────────
+    if (new Date() > new Date(row.expires_at)) {
+      await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token expired. Please log in again",
+      });
+    }
+
+    // ─── Issue new access token ────────────────────────────
+    const newToken = jwt.sign(
+      { id: row.user_id, name: row.name, email: row.email, role: row.role, refNo: row.ref_no || null },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+      token: newToken,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ─── 6. Logout ─────────────────────────────────────────────
+// POST /api/auth/logout
+// Body: { refreshToken: "..." }
+// Blacklists the current access token + deletes the refresh token from DB.
+router.post("/logout", protect, async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const accessToken = req.token; // set by protect middleware
+
+    // ─── Blacklist the current access token ───────────────
+    if (accessToken) {
+      const decoded = jwt.decode(accessToken);
+      const expiresAt = decoded?.exp
+        ? new Date(decoded.exp * 1000)
+        : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await pool.query(
+        `INSERT INTO blacklisted_tokens (token, user_id, expires_at)
+         VALUES ($1, $2, $3) ON CONFLICT (token) DO NOTHING`,
+        [accessToken, req.user.id, expiresAt]
+      );
+    }
+
+    // ─── Delete the refresh token from DB ─────────────────
+    if (refreshToken) {
+      await pool.query(
+        "DELETE FROM refresh_tokens WHERE token = $1 AND user_id = $2",
+        [refreshToken, req.user.id]
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ─── 7. Change Password ────────────────────────────────────
 // POST /api/auth/change-password
 router.post("/change-password", async (req, res) => {
   try {

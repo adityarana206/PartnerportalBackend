@@ -8,7 +8,7 @@ const {
   updateSalesShipmentStatus,
   deleteSalesShipment,
 } = require("../controllers/SalesShipment.controller");
-const { protect } = require("../middleware/auth.middleware");
+const { protect, protectRegister } = require("../middleware/auth.middleware");
 const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // READ
@@ -18,6 +18,8 @@ router.get("/portal/:portalDocumentNo", protect, canRead("SALES_SHIPMENTS"), get
 
 // WRITE
 router.post("/", protect, canWrite("SALES_SHIPMENTS"), createSalesShipment);
+router.post("/businesscentral", protectRegister, createSalesShipment);
+
 
 // MODIFY
 router.patch("/:id/status", protect, canModify("SALES_SHIPMENTS"), updateSalesShipmentStatus);

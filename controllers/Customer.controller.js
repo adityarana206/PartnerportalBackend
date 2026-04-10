@@ -1,6 +1,8 @@
 const User = require("../models/Authorization.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const { pool } = require("../config/db");
 
 const VALID_ROLES = [
   "customer",
@@ -10,13 +12,29 @@ const VALID_ROLES = [
   "super_admin",
 ];
 
-// ─── Generate Token ───────────────────────────────────────
+// ─── Generate Access Token (short-lived) ─────────────────
 const generateToken = (payload) => {
   try {
     return jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "30d",
+      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
     });
   } catch (error) {
+    return null;
+  }
+};
+
+// ─── Generate + Store Refresh Token (long-lived) ─────────
+const generateRefreshToken = async (userId) => {
+  try {
+    const token = crypto.randomBytes(64).toString("hex");
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    await pool.query(
+      `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
+      [userId, token, expiresAt]
+    );
+    return token;
+  } catch (err) {
+    console.error("⚠️  Could not store refresh token:", err.message);
     return null;
   }
 };
@@ -151,6 +169,8 @@ const login = async (req, res) => {
       refNo: user.ref_no || null,
     });
 
+    const refreshToken = await generateRefreshToken(user.id);
+
     const { password: pwd, ...userWithoutPassword } = user;
 
     return res.status(200).json({
@@ -158,6 +178,7 @@ const login = async (req, res) => {
       message: `${user.role} logged in successfully`,
       role: user.role,
       token,
+      refreshToken,
       data: userWithoutPassword,
     });
   } catch (error) {
