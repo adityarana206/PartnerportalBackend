@@ -64,6 +64,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", AuthRoutes);
 app.use("/api/users", UserRoutes);
+
 app.use("/api/vendor/item", ItemRoutes);
 app.use("/api/contact", ContactRoutes);
 
