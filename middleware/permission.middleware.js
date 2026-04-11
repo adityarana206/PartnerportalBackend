@@ -1,18 +1,21 @@
 const Permission = require("../models/Permission.model");
 
+const ADMIN_ROLES = ["super_admin", "customer_admin", "vendor_admin"];
+
 // ─── Check if user has specific permission ────────────────
 const checkPermission = (screenCode, permissionType) => {
   return async (req, res, next) => {
     try {
-      // Super admin bypasses all permission checks
-      if (req.user.role === "super_admin") {
+      // Admin roles have full access to all resources
+      if (ADMIN_ROLES.includes(req.user.role)) {
         return next();
       }
 
       const hasPermission = await Permission.checkPermission(
         req.user.id,
         screenCode,
-        permissionType
+        permissionType,
+        req.user.role
       );
 
       if (!hasPermission) {
@@ -43,13 +46,13 @@ const canDelete = (screenCode) => checkPermission(screenCode, "delete");
 const checkAnyPermission = (screenCode, permissionTypes) => {
   return async (req, res, next) => {
     try {
-      if (req.user.role === "super_admin") {
+      if (ADMIN_ROLES.includes(req.user.role)) {
         return next();
       }
 
       const checks = await Promise.all(
         permissionTypes.map((type) =>
-          Permission.checkPermission(req.user.id, screenCode, type)
+          Permission.checkPermission(req.user.id, screenCode, type, req.user.role)
         )
       );
 
@@ -77,13 +80,13 @@ const checkAnyPermission = (screenCode, permissionTypes) => {
 const checkAllPermissions = (screenCode, permissionTypes) => {
   return async (req, res, next) => {
     try {
-      if (req.user.role === "super_admin") {
+      if (ADMIN_ROLES.includes(req.user.role)) {
         return next();
       }
 
       const checks = await Promise.all(
         permissionTypes.map((type) =>
-          Permission.checkPermission(req.user.id, screenCode, type)
+          Permission.checkPermission(req.user.id, screenCode, type, req.user.role)
         )
       );
 

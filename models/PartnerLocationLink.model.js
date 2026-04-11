@@ -54,11 +54,16 @@ const PartnerLocationLink = {
 
   // ─── Find by Partner No ────────────────────────────────
   async findByPartnerNo(partnerNo) {
-    const result = await pool.query(
-      "SELECT * FROM partner_location_links WHERE partner_no = $1 ORDER BY created_at DESC",
-      [partnerNo],
-    );
-    return result.rows;
+    try {
+      const result = await pool.query(
+        "SELECT * FROM partner_location_links WHERE partner_no = $1 ORDER BY created_at DESC",
+        [partnerNo],
+      );
+      return result.rows;
+    } catch (error) {
+      console.error('Database error in findByPartnerNo:', error);
+      throw error;
+    }
   },
 
   // ─── Find by Partner Type ──────────────────────────────

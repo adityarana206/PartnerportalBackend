@@ -96,21 +96,6 @@ const register = async (req, res) => {
       }
     }
 
-    // ─── Generate token FIRST ─────────────────────────────
-    const token = generateToken({
-      name: req.body.name,
-      email: req.body.email || null,
-      refNo: refNo || null,
-      role: role,
-    });
-
-    if (!token) {
-      return res.status(500).json({
-        success: false,
-        message: "Token generation failed. Registration aborted.",
-      });
-    }
-
     // ─── Hash password ────────────────────────────────────
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -120,12 +105,31 @@ const register = async (req, res) => {
       role,
     );
 
+    // ─── Generate token AFTER save so id is available ─────
+    const token = generateToken({
+      id: user.id,
+      name: user.name,
+      email: user.email || null,
+      refNo: user.ref_no || null,
+      role: user.role,
+    });
+
+    if (!token) {
+      return res.status(500).json({
+        success: false,
+        message: "Token generation failed. Registration aborted.",
+      });
+    }
+
+    const refreshToken = await generateRefreshToken(user.id);
+
     const { password, ...userWithoutPassword } = user;
 
     return res.status(201).json({
       success: true,
       message: `${role} registered successfully`,
       token,
+      refreshToken,
       data: userWithoutPassword,
     });
   } catch (error) {

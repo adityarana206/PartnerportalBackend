@@ -11,104 +11,25 @@ const {
   updateDefaultStatus,
   deletePartnerLocationLink,
 } = require("../controllers/PartnerLocationLink.controller");
-const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
+const { protect, protectRegister } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-router.post(
-  "/",
-  protect,
-  authorizeRoles(
-    "customer",
-    "vendor",
-    "customer_admin",
-    "vendor_admin",
-    "super_admin",
-  ),
-  createPartnerLocationLink,
-);
-router.post(
-  "/businesscentral",
-  protectRegister,
-  createPartnerLocationLink,
-);
-router.get(
-  "/",
-  protect,
-  authorizeRoles(
-    "customer",
-    "vendor",
-    "customer_admin",
-    "vendor_admin",
-    "super_admin",
-  ),
-  getAllPartnerLocationLinks,
-);
-router.get(
-  "/partner/:partnerNo",
-  protect,
-  authorizeRoles(
-    "customer",
-    "vendor",
-    "customer_admin",
-    "vendor_admin",
-    "super_admin",
-  ),
-  getLinksByPartner,
-);
-router.get(
-  "/partner/:partnerNo/default",
-  protect,
-  authorizeRoles(
-    "customer",
-    "vendor",
-    "customer_admin",
-    "vendor_admin",
-    "super_admin",
-  ),
-  getDefaultLinkByPartner,
-);
-router.get(
-  "/:id",
-  protect,
-  authorizeRoles(
-    "customer",
-    "vendor",
-    "customer_admin",
-    "vendor_admin",
-    "super_admin",
-  ),
-  getPartnerLocationLinkById,
-);
-router.put(
-  "/:id",
-  protect,
-  authorizeRoles(
-    "customer",
-    "vendor",
-    "customer_admin",
-    "vendor_admin",
-    "super_admin",
-  ),
-  updatePartnerLocationLink,
-);
+// ─── READ ──────────────────────────────────────────────────
+router.get("/", protect, canRead("PARTNER_LOCATION_LINKS"), getAllPartnerLocationLinks);
+router.get("/partner/:partnerNo", protect, canRead("PARTNER_LOCATION_LINKS"), getLinksByPartner);
+router.get("/partner/:partnerNo/default", protect, canRead("PARTNER_LOCATION_LINKS"), getDefaultLinkByPartner);
+router.get("/:id", protect, canRead("PARTNER_LOCATION_LINKS"), getPartnerLocationLinkById);
 
-// ─── Admin Only ───────────────────────────────────────────
-router.patch(
-  "/:id/block",
-  protect,
-  authorizeRoles("customer_admin", "vendor_admin", "super_admin"),
-  updateBlockStatus,
-);
-router.patch(
-  "/:id/default",
-  protect,
-  authorizeRoles("customer_admin", "vendor_admin", "super_admin"),
-  updateDefaultStatus,
-);
-router.delete(
-  "/:id",
-  protect,
-  authorizeRoles("customer_admin", "vendor_admin", "super_admin"),
-  deletePartnerLocationLink,
-);
+// ─── WRITE (Create) ────────────────────────────────────────
+router.post("/", protect, canWrite("PARTNER_LOCATION_LINKS"), createPartnerLocationLink);
+router.post("/businesscentral", protectRegister, createPartnerLocationLink);
+
+// ─── MODIFY (Update) ───────────────────────────────────────
+router.put("/:id", protect, canModify("PARTNER_LOCATION_LINKS"), updatePartnerLocationLink);
+router.patch("/:id/block", protect, canModify("PARTNER_LOCATION_LINKS"), updateBlockStatus);
+router.patch("/:id/default", protect, canModify("PARTNER_LOCATION_LINKS"), updateDefaultStatus);
+
+// ─── DELETE ────────────────────────────────────────────────
+router.delete("/:id", protect, canDelete("PARTNER_LOCATION_LINKS"), deletePartnerLocationLink);
 
 module.exports = router;

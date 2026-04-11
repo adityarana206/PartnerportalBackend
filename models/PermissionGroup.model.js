@@ -1,5 +1,7 @@
 const { pool } = require("../config/db");
 
+const ADMIN_ROLES = ["super_admin", "customer_admin", "vendor_admin"];
+
 const PermissionGroup = {
   // ─── Get all permission groups ─────────────────────────────
   async getAllGroups() {
@@ -187,14 +189,13 @@ const PermissionGroup = {
 
   // ─── Get user's effective permissions from groups ──────────
   async getUserEffectivePermissions(userId) {
-    // Check if user is super admin
     const userCheck = await pool.query(
       "SELECT role FROM users WHERE id = $1",
       [userId]
     );
-    
-    if (userCheck.rows[0]?.role === 'super_admin') {
-      // Super admin gets all permissions
+
+    // Admin roles get full access to all screens
+    if (ADMIN_ROLES.includes(userCheck.rows[0]?.role)) {
       const query = `
         SELECT s.id, s.screen_name, s.screen_code, s.description,
                true as can_read,
@@ -230,11 +231,11 @@ const PermissionGroup = {
   // ─── Get users in a group ──────────────────────────────────
   async getGroupUsers(groupId) {
     const query = `
-      SELECT u.id, u.username, u.email, u.role, uga.assigned_at
+      SELECT u.id, u.name, u.email, u.role, uga.assigned_at
       FROM users u
       JOIN user_group_assignments uga ON u.id = uga.user_id
       WHERE uga.group_id = $1
-      ORDER BY u.username
+      ORDER BY u.name
     `;
     const result = await pool.query(query, [groupId]);
     return result.rows;

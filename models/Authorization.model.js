@@ -102,6 +102,31 @@ const User = {
     return result.rows[0] || null;
   },
 
+  async findAllByRoles(roles) {
+    const query = `
+      SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+             u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+             u.payment_terms_code, u.role, u.created_at, u.updated_at,
+             COALESCE(
+               json_agg(
+                 json_build_object(
+                   'id', pg.id,
+                   'group_name', pg.group_name,
+                   'description', pg.description,
+                   'assigned_at', uga.assigned_at
+                 )
+               ) FILTER (WHERE pg.id IS NOT NULL), '[]'
+             ) as permission_groups
+      FROM users u
+      LEFT JOIN user_group_assignments uga ON u.id = uga.user_id
+      LEFT JOIN permission_groups pg ON uga.group_id = pg.id
+      WHERE u.role = ANY($1::text[])
+      GROUP BY u.id
+      ORDER BY u.created_at DESC`;
+    const result = await pool.query(query, [roles]);
+    return result.rows;
+  },
+
   async findByIdAndRole(id, role) {
     const result = await pool.query(
       "SELECT * FROM users WHERE id = $1 AND role = $2",

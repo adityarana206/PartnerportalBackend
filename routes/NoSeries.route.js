@@ -1,20 +1,22 @@
 const { Router } = require("express");
 const NoSeriesController = require("../controllers/NoSeries.Controller");
+const { protect } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 const router = Router();
 
 // ─── Filter routes (must come before /:id to avoid param clash) ───────────────
-router.get("/code/:code",        NoSeriesController.getByCode);      // GET    /api/no-series/code/:code
+router.get("/code/:code", protect, canRead("NO_SERIES"), NoSeriesController.getByCode);
 
-// ─── Collection routes ────────────────────────────────────────────────────────
-router.get("/getall",                  NoSeriesController.getAll);          // GET    /api/no-series
-router.post("/",                 NoSeriesController.create);          // POST   /api/no-series
+// ─── Collection routes ─────────────────────────────────────────────────────────
+router.get("/getall", protect, canRead("NO_SERIES"), NoSeriesController.getAll);
+router.post("/", protect, canWrite("NO_SERIES"), NoSeriesController.create);
 
-// ─── Single resource routes ───────────────────────────────────────────────────
-router.get("/:id",               NoSeriesController.getOne);          // GET    /api/no-series/:id
-router.put("/:id",               NoSeriesController.update);          // PUT    /api/no-series/:id
-router.patch("/:id/next-number", NoSeriesController.getNextNumber);   // PATCH  /api/no-series/:id/next-number
-router.patch("/:id/reset",       NoSeriesController.reset);           // PATCH  /api/no-series/:id/reset
-router.delete("/:id",            NoSeriesController.delete);          // DELETE /api/no-series/:id
+// ─── Single resource routes ────────────────────────────────────────────────────
+router.get("/:id", protect, canRead("NO_SERIES"), NoSeriesController.getOne);
+router.put("/:id", protect, canModify("NO_SERIES"), NoSeriesController.update);
+router.patch("/:id/next-number", protect, canModify("NO_SERIES"), NoSeriesController.getNextNumber);
+router.patch("/:id/reset", protect, canModify("NO_SERIES"), NoSeriesController.reset);
+router.delete("/:id", protect, canDelete("NO_SERIES"), NoSeriesController.delete);
 
 module.exports = router;

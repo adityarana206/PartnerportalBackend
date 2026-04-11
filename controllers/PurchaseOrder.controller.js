@@ -23,6 +23,7 @@ const createPurchaseOrder = async (req, res) => {
       });
     }
     const userId = req.user ? req.user.id : null;
+    const order = await PurchaseOrder.create(req.body, userId);
 
     let bcResponse = null;
     let bcError = null;
@@ -38,6 +39,7 @@ const createPurchaseOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Purchase order created successfully",
+      data: order,
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {

@@ -10,63 +10,24 @@ const {
   updatePurchaseReceiptStatus,
   deletePurchaseReceipt,
 } = require("../controllers/PurchaseReceipt.controller");
-const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
+const { protect, protectRegister } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-// ─── Vendor + Vendor Admin + Super Admin ──────────────────
-router.post(
-  "/",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  createPurchaseReceipt,
-);
-router.post(
-  "/businesscentral",
-  protectRegister,
-  createPurchaseReceipt,
-);
-router.get(
-  "/",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getAllPurchaseReceipts,
-);
-router.get(
-  "/partner/:partnerNo",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getPurchaseReceiptsByPartner,
-);
-router.get(
-  "/shipment/:shipmentNo",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getPurchaseReceiptByShipmentNo,
-);
-router.get(
-  "/:id",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getPurchaseReceiptById,
-);
-router.put(
-  "/:id",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  updatePurchaseReceipt,
-);
+// ─── READ ──────────────────────────────────────────────────
+router.get("/", protect, canRead("PURCHASE_RECEIPTS"), getAllPurchaseReceipts);
+router.get("/partner/:partnerNo", protect, canRead("PURCHASE_RECEIPTS"), getPurchaseReceiptsByPartner);
+router.get("/shipment/:shipmentNo", protect, canRead("PURCHASE_RECEIPTS"), getPurchaseReceiptByShipmentNo);
+router.get("/:id", protect, canRead("PURCHASE_RECEIPTS"), getPurchaseReceiptById);
 
-// ─── Vendor Admin + Super Admin Only ─────────────────────
-router.patch(
-  "/:id/status",
-  protect,
-  authorizeRoles("vendor_admin", "super_admin"),
-  updatePurchaseReceiptStatus,
-);
-router.delete(
-  "/:id",
-  protect,
-  authorizeRoles("vendor_admin", "super_admin"),
-  deletePurchaseReceipt,
-);
+// ─── WRITE (Create) ────────────────────────────────────────
+router.post("/", protect, canWrite("PURCHASE_RECEIPTS"), createPurchaseReceipt);
+router.post("/businesscentral", protectRegister, createPurchaseReceipt);
+
+// ─── MODIFY (Update) ───────────────────────────────────────
+router.put("/:id", protect, canModify("PURCHASE_RECEIPTS"), updatePurchaseReceipt);
+router.patch("/:id/status", protect, canModify("PURCHASE_RECEIPTS"), updatePurchaseReceiptStatus);
+
+// ─── DELETE ────────────────────────────────────────────────
+router.delete("/:id", protect, canDelete("PURCHASE_RECEIPTS"), deletePurchaseReceipt);
 
 module.exports = router;

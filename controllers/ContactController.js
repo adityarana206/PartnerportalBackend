@@ -23,7 +23,7 @@ const createContact = async (req, res) => {
       }
     }
 
-    const contact = await Contact.create(req.body, req.user.id);
+    const contact = await Contact.create(req.body, req.user ? req.user.id : null);
 
     // ─── Send to Business Central ──────────────────────────
     let bcResponse = null;

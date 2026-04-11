@@ -1,5 +1,7 @@
 const { pool } = require("../config/db");
 
+const ADMIN_ROLES = ["super_admin", "customer_admin", "vendor_admin"];
+
 const Permission = {
   // ─── Get all screens ───────────────────────────────────────
   async getAllScreens() {
@@ -27,66 +29,36 @@ const Permission = {
 
   // ─── Get user-specific permissions ─────────────────────────
   async getUserPermissions(userId) {
-    // Check if user is super admin
     const userCheck = await pool.query(
       "SELECT role FROM users WHERE id = $1",
       [userId]
     );
-    
-    if (userCheck.rows[0]?.role === 'super_admin') {
-      // Super admin gets all permissions
+
+    // Admin roles get full access by default, but respect user-specific overrides
+    if (ADMIN_ROLES.includes(userCheck.rows[0]?.role)) {
       const query = `
         SELECT s.id, s.screen_name, s.screen_code, s.description,
-               true as can_read,
-               true as can_write,
-               true as can_modify,
-               true as can_delete,
-               false as has_override
+               COALESCE(up.can_read,   true) as can_read,
+               COALESCE(up.can_write,  true) as can_write,
+               COALESCE(up.can_modify, true) as can_modify,
+               COALESCE(up.can_delete, true) as can_delete,
+               (up.id IS NOT NULL) as has_override
         FROM screens s
+        LEFT JOIN user_permissions up ON s.id = up.screen_id AND up.user_id = $1
         ORDER BY s.screen_name
       `;
-      const result = await pool.query(query);
+      const result = await pool.query(query, [userId]);
       return result.rows;
     }
     
-    // Regular users get permissions from role and overrides
+    // Regular users get permissions from role, groups, and user overrides
     const query = `
       SELECT s.id, s.screen_name, s.screen_code, s.description,
-             COALESCE(up.can_read, p.can_read, false) as can_read,
-             COALESCE(up.can_write, p.can_write, false) as can_write,
-             COALESCE(up.can_modify, p.can_modify, false) as can_modify,
-             COALESCE(up.can_delete, p.can_delete, false) as can_delete,
-             CASE WHEN up.id IS NOT NULL THEN true ELSE false END as has_override
-      FROM screens s
-      LEFT JOIN users u ON u.id = $1
-      LEFT JOIN permissions p ON s.id = p.screen_id AND p.role = u.role
-      LEFT JOIN user_permissions up ON s.id = up.screen_id AND up.user_id = $1
-      ORDER BY s.screen_name
-    `;
-    const result = await pool.query(query, [userId]);
-    return result.rows;
-  },
-
-  // ─── Check specific permission ─────────────────────────────
-  async checkPermission(userId, screenCode, permissionType) {
-    // Check if user is super admin
-    const userCheck = await pool.query(
-      "SELECT role FROM users WHERE id = $1",
-      [userId]
-    );
-    
-    if (userCheck.rows[0]?.role === 'super_admin') {
-      return true;
-    }
-    
-    const query = `
-      SELECT 
-        CASE $3
-          WHEN 'read'   THEN bool_or(COALESCE(up.can_read,   gp.can_read,   p.can_read,   false))
-          WHEN 'write'  THEN bool_or(COALESCE(up.can_write,  gp.can_write,  p.can_write,  false))
-          WHEN 'modify' THEN bool_or(COALESCE(up.can_modify, gp.can_modify, p.can_modify, false))
-          WHEN 'delete' THEN bool_or(COALESCE(up.can_delete, gp.can_delete, p.can_delete, false))
-        END as has_permission
+             bool_or(COALESCE(up.can_read,   gp.can_read,   p.can_read,   false)) as can_read,
+             bool_or(COALESCE(up.can_write,  gp.can_write,  p.can_write,  false)) as can_write,
+             bool_or(COALESCE(up.can_modify, gp.can_modify, p.can_modify, false)) as can_modify,
+             bool_or(COALESCE(up.can_delete, gp.can_delete, p.can_delete, false)) as can_delete,
+             bool_or(up.id IS NOT NULL) as has_override
       FROM screens s
       LEFT JOIN users u ON u.id = $1
       LEFT JOIN permissions p ON s.id = p.screen_id AND p.role = u.role
@@ -94,11 +66,58 @@ const Permission = {
       LEFT JOIN user_group_assignments uga ON uga.user_id = $1
       LEFT JOIN permission_groups pg ON uga.group_id = pg.id AND pg.is_active = true
       LEFT JOIN group_permissions gp ON s.id = gp.screen_id AND gp.group_id = pg.id
-      WHERE s.screen_code = $2
-      GROUP BY s.id
+      GROUP BY s.id, s.screen_name, s.screen_code, s.description
+      ORDER BY s.screen_name
     `;
-    const result = await pool.query(query, [userId, screenCode, permissionType]);
-    return result.rows[0]?.has_permission || false;
+    const result = await pool.query(query, [userId]);
+    return result.rows;
+  },
+
+  // ─── Check specific permission ─────────────────────────────
+  // role param is optional — pass req.user.role to skip the extra DB lookup
+  async checkPermission(userId, screenCode, permissionType, role) {
+    try {
+      // Admin roles have full access — no DB lookup needed
+      if (role && ADMIN_ROLES.includes(role)) {
+        return true;
+      }
+
+      // Fallback DB check when role is not supplied (e.g. direct API call)
+      if (!role) {
+        const userCheck = await pool.query(
+          "SELECT role FROM users WHERE id = $1",
+          [userId]
+        );
+        if (ADMIN_ROLES.includes(userCheck.rows[0]?.role)) {
+          return true;
+        }
+      }
+
+      const query = `
+        SELECT 
+          CASE $3
+            WHEN 'read'   THEN bool_or(COALESCE(up.can_read,   gp.can_read,   p.can_read,   false))
+            WHEN 'write'  THEN bool_or(COALESCE(up.can_write,  gp.can_write,  p.can_write,  false))
+            WHEN 'modify' THEN bool_or(COALESCE(up.can_modify, gp.can_modify, p.can_modify, false))
+            WHEN 'delete' THEN bool_or(COALESCE(up.can_delete, gp.can_delete, p.can_delete, false))
+          END as has_permission
+        FROM screens s
+        LEFT JOIN users u ON u.id = $1
+        LEFT JOIN permissions p ON s.id = p.screen_id AND p.role = u.role
+        LEFT JOIN user_permissions up ON s.id = up.screen_id AND up.user_id = $1
+        LEFT JOIN user_group_assignments uga ON uga.user_id = $1
+        LEFT JOIN permission_groups pg ON uga.group_id = pg.id AND pg.is_active = true
+        LEFT JOIN group_permissions gp ON s.id = gp.screen_id AND gp.group_id = pg.id
+        WHERE s.screen_code = $2
+        GROUP BY s.id
+      `;
+      const result = await pool.query(query, [userId, screenCode, permissionType]);
+      return result.rows[0]?.has_permission || false;
+    } catch (error) {
+      console.error(`Permission check error for user ${userId}, screen ${screenCode}:`, error.message);
+      // If permission check fails, deny access for non-admins
+      return false;
+    }
   },
 
   // ─── Set role permissions ──────────────────────────────────

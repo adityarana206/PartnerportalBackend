@@ -10,63 +10,24 @@ const {
   updatePurchaseInvoiceStatus,
   deletePurchaseInvoice,
 } = require("../controllers/PurchaseInvoice.controller");
-const { protect, authorizeRoles, protectRegister } = require("../middleware/auth.middleware");
+const { protect, protectRegister } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-// ─── Vendor + Vendor Admin + Super Admin ──────────────────
-router.post(
-  "/",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  createPurchaseInvoice,
-);
-router.post(
-  "/businesscentral",
-  protectRegister,
-  createPurchaseInvoice,
-);
-router.get(
-  "/",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getAllPurchaseInvoices,
-);
-router.get(
-  "/partner/:partnerNo",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getPurchaseInvoicesByPartner,
-);
-router.get(
-  "/no/:invoiceNo",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getPurchaseInvoiceByNo,
-);
-router.get(
-  "/:id",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  getPurchaseInvoiceById,
-);
-router.put(
-  "/:id",
-  protect,
-  authorizeRoles("vendor", "vendor_admin", "super_admin"),
-  updatePurchaseInvoice,
-);
+// ─── READ ──────────────────────────────────────────────────
+router.get("/", protect, canRead("PURCHASE_INVOICES"), getAllPurchaseInvoices);
+router.get("/partner/:partnerNo", protect, canRead("PURCHASE_INVOICES"), getPurchaseInvoicesByPartner);
+router.get("/no/:invoiceNo", protect, canRead("PURCHASE_INVOICES"), getPurchaseInvoiceByNo);
+router.get("/:id", protect, canRead("PURCHASE_INVOICES"), getPurchaseInvoiceById);
 
-// ─── Vendor Admin + Super Admin Only ─────────────────────
-router.patch(
-  "/:id/status",
-  protect,
-  authorizeRoles("vendor_admin", "super_admin"),
-  updatePurchaseInvoiceStatus,
-);
-router.delete(
-  "/:id",
-  protect,
-  authorizeRoles("vendor_admin", "super_admin"),
-  deletePurchaseInvoice,
-);
+// ─── WRITE (Create) ────────────────────────────────────────
+router.post("/", protect, canWrite("PURCHASE_INVOICES"), createPurchaseInvoice);
+router.post("/businesscentral", protectRegister, createPurchaseInvoice);
+
+// ─── MODIFY (Update) ───────────────────────────────────────
+router.put("/:id", protect, canModify("PURCHASE_INVOICES"), updatePurchaseInvoice);
+router.patch("/:id/status", protect, canModify("PURCHASE_INVOICES"), updatePurchaseInvoiceStatus);
+
+// ─── DELETE ────────────────────────────────────────────────
+router.delete("/:id", protect, canDelete("PURCHASE_INVOICES"), deletePurchaseInvoice);
 
 module.exports = router;

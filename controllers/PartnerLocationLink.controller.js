@@ -83,7 +83,11 @@ const getLinksByPartner = async (req, res) => {
       data: links,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error fetching partner locations:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Failed to fetch partner locations'
+    });
   }
 };
 

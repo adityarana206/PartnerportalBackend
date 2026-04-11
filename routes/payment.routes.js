@@ -9,14 +9,15 @@ const {
   updatePaymentStatus,
   deletePayment,
 } = require("../controllers/Payment.controller");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const { protect } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-router.get("/", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), getAllPayments);
-router.get("/partner/:partnerNo", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), getPaymentsByPartner);
-router.get("/:id", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), getPaymentById);
-router.post("/", protect, authorizeRoles("vendor_admin", "super_admin"), createPayment);
-router.put("/:id", protect, authorizeRoles("vendor_admin", "super_admin"), updatePayment);
-router.patch("/:id/status", protect, authorizeRoles("vendor_admin", "super_admin"), updatePaymentStatus);
-router.delete("/:id", protect, authorizeRoles("super_admin"), deletePayment);
+router.get("/", protect, canRead("PAYMENTS"), getAllPayments);
+router.get("/partner/:partnerNo", protect, canRead("PAYMENTS"), getPaymentsByPartner);
+router.get("/:id", protect, canRead("PAYMENTS"), getPaymentById);
+router.post("/", protect, canWrite("PAYMENTS"), createPayment);
+router.put("/:id", protect, canModify("PAYMENTS"), updatePayment);
+router.patch("/:id/status", protect, canModify("PAYMENTS"), updatePaymentStatus);
+router.delete("/:id", protect, canDelete("PAYMENTS"), deletePayment);
 
 module.exports = router;

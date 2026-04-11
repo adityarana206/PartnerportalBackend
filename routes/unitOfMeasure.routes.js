@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const { getAllUOM, getUOMById, createUOM, updateUOM, deleteUOM } = require("../controllers/UnitOfMeasure.controller");
-const { protect, authorizeRoles } = require("../middleware/auth.middleware");
+const { protect } = require("../middleware/auth.middleware");
+const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
-router.get("/", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), getAllUOM);
-router.get("/:id", protect, authorizeRoles("vendor", "vendor_admin", "super_admin"), getUOMById);
-router.post("/", protect, authorizeRoles("vendor_admin", "super_admin"), createUOM);
-router.put("/:id", protect, authorizeRoles("vendor_admin", "super_admin"), updateUOM);
-router.delete("/:id", protect, authorizeRoles("super_admin"), deleteUOM);
+router.get("/", protect, canRead("UNIT_OF_MEASURES"), getAllUOM);
+router.get("/:id", protect, canRead("UNIT_OF_MEASURES"), getUOMById);
+router.post("/", protect, canWrite("UNIT_OF_MEASURES"), createUOM);
+router.put("/:id", protect, canModify("UNIT_OF_MEASURES"), updateUOM);
+router.delete("/:id", protect, canDelete("UNIT_OF_MEASURES"), deleteUOM);
 
 module.exports = router;

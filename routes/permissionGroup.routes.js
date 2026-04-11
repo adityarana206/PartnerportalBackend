@@ -25,16 +25,16 @@ router.get("/groups/:groupId", protect, isSuperAdmin, getGroupById);
 router.put("/groups/:groupId", protect, isSuperAdmin, updateGroup);
 router.delete("/groups/:groupId", protect, isSuperAdmin, deleteGroup);
 
-// ─── Group Permissions Management (Admin Only) ─────────────
-router.get("/groups/:groupId/permissions", protect, isSuperAdmin, getGroupPermissions);
+// ─── Group Permissions Management ─────────────────────────────
+router.get("/groups/:groupId/permissions", protect, getGroupPermissions);
 router.post("/groups/:groupId/permissions", protect, isSuperAdmin, setGroupPermission);
 router.post("/groups/:groupId/permissions/bulk", protect, isSuperAdmin, bulkSetGroupPermissions);
 router.delete("/groups/:groupId/permissions/:screenId", protect, isSuperAdmin, removeGroupPermission);
 
-// ─── User Group Assignments (Admin Only) ───────────────────
+// ─── User Group Assignments ────────────────────────────────
 router.post("/users/:userId/groups/:groupId", protect, isSuperAdmin, assignGroupToUser);
 router.delete("/users/:userId/groups/:groupId", protect, isSuperAdmin, removeGroupFromUser);
-router.get("/users/:userId/groups", protect, isSuperAdmin, getUserGroups);
+router.get("/users/:userId/groups", protect, getUserGroups);
 router.get("/users/:userId/effective-permissions", protect, getUserEffectivePermissions);
 
 // ─── Group Users (Admin Only) ──────────────────────────────
