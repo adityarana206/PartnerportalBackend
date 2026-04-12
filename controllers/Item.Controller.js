@@ -23,18 +23,18 @@ const createItemRequestfrombc = async (req, res) => {
       });
     }
 
-    const userId = req.user ? req.user.id : null;
-    const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
+     const userId = req.user ? req.user.id : null;
+     const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
 
-    if (partnerNo) {
-      const partnerExists = await ItemRequest.checkPartnerExists(partnerNo);
-      if (!partnerExists) {
-        return res.status(400).json({
-          success: false,
-          message: `Partner number '${partnerNo}' does not exist`,
-        });
-      }
-    }
+    // if (partnerNo) {
+    //   const partnerExists = await ItemRequest.checkPartnerExists(partnerNo);
+    //   if (!partnerExists) {
+    //     return res.status(400).json({
+    //       success: false,
+    //       message: `Partner number '${partnerNo}' does not exist`,
+    //     });
+    //   }
+    // }
 
     const item = await ItemRequest.create({ ...req.body, partnerNo }, userId);
 
