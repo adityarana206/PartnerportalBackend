@@ -16,12 +16,12 @@ const createItemRequestfrombc = async (req, res) => {
       });
     }
 
-    if (!req.body.partnerPortalNo || !req.body.partnerNo || !req.body.batchNo) {
-      return res.status(400).json({
-        success: false,
-        message: "partnerPortalNo, partnerNo, and batchNo are required",
-      });
-    }
+    // if (!req.body.partnerPortalNo || !req.body.partnerNo || !req.body.batchNo) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "partnerPortalNo, partnerNo, and batchNo are required",
+    //   });
+    // }
 
      const userId = req.user ? req.user.id : null;
      const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
