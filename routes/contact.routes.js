@@ -20,7 +20,7 @@ router.get("/:id", protect, canRead("CONTACTS"), getContactById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
 router.post("/", protect, canWrite("CONTACTS"), createContact);
-router.post("/businesscentral",protectRegister , createContact);
+router.post("/businesscentral",protectRegister , createContactbc);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
 router.put("/:id", protect, canModify("CONTACTS"), updateContact);
