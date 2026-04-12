@@ -318,6 +318,7 @@ const deleteContact = async (req, res) => {
 
 module.exports = {
   createContact,
+  createContactbc,
   getAllContacts,
   getContactById,
   getContactsByPartner,
