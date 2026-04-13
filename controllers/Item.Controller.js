@@ -8,6 +8,7 @@ const { isValidId, sanitizeString } = require("../utils/validation.utils");
 // ─── Create Item Request ───────────────────────────────────
 // POST /api/items
 const createItemRequestfrombc = async (req, res) => {
+  
   try {
     if (!req.body.itemName) {
       return res.status(400).json({
@@ -25,18 +26,9 @@ const createItemRequestfrombc = async (req, res) => {
 
      const userId = req.user ? req.user.id : null;
      const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
+     const partnerPortalNo = await NoSeries.getNextNumberByCode("PORTAL");
 
-    // if (partnerNo) {
-    //   const partnerExists = await ItemRequest.checkPartnerExists(partnerNo);
-    //   if (!partnerExists) {
-    //     return res.status(400).json({
-    //       success: false,
-    //       message: `Partner number '${partnerNo}' does not exist`,
-    //     });
-    //   }
-    // }
-
-    const item = await ItemRequest.create({ ...req.body, partnerNo }, userId);
+    const item = await ItemRequest.create({ ...req.body, partnerNo, partnerPortalNo }, userId);
 
     res.status(201).json({
       success: true,
@@ -67,10 +59,12 @@ const createItemRequest = async (req, res) => {
       bcError = bcErr.response?.data || bcErr.message;
       console.error("⚠️  Failed to sync to Business Central:", bcError);
     }
+    // const item = await ItemRequest.create({ ...req.body, partnerNo }, userId);
 
     res.status(201).json({
       success: true,
       message: "Item request created successfully",
+      //  data: item,
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {

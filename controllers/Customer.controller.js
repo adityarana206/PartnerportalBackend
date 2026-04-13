@@ -74,16 +74,16 @@ const register = async (req, res) => {
     }
 
     // ─── Check duplicate ref_no ───────────────────────────
-    const refNo = req.body.partnerno
-    if (refNo) {
-      const existing = await User.findByRefNo(refNo);
-      if (existing) {
-        return res.status(400).json({
-          success: false,
-          message: "Reference number already exists",
-        });
-      }
-    }
+    // const refNo = req.body.partnerno
+    // if (refNo) {
+    //   const existing = await User.findByRefNo(refNo);
+    //   if (existing) {
+    //     return res.status(400).json({
+    //       success: false,
+    //       message: "Reference number already exists",
+    //     });
+    //   }
+    // }
 
     // ─── Check duplicate email ────────────────────────────
     if (req.body.email) {

@@ -59,39 +59,12 @@ const createContactbc = async (req, res) => {
       });
     }
 
-    // ─── Check duplicate contactNo ─────────────────────────
-    if (req.body.contactNo) {
-      const existing = await Contact.findByContactNo(req.body.contactNo);
-      if (existing) {
-        return res.status(400).json({
-          success: false,
-          message: "Contact number already exists",
-        });
-      }
-    }
-
     const contact = await Contact.create(req.body, req.user ? req.user.id : null);
-
-    // ─── Send to Business Central ──────────────────────────
-    // let bcResponse = null;
-    // let bcError = null;
-    // try {
-    //   bcResponse = await bcService.createContactStaging(req.body);
-    //   console.log("✅ Contact synced to Business Central:", bcResponse);
-    // } catch (bcErr) {
-    //   bcError = bcErr.response?.data || bcErr.message;
-    //   console.error("⚠️  Failed to sync to Business Central:", bcError);
-    // }
 
     res.status(201).json({
       success: true,
       message: "Contact created successfully",
       data: contact,
-      // businessCentral: {
-      //   synced: !!bcResponse,
-      //   response: bcResponse,
-      //   error: bcError,
-      // },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -197,17 +170,6 @@ const updateContact = async (req, res) => {
         success: false,
         message: "Access denied. You can only update your own contacts",
       });
-    }
-
-    // ─── Check duplicate contactNo if changed ──────────────
-    if (req.body.contactNo && req.body.contactNo !== contact.contact_no) {
-      const existing = await Contact.findByContactNo(req.body.contactNo);
-      if (existing) {
-        return res.status(400).json({
-          success: false,
-          message: "Contact number already exists",
-        });
-      }
     }
 
     const updated = await Contact.update(req.params.id, req.body);
