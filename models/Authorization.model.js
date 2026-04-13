@@ -10,24 +10,39 @@ const User = {
         payment_terms_code, password, role
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
-      ) RETURNING *;
+      )
+      ON CONFLICT (ref_no) DO UPDATE SET
+        name = EXCLUDED.name,
+        name2 = EXCLUDED.name2,
+        address = EXCLUDED.address,
+        address2 = EXCLUDED.address2,
+        city = EXCLUDED.city,
+        post_code = EXCLUDED.post_code,
+        country_region_code = EXCLUDED.country_region_code,
+        phone_no = EXCLUDED.phone_no,
+        email = EXCLUDED.email,
+        vat_registration_no = EXCLUDED.vat_registration_no,
+        currency_code = EXCLUDED.currency_code,
+        payment_terms_code = EXCLUDED.payment_terms_code,
+        updated_at = NOW()
+      RETURNING *;
     `;
     const values = [
-      data.partnerno || null, // $1  ref_no
-      data.name, // $2  name
-      data.name2 || null, // $3  name2
-      data.address || null, // $4  address
-      data.address2 || null, // $5  address2
-      data.city || null, // $6  city
-      data.postCode || null, // $7  post_code
-      data.countryRegionCode || null, // $8  country_region_code
-      data.phoneNo || null, // $9  phone_no
-      data.email || null, // $10 email
-      data.vatRegistrationNo || null, // $11 vat_registration_no
-      data.currencyCode || null, // $12 currency_code
-      data.paymentTermsCode || null, // $13 payment_terms_code
-      data.password || null, // $14 password
-      role, // $15 role
+      data.partnerno || null,
+      data.name,
+      data.name2 || null,
+      data.address || null,
+      data.address2 || null,
+      data.city || null,
+      data.postCode || null,
+      data.countryRegionCode || null,
+      data.phoneNo || null,
+      data.email || null,
+      data.vatRegistrationNo || null,
+      data.currencyCode || null,
+      data.paymentTermsCode || null,
+      data.password || null,
+      role,
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
