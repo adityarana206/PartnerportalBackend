@@ -18,16 +18,16 @@ const UnitOfMeasure = {
 
   async create(data) {
     const result = await pool.query(
-      "INSERT INTO unit_of_measures (code, description) VALUES ($1,$2) RETURNING *",
-      [data.code, data.description || null]
+      "INSERT INTO unit_of_measures (code, description, international_standard_code) VALUES ($1,$2,$3) RETURNING *",
+      [data.code, data.description || null, data.international_standard_code || null]
     );
     return result.rows[0];
   },
 
   async update(id, data) {
     const result = await pool.query(
-      "UPDATE unit_of_measures SET code=$1, description=$2, updated_at=NOW() WHERE id=$3 RETURNING *",
-      [data.code, data.description || null, id]
+      "UPDATE unit_of_measures SET code=$1, description=$2, international_standard_code=$3, updated_at=NOW() WHERE id=$4 RETURNING *",
+      [data.code, data.description || null, data.international_standard_code || null, id]
     );
     return result.rows[0] || null;
   },
