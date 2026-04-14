@@ -7,78 +7,67 @@ const PurchaseOrder = {
     try {
       await client.query("BEGIN");
 
-      // ─── Insert Header ───────────────────────────────────
-      const orderQuery = `
-        INSERT INTO purchase_orders (
-          order_type, partner_no, partner_type, ship_to_code,
+      const orderResult = await client.query(
+        `INSERT INTO purchase_orders (
+          order_type, no, partner_no, partner_type, ship_to_code,
           location_code, order_date, requested_delivery_date,
           currency_code, external_document_no, status,
           direction, submitted_date, created_by
-        ) VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
-        ) RETURNING *;
-      `;
-      const orderValues = [
-        data.orderType || null,
-        data.partnerNo || null,
-        data.partnerType || null,
-        data.shipToCode || null,
-        data.locationCode || null,
-        data.orderDate || null,
-        data.requestedDeliveryDate || null,
-        data.currencyCode || null,
-        data.externalDocumentNo || null,
-        data.status || null,
-        data.direction || null,
-        data.submittedDate || null,
-        userId || null,
-      ];
-
-      const orderResult = await client.query(orderQuery, orderValues);
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+        [
+          data.orderType || null,
+          data.No || null,
+          data.partnerNo || null,
+          data.partnerType || null,
+          data.shipToCode || null,
+          data.locationCode || null,
+          data.orderDate || null,
+          data.requestedDeliveryDate || null,
+          data.currencyCode || null,
+          data.externalDocumentNo || null,
+          data.status || null,
+          data.direction || null,
+          data.submittedDate || null,
+          userId || null,
+        ]
+      );
       const order = orderResult.rows[0];
 
-      // ─── Insert Lines ────────────────────────────────────
       const lines = [];
-      if (data.orderStagingLines && data.orderStagingLines.length > 0) {
-        for (const line of data.orderStagingLines) {
-          // ─── Fetch VAT if vatCode provided ─────────────
-          let vatPercent = 0;
-          let vatAmount = 0;
-          let lineAmountInclVat = 0;
-          const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
+      for (const line of data.orderStagingLines || []) {
+        let vatPercent = 0;
+        let vatAmount = 0;
+        let lineAmountInclVat = 0;
+        const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
 
-          if (line.vatCode) {
-            const vat = await client.query(
-              "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
-              [line.vatCode]
-            );
-            if (vat.rows[0]) {
-              vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
-              if (vat.rows[0].is_inclusive) {
-                // VAT included in price: extract it
-                vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
-                lineAmountInclVat = lineAmount;
-              } else {
-                // VAT exclusive: add on top
-                vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
-                lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-              }
+        if (line.vatCode) {
+          const vat = await client.query(
+            "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
+            [line.vatCode]
+          );
+          if (vat.rows[0]) {
+            vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
+            if (vat.rows[0].is_inclusive) {
+              vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
+              lineAmountInclVat = lineAmount;
+            } else {
+              vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
+              lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
             }
           }
+        }
 
-          const lineQuery = `
-            INSERT INTO purchase_order_lines (
-              order_id, line_no, item_no, description,
-              quantity, unit_of_measure_code, unit_price,
-              line_discount_percent, line_discount_amount,
-              line_amount, location_code, delivery_date, variant_code,
-              vat_code, vat_percent, vat_amount, line_amount_incl_vat
-            ) VALUES (
-              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
-            ) RETURNING *;
-          `;
-          const lineValues = [
+        const lineResult = await client.query(
+          `INSERT INTO purchase_order_lines (
+            order_id, document_no, line_no, item_no, description,
+            quantity, unit_of_measure_code, unit_price,
+            line_discount_percent, line_discount_amount,
+            line_amount, location_code, delivery_date, variant_code,
+            vat_code, vat_percent, vat_amount, line_amount_incl_vat
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
+          [
             order.id,
+            line.documentNo || null,
             line.lineNo || null,
             line.itemNo || null,
             line.description || null,
@@ -95,10 +84,9 @@ const PurchaseOrder = {
             vatPercent,
             vatAmount,
             lineAmountInclVat,
-          ];
-          const lineResult = await client.query(lineQuery, lineValues);
-          lines.push(lineResult.rows[0]);
-        }
+          ]
+        );
+        lines.push(lineResult.rows[0]);
       }
 
       await client.query("COMMIT");
@@ -113,15 +101,12 @@ const PurchaseOrder = {
 
   // ─── Find All Orders with Lines ────────────────────────
   async findAll() {
-    const orders = await pool.query(
-      "SELECT * FROM purchase_orders ORDER BY created_at DESC",
-    );
-
+    const orders = await pool.query("SELECT * FROM purchase_orders ORDER BY created_at DESC");
     const result = [];
     for (const order of orders.rows) {
       const lines = await pool.query(
         "SELECT * FROM purchase_order_lines WHERE order_id = $1 ORDER BY line_no",
-        [order.id],
+        [order.id]
       );
       result.push({ ...order, orderStagingLines: lines.rows });
     }
@@ -130,15 +115,11 @@ const PurchaseOrder = {
 
   // ─── Find by ID with Lines ─────────────────────────────
   async findById(id) {
-    const order = await pool.query(
-      "SELECT * FROM purchase_orders WHERE id = $1",
-      [id],
-    );
+    const order = await pool.query("SELECT * FROM purchase_orders WHERE id = $1", [id]);
     if (!order.rows[0]) return null;
-
     const lines = await pool.query(
       "SELECT * FROM purchase_order_lines WHERE order_id = $1 ORDER BY line_no",
-      [id],
+      [id]
     );
     return { ...order.rows[0], orderStagingLines: lines.rows };
   },
@@ -147,14 +128,13 @@ const PurchaseOrder = {
   async findByPartnerNo(partnerNo) {
     const orders = await pool.query(
       "SELECT * FROM purchase_orders WHERE partner_no = $1 ORDER BY created_at DESC",
-      [partnerNo],
+      [partnerNo]
     );
-
     const result = [];
     for (const order of orders.rows) {
       const lines = await pool.query(
         "SELECT * FROM purchase_order_lines WHERE order_id = $1 ORDER BY line_no",
-        [order.id],
+        [order.id]
       );
       result.push({ ...order, orderStagingLines: lines.rows });
     }
@@ -165,98 +145,89 @@ const PurchaseOrder = {
   async findByStatus(status) {
     const orders = await pool.query(
       "SELECT * FROM purchase_orders WHERE status = $1 ORDER BY created_at DESC",
-      [status],
+      [status]
     );
-
     const result = [];
     for (const order of orders.rows) {
       const lines = await pool.query(
         "SELECT * FROM purchase_order_lines WHERE order_id = $1 ORDER BY line_no",
-        [order.id],
+        [order.id]
       );
       result.push({ ...order, orderStagingLines: lines.rows });
     }
     return result;
   },
 
-  // ─── Update Order Header ───────────────────────────────
+  // ─── Update Order ──────────────────────────────────────
   async update(id, data) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
 
-      // ─── Update Header ───────────────────────────────────
-      const orderQuery = `
-        UPDATE purchase_orders SET
-          order_type=$1, partner_no=$2, partner_type=$3,
-          ship_to_code=$4, location_code=$5, order_date=$6,
-          requested_delivery_date=$7, currency_code=$8,
-          external_document_no=$9, status=$10, direction=$11,
-          submitted_date=$12, updated_at=NOW()
-        WHERE id=$13 RETURNING *;
-      `;
-      const orderValues = [
-        data.orderType || null,
-        data.partnerNo || null,
-        data.partnerType || null,
-        data.shipToCode || null,
-        data.locationCode || null,
-        data.orderDate || null,
-        data.requestedDeliveryDate || null,
-        data.currencyCode || null,
-        data.externalDocumentNo || null,
-        data.status || "Processed",
-        data.direction || null,
-        data.submittedDate || null,
-        id,
-      ];
-      const orderResult = await client.query(orderQuery, orderValues);
+      const orderResult = await client.query(
+        `UPDATE purchase_orders SET
+          order_type=$1, no=$2, partner_no=$3, partner_type=$4,
+          ship_to_code=$5, location_code=$6, order_date=$7,
+          requested_delivery_date=$8, currency_code=$9,
+          external_document_no=$10, status=$11,
+          direction=$12, submitted_date=$13, updated_at=NOW()
+        WHERE id=$14 RETURNING *`,
+        [
+          data.orderType || null,
+          data.No || null,
+          data.partnerNo || null,
+          data.partnerType || null,
+          data.shipToCode || null,
+          data.locationCode || null,
+          data.orderDate || null,
+          data.requestedDeliveryDate || null,
+          data.currencyCode || null,
+          data.externalDocumentNo || null,
+          data.status || "Processed",
+          data.direction || null,
+          data.submittedDate || null,
+          id,
+        ]
+      );
       const order = orderResult.rows[0];
 
-      // ─── Delete old lines and reinsert ───────────────────
-      await client.query(
-        "DELETE FROM purchase_order_lines WHERE order_id = $1",
-        [id],
-      );
+      await client.query("DELETE FROM purchase_order_lines WHERE order_id = $1", [id]);
 
       const lines = [];
-      if (data.orderStagingLines && data.orderStagingLines.length > 0) {
-        for (const line of data.orderStagingLines) {
-          let vatPercent = 0;
-          let vatAmount = 0;
-          let lineAmountInclVat = 0;
-          const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
+      for (const line of data.orderStagingLines || []) {
+        let vatPercent = 0;
+        let vatAmount = 0;
+        let lineAmountInclVat = 0;
+        const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
 
-          if (line.vatCode) {
-            const vat = await client.query(
-              "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
-              [line.vatCode]
-            );
-            if (vat.rows[0]) {
-              vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
-              if (vat.rows[0].is_inclusive) {
-                vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
-                lineAmountInclVat = lineAmount;
-              } else {
-                vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
-                lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-              }
+        if (line.vatCode) {
+          const vat = await client.query(
+            "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
+            [line.vatCode]
+          );
+          if (vat.rows[0]) {
+            vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
+            if (vat.rows[0].is_inclusive) {
+              vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
+              lineAmountInclVat = lineAmount;
+            } else {
+              vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
+              lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
             }
           }
+        }
 
-          const lineQuery = `
-            INSERT INTO purchase_order_lines (
-              order_id, line_no, item_no, description,
-              quantity, unit_of_measure_code, unit_price,
-              line_discount_percent, line_discount_amount,
-              line_amount, location_code, delivery_date, variant_code,
-              vat_code, vat_percent, vat_amount, line_amount_incl_vat
-            ) VALUES (
-              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
-            ) RETURNING *;
-          `;
-          const lineValues = [
+        const lineResult = await client.query(
+          `INSERT INTO purchase_order_lines (
+            order_id, document_no, line_no, item_no, description,
+            quantity, unit_of_measure_code, unit_price,
+            line_discount_percent, line_discount_amount,
+            line_amount, location_code, delivery_date, variant_code,
+            vat_code, vat_percent, vat_amount, line_amount_incl_vat
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
+          [
             id,
+            line.documentNo || null,
             line.lineNo || null,
             line.itemNo || null,
             line.description || null,
@@ -273,10 +244,9 @@ const PurchaseOrder = {
             vatPercent,
             vatAmount,
             lineAmountInclVat,
-          ];
-          const lineResult = await client.query(lineQuery, lineValues);
-          lines.push(lineResult.rows[0]);
-        }
+          ]
+        );
+        lines.push(lineResult.rows[0]);
       }
 
       await client.query("COMMIT");
@@ -292,14 +262,13 @@ const PurchaseOrder = {
   // ─── Update Status Only ────────────────────────────────
   async updateStatus(id, status) {
     const result = await pool.query(
-      `UPDATE purchase_orders SET status=$1, updated_at=NOW()
-       WHERE id=$2 RETURNING *`,
-      [status, id],
+      `UPDATE purchase_orders SET status=$1, updated_at=NOW() WHERE id=$2 RETURNING *`,
+      [status, id]
     );
     return result.rows[0] || null;
   },
 
-  // ─── Approved items lookup for a partner (purchase line dropdown) ───
+  // ─── Approved items lookup ─────────────────────────────
   async findApprovedItemsByPartner(partnerNo) {
     const result = await pool.query(
       `SELECT batch_no, item_name, description, base_unit_of_measure,
@@ -313,7 +282,7 @@ const PurchaseOrder = {
     return result.rows;
   },
 
-  // ─── Single approved item detail by partnerNo + batchNo ───────────
+  // ─── Single approved item detail ──────────────────────
   async findApprovedItemDetail(partnerNo, batchNo) {
     const result = await pool.query(
       `SELECT batch_no, item_name, description, base_unit_of_measure,
@@ -328,10 +297,9 @@ const PurchaseOrder = {
 
   // ─── Delete Order + Lines ──────────────────────────────
   async delete(id) {
-    // Lines deleted automatically via ON DELETE CASCADE
     const result = await pool.query(
       "DELETE FROM purchase_orders WHERE id = $1 RETURNING *",
-      [id],
+      [id]
     );
     return result.rows[0] || null;
   },
