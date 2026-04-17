@@ -9,22 +9,20 @@ const {
   deleteSalesShipment,
 } = require("../controllers/SalesShipment.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // READ
-router.get("/", protect, canRead("SALES_SHIPMENTS"), getAllSalesShipments);
-router.get("/:id", protect, canRead("SALES_SHIPMENTS"), getSalesShipmentById);
-router.get("/portal/:portalDocumentNo", protect, canRead("SALES_SHIPMENTS"), getSalesShipmentByPortalDocNo);
+router.get("/", protect, getAllSalesShipments);
+router.get("/:id", protect, getSalesShipmentById);
+router.get("/portal/:portalDocumentNo", protect, getSalesShipmentByPortalDocNo);
 
 // WRITE
-router.post("/", protect, canWrite("SALES_SHIPMENTS"), createSalesShipment);
+router.post("/", protect, createSalesShipment);
 router.post("/businesscentral", protectRegister, createSalesShipment);
 
-
 // MODIFY
-router.patch("/:id/status", protect, canModify("SALES_SHIPMENTS"), updateSalesShipmentStatus);
+router.patch("/:id/status", protect, updateSalesShipmentStatus);
 
 // DELETE
-router.delete("/:id", protect, canDelete("SALES_SHIPMENTS"), deleteSalesShipment);
+router.delete("/:id", protect, deleteSalesShipment);
 
 module.exports = router;

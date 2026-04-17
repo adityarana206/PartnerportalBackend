@@ -14,25 +14,24 @@ const {
   getLocationsForPartner,
 } = require("../controllers/PurchaseOrder.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
-router.get("/", protect, canRead("PURCHASE_ORDERS"), getAllPurchaseOrders);
-router.get("/partner/:partnerNo", protect, canRead("PURCHASE_ORDERS"), getOrdersByPartner);
-router.get("/items/:partnerNo", protect, canRead("PURCHASE_ORDERS"), getApprovedItemsForPartner);
-router.get("/items/:partnerNo/:batchNo", protect, canRead("PURCHASE_ORDERS"), getApprovedItemDetail);
-router.get("/locations", protect, canRead("PURCHASE_ORDERS"), getLocationsForPartner);
-router.get("/:id", protect, canRead("PURCHASE_ORDERS"), getPurchaseOrderById);
+router.get("/", protect, getAllPurchaseOrders);
+router.get("/partner/:partnerNo", protect, getOrdersByPartner);
+router.get("/items/:partnerNo", protect, getApprovedItemsForPartner);
+router.get("/items/:partnerNo/:batchNo", protect, getApprovedItemDetail);
+router.get("/locations", protect, getLocationsForPartner);
+router.get("/:id", protect, getPurchaseOrderById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
-router.post("/", protect, canWrite("PURCHASE_ORDERS"), createPurchaseOrder);
+router.post("/", protect, createPurchaseOrder);
 router.post("/businesscentral", protectRegister, createPurchaseOrderbc);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
-router.put("/:id", protect, canModify("PURCHASE_ORDERS"), updatePurchaseOrder);
-router.patch("/:id/status", protect, canModify("PURCHASE_ORDERS"), updateOrderStatus);
+router.put("/:id", protect, updatePurchaseOrder);
+router.patch("/:id/status", protect, updateOrderStatus);
 
 // ─── DELETE ────────────────────────────────────────────────
-router.delete("/:id", protect, canDelete("PURCHASE_ORDERS"), deletePurchaseOrder);
+router.delete("/:id", protect, deletePurchaseOrder);
 
 module.exports = router;

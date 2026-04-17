@@ -1,3180 +1,1941 @@
 {
   "info": {
     "name": "Partner Portal API",
-    "description": "Example requests for PartnerportalBackend. Variables: baseUrl, accessToken, refreshToken, registerToken, ids, partner numbers.",
+    "description": "Complete API collection for the Partner Portal Backend. Set {{base_url}} = http://localhost:3000 and {{token}} = your JWT access token.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000"
-    },
-    {
-      "key": "accessToken",
-      "value": ""
-    },
-    {
-      "key": "refreshToken",
-      "value": ""
-    },
-    {
-      "key": "registerToken",
-      "value": ""
-    },
-    {
-      "key": "userId",
-      "value": "1"
-    },
-    {
-      "key": "itemId",
-      "value": "1"
-    },
-    {
-      "key": "contactId",
-      "value": "1"
-    },
-    {
-      "key": "purchaseOrderId",
-      "value": "1"
-    },
-    {
-      "key": "salesOrderId",
-      "value": "1"
-    },
-    {
-      "key": "invoiceId",
-      "value": "1"
-    },
-    {
-      "key": "purchaseInvoiceId",
-      "value": "1"
-    },
-    {
-      "key": "purchaseReceiptId",
-      "value": "1"
-    },
-    {
-      "key": "partnerLinkId",
-      "value": "1"
-    },
-    {
-      "key": "purchasePriceId",
-      "value": "1"
-    },
-    {
-      "key": "paymentId",
-      "value": "1"
-    },
-    {
-      "key": "uomId",
-      "value": "1"
-    },
-    {
-      "key": "noSeriesId",
-      "value": "1"
-    },
-    {
-      "key": "vatMasterId",
-      "value": "1"
-    },
-    {
-      "key": "salesShipmentId",
-      "value": "1"
-    },
-    {
-      "key": "bcUserRegistrationId",
-      "value": "1"
-    },
-    {
-      "key": "permissionGroupId",
-      "value": "1"
-    },
-    {
-      "key": "screenId",
-      "value": "1"
-    },
-    {
-      "key": "partnerNo",
-      "value": "VNR000001"
-    },
-    {
-      "key": "customerPartnerNo",
-      "value": "CUS000001"
-    },
-    {
-      "key": "invoiceNo",
-      "value": "INV-1001"
-    },
-    {
-      "key": "shipmentNo",
-      "value": "SHP-1001"
-    },
-    {
-      "key": "portalDocumentNo",
-      "value": "SHIP-00001"
-    },
-    {
-      "key": "partnerPortalNo",
-      "value": "PP-001"
-    },
-    {
-      "key": "batchNo",
-      "value": "BATCH-1001"
-    },
-    {
-      "key": "noSeriesCode",
-      "value": "SHIP"
-    },
-    {
-      "key": "vatCode",
-      "value": "VAT18"
-    },
-    {
-      "key": "role",
-      "value": "vendor_admin"
-    }
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "token",    "value": "YOUR_JWT_TOKEN_HERE" }
   ],
   "item": [
-    {
-      "name": "Health",
-      "item": [
-        {
-          "name": "GET /",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/"
-          }
-        },
-        {
-          "name": "GET /api/routes (dev)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/routes"
-          }
-        }
-      ]
-    },
+
     {
       "name": "Auth",
       "item": [
         {
-          "name": "POST get-register-token",
+          "name": "Get Register Token",
           "request": {
             "method": "POST",
-            "header": [],
-            "url": "{{baseUrl}}/api/auth/get-register-token"
+            "url": "{{base_url}}/api/auth/get-register-token",
+            "header": []
           }
         },
         {
-          "name": "POST login",
+          "name": "Login",
           "request": {
             "method": "POST",
-            "header": [],
+            "url": "{{base_url}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"yourPassword\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/auth/login"
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\"\n}"
+            }
           }
         },
         {
-          "name": "POST create-super-admin",
+          "name": "Create Super Admin",
           "request": {
             "method": "POST",
-            "header": [],
+            "url": "{{base_url}}/api/auth/create-super-admin",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Super Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"SecurePassword@123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/auth/create-super-admin"
+              "raw": "{\n  \"name\": \"Super Admin\",\n  \"email\": \"superadmin@example.com\",\n  \"password\": \"SuperPass@123\"\n}"
+            }
           }
         },
         {
-          "name": "POST verify-token",
+          "name": "Verify Token",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/auth/verify-token",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/refresh-token",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"YOUR_REFRESH_TOKEN_HERE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/logout",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/auth/verify-token"
-          }
-        },
-        {
-          "name": "POST refresh-token",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/auth/refresh-token"
-          }
-        },
-        {
-          "name": "POST logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/auth/logout"
+              "raw": "{\n  \"refreshToken\": \"YOUR_REFRESH_TOKEN_HERE\"\n}"
+            }
           }
         },
         {
-          "name": "POST change-password",
+          "name": "Change Password",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/auth/change-password",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"oldPassword\": \"CurrentPassword@123\",\n  \"newPassword\": \"NewPassword@456\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/auth/change-password"
+              "raw": "{\n  \"oldPassword\": \"password123\",\n  \"newPassword\": \"NewPass@456\"\n}"
+            }
           }
         }
       ]
     },
+
     {
       "name": "Users",
       "item": [
         {
-          "name": "POST register",
+          "name": "Register User",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
+            "url": "{{base_url}}/api/users/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"partnerno\": \"CUS000001\",\n  \"name\": \"Test Customer\",\n  \"name2\": \"Branch 1\",\n  \"address\": \"Street 1\",\n  \"address2\": \"Area\",\n  \"city\": \"Bengaluru\",\n  \"postCode\": \"560001\",\n  \"countryRegionCode\": \"IN\",\n  \"phoneNo\": \"+919999999999\",\n  \"email\": \"customer@example.com\",\n  \"vatRegistrationNo\": \"VAT123\",\n  \"currencyCode\": \"INR\",\n  \"paymentTermsCode\": \"NET30\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\",\n  \"customerNo\": \"CUS000001\",\n  \"vendorNo\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/users/register"
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Pass@123\",\n  \"role\": \"customer\",\n  \"phoneNo\": \"+1-555-0100\",\n  \"address\": \"123 Main St\",\n  \"city\": \"New York\",\n  \"postCode\": \"10001\",\n  \"countryRegionCode\": \"US\",\n  \"currencyCode\": \"USD\",\n  \"paymentTermsCode\": \"NET30\"\n}"
+            }
           }
         },
         {
-          "name": "GET all",
+          "name": "Get All Users",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/users"
+            "url": "{{base_url}}/api/users",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET me",
+          "name": "Get Me",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/users/me"
+            "url": "{{base_url}}/api/users/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get User by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/users/{{userId}}"
+            "url": "{{base_url}}/api/users/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "PUT by id",
+          "name": "Update User",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/users/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Name\",\n  \"name2\": \"Updated Branch\",\n  \"address\": \"Updated Street\",\n  \"address2\": \"Updated Area\",\n  \"city\": \"Mumbai\",\n  \"postCode\": \"400001\",\n  \"countryRegionCode\": \"IN\",\n  \"phoneNo\": \"+919888888888\",\n  \"email\": \"updated@example.com\",\n  \"vatRegistrationNo\": \"VAT999\",\n  \"currencyCode\": \"INR\",\n  \"paymentTermsCode\": \"NET45\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/users/{{userId}}"
+              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"phoneNo\": \"+1-555-0199\",\n  \"address\": \"456 Oak Ave\",\n  \"city\": \"Boston\",\n  \"postCode\": \"02101\",\n  \"countryRegionCode\": \"US\",\n  \"currencyCode\": \"USD\",\n  \"paymentTermsCode\": \"NET30\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id (super_admin)",
+          "name": "Delete User",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/users/{{userId}}"
+            "url": "{{base_url}}/api/users/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Vendor items",
+      "name": "Items (Vendor)",
       "item": [
         {
-          "name": "GET import template",
+          "name": "Get All Items",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item/import/template"
+            "url": "{{base_url}}/api/vendor/item",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET all (query)",
+          "name": "Download Import Template",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item?status=Created&partnerNo={{partnerNo}}"
+            "url": "{{base_url}}/api/vendor/item/import/template",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Items by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item/partner/{{partnerNo}}"
+            "url": "{{base_url}}/api/vendor/item/partner/CUST001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by portal no",
+          "name": "Get Items by Portal No",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item/portal/{{partnerPortalNo}}"
+            "url": "{{base_url}}/api/vendor/item/portal/PORTAL000001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by composite key",
+          "name": "Get Item by Key",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item/key/{{partnerPortalNo}}/{{partnerNo}}/{{batchNo}}"
+            "url": "{{base_url}}/api/vendor/item/key/PORTAL000001/CUST001/BATCH000001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET unit-of-measures",
+          "name": "Get Unit of Measures",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item/unit-of-measures"
+            "url": "{{base_url}}/api/vendor/item/unit-of-measures",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Item by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item/{{itemId}}"
+            "url": "{{base_url}}/api/vendor/item/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST import (multipart: file)",
+          "name": "Create Item Request",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/vendor/item",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"itemDescription\": \"Industrial Gear Box\",\n  \"unitOfMeasureCode\": \"PCS\",\n  \"unitPrice\": 250.00,\n  \"vatProdPostingGroup\": \"STANDARD\",\n  \"genProdPostingGroup\": \"RETAIL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Import Items (File Upload)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/vendor/item/import",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "body": {
               "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": ""
-                }
-              ]
-            },
-            "url": "{{baseUrl}}/api/vendor/item/import"
+              "formdata": [{ "key": "file", "type": "file", "src": "" }]
+            }
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Price Change",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/vendor/item/price-change",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"batchNo\": \"BATCH-1001\",\n  \"itemName\": \"Organic Rice\",\n  \"description\": \"Premium grade\",\n  \"itemCategoryCode\": \"FOOD\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 25,\n  \"grossWeight\": 26,\n  \"specifications\": \"Long grain\",\n  \"ingredients\": \"Rice\",\n  \"allergenDeclaration\": \"None\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"12345678901234\",\n  \"eanCode\": \"8901234567890\",\n  \"unitPrice\": 120.5,\n  \"priceCurrencyCode\": \"INR\",\n  \"partnerNo\": \"VNR000001\",\n  \"block\": false,\n  \"status\": \"Created\",\n  \"rejectionReason\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item"
+              "raw": "{\n  \"partnerPortalNo\": \"PORTAL000001\",\n  \"partnerNo\": \"CUST001\",\n  \"batchNo\": \"BATCH000001\",\n  \"newUnitPrice\": 275.00,\n  \"reason\": \"Annual price revision\"\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
+          "name": "Create Item Change Request",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/vendor/item/change-request",
             "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"batchNo\": \"BATCH-1001\",\n  \"itemName\": \"Organic Rice\",\n  \"description\": \"Premium grade\",\n  \"itemCategoryCode\": \"FOOD\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 25,\n  \"grossWeight\": 26,\n  \"specifications\": \"Long grain\",\n  \"ingredients\": \"Rice\",\n  \"allergenDeclaration\": \"None\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"12345678901234\",\n  \"eanCode\": \"8901234567890\",\n  \"unitPrice\": 120.5,\n  \"priceCurrencyCode\": \"INR\",\n  \"partnerNo\": \"VNR000001\",\n  \"block\": false,\n  \"status\": \"Created\",\n  \"rejectionReason\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item/businesscentral"
+              "raw": "{\n  \"partnerPortalNo\": \"PORTAL000001\",\n  \"partnerNo\": \"CUST001\",\n  \"batchNo\": \"BATCH000001\",\n  \"changeDescription\": \"Update item description and unit of measure\",\n  \"newDescription\": \"Industrial Gear Box v2\",\n  \"newUnitOfMeasureCode\": \"BOX\"\n}"
+            }
           }
         },
         {
-          "name": "POST price-change",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"itemNo\": \"ITEM001\",\n  \"variantCode\": \"\",\n  \"newPrice\": 199.99,\n  \"oldPrice\": 120.5,\n  \"effectiveDate\": \"2026-04-01\",\n  \"endingDate\": \"2026-12-31\",\n  \"currencyCode\": \"INR\",\n  \"unitOfMeasureCode\": \"KG\",\n  \"minimumQuantity\": 1,\n  \"partnerNo\": \"VNR000001\",\n  \"rejectionReason\": \"\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item/price-change"
-          }
-        },
-        {
-          "name": "POST change-request",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"itemNo\": \"ITEM001\",\n  \"changeType\": \"Description\",\n  \"changeDescription\": \"Update product copy\",\n  \"oldValue\": \"Old text\",\n  \"newValue\": \"New text\",\n  \"partnerType\": \"vendor\",\n  \"partnerNo\": \"VNR000001\",\n  \"rejectionReason\": \"\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item/change-request"
-          }
-        },
-        {
-          "name": "PUT by id",
+          "name": "Update Item",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/vendor/item/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"batchNo\": \"BATCH-1001\",\n  \"itemName\": \"Organic Rice\",\n  \"description\": \"Premium grade\",\n  \"itemCategoryCode\": \"FOOD\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 25,\n  \"grossWeight\": 26,\n  \"specifications\": \"Long grain\",\n  \"ingredients\": \"Rice\",\n  \"allergenDeclaration\": \"None\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"12345678901234\",\n  \"eanCode\": \"8901234567890\",\n  \"unitPrice\": 120.5,\n  \"priceCurrencyCode\": \"INR\",\n  \"partnerNo\": \"VNR000001\",\n  \"block\": false,\n  \"status\": \"Created\",\n  \"rejectionReason\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item/{{itemId}}"
+              "raw": "{\n  \"itemDescription\": \"Industrial Gear Box Pro\",\n  \"unitOfMeasureCode\": \"PCS\",\n  \"unitPrice\": 300.00\n}"
+            }
           }
         },
         {
-          "name": "PATCH status (approved)",
+          "name": "Update Item Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/vendor/item/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Approved\",\n  \"rejectionReason\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item/{{itemId}}/status"
+              "raw": "{\n  \"status\": \"Approved\"\n}"
+            }
           }
         },
         {
-          "name": "PATCH status (rejected)",
+          "name": "Update Item Block",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/vendor/item/1/block",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Rejected\",\n  \"rejectionReason\": \"Does not meet specification\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item/{{itemId}}/status"
+              "raw": "{\n  \"blocked\": true\n}"
+            }
           }
         },
         {
-          "name": "PATCH block",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"block\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vendor/item/{{itemId}}/block"
-          }
-        },
-        {
-          "name": "DELETE by id",
+          "name": "Delete Item",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vendor/item/{{itemId}}"
+            "url": "{{base_url}}/api/vendor/item/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
       "name": "Contacts",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Contacts",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/contact?syncStatus=Pending&partnerNo={{customerPartnerNo}}&companyNo=COMP0001"
+            "url": "{{base_url}}/api/contact",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Contacts by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/contact/partner/{{customerPartnerNo}}"
+            "url": "{{base_url}}/api/contact/partner/CUST001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Contact by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/contact/{{contactId}}"
+            "url": "{{base_url}}/api/contact/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Contact",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/contact",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNo\": \"CONT0001\",\n  \"contactName\": \"John Doe\",\n  \"eMail\": \"john@example.com\",\n  \"phoneNo\": \"+911234567890\",\n  \"mobilePhoneNo\": \"+919876543210\",\n  \"companyNo\": \"COMP0001\",\n  \"companyName\": \"Nova Soft\",\n  \"portalUser\": true,\n  \"portalAdmin\": false,\n  \"partnerType\": \"customer\",\n  \"partnerNo\": \"CUS000001\",\n  \"shipToCode\": \"SHIP001\",\n  \"vendorLocationCode\": \"VLOC001\",\n  \"locationCode\": \"LOC001\",\n  \"address\": \"Address line 1\",\n  \"address2\": \"Address line 2\",\n  \"city\": \"Bengaluru\",\n  \"postCode\": \"560001\",\n  \"countryRegionCode\": \"IN\",\n  \"jobTitle\": \"Manager\",\n  \"languageCode\": \"EN\",\n  \"syncStatus\": \"Pending\",\n  \"lastSyncedDateTime\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/contact"
+              "raw": "{\n  \"contactName\": \"Jane Smith\",\n  \"partnerNo\": \"CUST001\",\n  \"email\": \"jane.smith@example.com\",\n  \"phoneNo\": \"+1-555-0200\",\n  \"jobTitle\": \"Procurement Manager\",\n  \"address\": \"789 Business Park\",\n  \"city\": \"Chicago\",\n  \"postCode\": \"60601\",\n  \"countryRegionCode\": \"US\"\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"contactNo\": \"CONT0001\",\n  \"contactName\": \"John Doe\",\n  \"eMail\": \"john@example.com\",\n  \"phoneNo\": \"+911234567890\",\n  \"mobilePhoneNo\": \"+919876543210\",\n  \"companyNo\": \"COMP0001\",\n  \"companyName\": \"Nova Soft\",\n  \"portalUser\": true,\n  \"portalAdmin\": false,\n  \"partnerType\": \"customer\",\n  \"partnerNo\": \"CUS000001\",\n  \"shipToCode\": \"SHIP001\",\n  \"vendorLocationCode\": \"VLOC001\",\n  \"locationCode\": \"LOC001\",\n  \"address\": \"Address line 1\",\n  \"address2\": \"Address line 2\",\n  \"city\": \"Bengaluru\",\n  \"postCode\": \"560001\",\n  \"countryRegionCode\": \"IN\",\n  \"jobTitle\": \"Manager\",\n  \"languageCode\": \"EN\",\n  \"syncStatus\": \"Pending\",\n  \"lastSyncedDateTime\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/contact/businesscentral"
-          }
-        },
-        {
-          "name": "PUT by id",
+          "name": "Update Contact",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/contact/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNo\": \"CONT0001\",\n  \"contactName\": \"John Doe\",\n  \"eMail\": \"john@example.com\",\n  \"phoneNo\": \"+911234567890\",\n  \"mobilePhoneNo\": \"+919876543210\",\n  \"companyNo\": \"COMP0001\",\n  \"companyName\": \"Nova Soft\",\n  \"portalUser\": true,\n  \"portalAdmin\": false,\n  \"partnerType\": \"customer\",\n  \"partnerNo\": \"CUS000001\",\n  \"shipToCode\": \"SHIP001\",\n  \"vendorLocationCode\": \"VLOC001\",\n  \"locationCode\": \"LOC001\",\n  \"address\": \"Address line 1\",\n  \"address2\": \"Address line 2\",\n  \"city\": \"Bengaluru\",\n  \"postCode\": \"560001\",\n  \"countryRegionCode\": \"IN\",\n  \"jobTitle\": \"Manager\",\n  \"languageCode\": \"EN\",\n  \"syncStatus\": \"Pending\",\n  \"lastSyncedDateTime\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/contact/{{contactId}}"
+              "raw": "{\n  \"contactName\": \"Jane Smith Updated\",\n  \"phoneNo\": \"+1-555-0299\",\n  \"jobTitle\": \"Senior Procurement Manager\"\n}"
+            }
           }
         },
         {
-          "name": "PATCH sync",
+          "name": "Update Sync Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/contact/1/sync",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"syncStatus\": \"Synced\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/contact/{{contactId}}/sync"
+              "raw": "{\n  \"syncStatus\": \"Synced\"\n}"
+            }
           }
         },
         {
-          "name": "PATCH portal",
+          "name": "Update Portal Access",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/contact/1/portal",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"portalUser\": true,\n  \"portalAdmin\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/contact/{{contactId}}/portal"
+              "raw": "{\n  \"portalUser\": true,\n  \"portalAdmin\": false\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Contact",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/contact/{{contactId}}"
+            "url": "{{base_url}}/api/contact/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Purchase orders",
+      "name": "Sales Orders",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Sales Orders",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-orders?status=Processed&partnerNo={{partnerNo}}"
+            "url": "{{base_url}}/api/sales-orders",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Locations for Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-orders/partner/{{partnerNo}}"
+            "url": "{{base_url}}/api/sales-orders/locations",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET approved items",
+          "name": "Get Orders by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-orders/items/{{partnerNo}}"
+            "url": "{{base_url}}/api/sales-orders/partner/CUST001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET approved item detail",
+          "name": "Get Approved Items for Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-orders/items/{{partnerNo}}/{{batchNo}}"
+            "url": "{{base_url}}/api/sales-orders/items/CUST001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET locations",
+          "name": "Get Approved Item Detail",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-orders/locations"
+            "url": "{{base_url}}/api/sales-orders/items/CUST001/BATCH000001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Sales Order by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-orders/{{purchaseOrderId}}"
+            "url": "{{base_url}}/api/sales-orders/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Sales Order",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/sales-orders",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderType\": \"PO\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2026-03-22\",\n  \"requestedDeliveryDate\": \"2026-03-30\",\n  \"currencyCode\": \"INR\",\n  \"externalDocumentNo\": \"EXT-PO-1001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"submittedDate\": \"2026-03-22\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Item 1\",\n      \"quantity\": 10,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 100,\n      \"lineDiscountPercent\": 5,\n      \"lineDiscountAmount\": 50,\n      \"lineAmount\": 950,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2026-03-30\",\n      \"variantCode\": \"BLUE\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-orders"
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"locationCode\": \"MAIN\",\n  \"requestedDeliveryDate\": \"2026-05-01\",\n  \"orderStagingLines\": [\n    {\n      \"partnerPortalNo\": \"PORTAL000001\",\n      \"batchNo\": \"BATCH000001\",\n      \"quantity\": 10,\n      \"unitOfMeasureCode\": \"PCS\"\n    },\n    {\n      \"partnerPortalNo\": \"PORTAL000002\",\n      \"batchNo\": \"BATCH000002\",\n      \"quantity\": 5,\n      \"unitOfMeasureCode\": \"BOX\"\n    }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"orderType\": \"PO\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2026-03-22\",\n  \"requestedDeliveryDate\": \"2026-03-30\",\n  \"currencyCode\": \"INR\",\n  \"externalDocumentNo\": \"EXT-PO-1001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"submittedDate\": \"2026-03-22\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Item 1\",\n      \"quantity\": 10,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 100,\n      \"lineDiscountPercent\": 5,\n      \"lineDiscountAmount\": 50,\n      \"lineAmount\": 950,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2026-03-30\",\n      \"variantCode\": \"BLUE\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-orders/businesscentral"
-          }
-        },
-        {
-          "name": "PUT by id",
+          "name": "Update Sales Order",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/sales-orders/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderType\": \"PO\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2026-03-22\",\n  \"requestedDeliveryDate\": \"2026-03-30\",\n  \"currencyCode\": \"INR\",\n  \"externalDocumentNo\": \"EXT-PO-1001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"submittedDate\": \"2026-03-22\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Item 1\",\n      \"quantity\": 10,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 100,\n      \"lineDiscountPercent\": 5,\n      \"lineDiscountAmount\": 50,\n      \"lineAmount\": 950,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2026-03-30\",\n      \"variantCode\": \"BLUE\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-orders/{{purchaseOrderId}}"
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"locationCode\": \"MAIN\",\n  \"requestedDeliveryDate\": \"2026-05-15\",\n  \"orderStagingLines\": [\n    {\n      \"partnerPortalNo\": \"PORTAL000001\",\n      \"batchNo\": \"BATCH000001\",\n      \"quantity\": 15,\n      \"unitOfMeasureCode\": \"PCS\"\n    }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "PATCH status",
+          "name": "Update Sales Order Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/sales-orders/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Approved\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-orders/{{purchaseOrderId}}/status"
+              "raw": "{\n  \"status\": \"Processed\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Sales Order",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-orders/{{purchaseOrderId}}"
+            "url": "{{base_url}}/api/sales-orders/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Sales orders",
+      "name": "Purchase Orders",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Purchase Orders",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-orders?status=Processed&partnerNo={{customerPartnerNo}}"
+            "url": "{{base_url}}/api/purchase-orders",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Orders by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-orders/partner/{{customerPartnerNo}}"
+            "url": "{{base_url}}/api/purchase-orders/partner/VEND001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Approved Items for Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-orders/{{salesOrderId}}"
+            "url": "{{base_url}}/api/purchase-orders/items/VEND001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Get Approved Item Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/purchase-orders/items/VEND001/BATCH000001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get Locations for Partner",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/purchase-orders/locations",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get Purchase Order by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/purchase-orders/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Create Purchase Order",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/purchase-orders",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderType\": \"SO\",\n  \"partnerNo\": \"CUS000001\",\n  \"partnerType\": \"customer\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2026-03-22\",\n  \"requestedDeliveryDate\": \"2026-03-29\",\n  \"currencyCode\": \"INR\",\n  \"externalDocumentNo\": \"EXT-SO-1001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Outbound\",\n  \"submittedDate\": \"2026-03-22\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Sales Item\",\n      \"quantity\": 5,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 150,\n      \"lineDiscountPercent\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 750,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2026-03-29\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/sales-orders"
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"locationCode\": \"WAREHOUSE\",\n  \"requestedReceiptDate\": \"2026-05-10\",\n  \"orderStagingLines\": [\n    {\n      \"partnerPortalNo\": \"PORTAL000003\",\n      \"batchNo\": \"BATCH000003\",\n      \"quantity\": 50,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"directUnitCost\": 120.00\n    }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"orderType\": \"SO\",\n  \"partnerNo\": \"CUS000001\",\n  \"partnerType\": \"customer\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2026-03-22\",\n  \"requestedDeliveryDate\": \"2026-03-29\",\n  \"currencyCode\": \"INR\",\n  \"externalDocumentNo\": \"EXT-SO-1001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Outbound\",\n  \"submittedDate\": \"2026-03-22\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Sales Item\",\n      \"quantity\": 5,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 150,\n      \"lineDiscountPercent\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 750,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2026-03-29\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/sales-orders/businesscentral"
-          }
-        },
-        {
-          "name": "PUT by id",
+          "name": "Update Purchase Order",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/purchase-orders/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderType\": \"SO\",\n  \"partnerNo\": \"CUS000001\",\n  \"partnerType\": \"customer\",\n  \"shipToCode\": \"SHIP001\",\n  \"locationCode\": \"LOC001\",\n  \"orderDate\": \"2026-03-22\",\n  \"requestedDeliveryDate\": \"2026-03-29\",\n  \"currencyCode\": \"INR\",\n  \"externalDocumentNo\": \"EXT-SO-1001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Outbound\",\n  \"submittedDate\": \"2026-03-22\",\n  \"orderStagingLines\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Sales Item\",\n      \"quantity\": 5,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"unitPrice\": 150,\n      \"lineDiscountPercent\": 0,\n      \"lineDiscountAmount\": 0,\n      \"lineAmount\": 750,\n      \"locationCode\": \"LOC001\",\n      \"deliveryDate\": \"2026-03-29\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/sales-orders/{{salesOrderId}}"
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"locationCode\": \"WAREHOUSE\",\n  \"requestedReceiptDate\": \"2026-05-20\",\n  \"orderStagingLines\": [\n    {\n      \"partnerPortalNo\": \"PORTAL000003\",\n      \"batchNo\": \"BATCH000003\",\n      \"quantity\": 75,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"directUnitCost\": 115.00\n    }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "PATCH status",
+          "name": "Update Purchase Order Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/purchase-orders/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Approved\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/sales-orders/{{salesOrderId}}/status"
+              "raw": "{\n  \"status\": \"Processed\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Purchase Order",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-orders/{{salesOrderId}}"
+            "url": "{{base_url}}/api/purchase-orders/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
       "name": "Invoices",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Invoices",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/invoices?status=Pending&partnerNo={{customerPartnerNo}}"
+            "url": "{{base_url}}/api/invoices",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Invoices by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/invoices/partner/{{customerPartnerNo}}"
+            "url": "{{base_url}}/api/invoices/partner/CUST001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by invoice no",
+          "name": "Get Invoice by No",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/invoices/no/{{invoiceNo}}"
+            "url": "{{base_url}}/api/invoices/no/INV-2026-00001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Invoice by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}"
+            "url": "{{base_url}}/api/invoices/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Invoice",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/invoices",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"invoiceType\": \"Sales\",\n  \"invoiceNo\": \"INV-1001\",\n  \"invoiceDate\": \"2026-03-22\",\n  \"dueDate\": \"2026-04-21\",\n  \"partnerNo\": \"CUS000001\",\n  \"partnerType\": \"customer\",\n  \"totalAmount\": 1000,\n  \"currencyCode\": \"INR\",\n  \"outstandingAmount\": 1000,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-INV-1001\",\n  \"linkedOrderNo\": \"SO-1001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Invoice line\",\n      \"lineAmount\": 1000,\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"quantity\": 10,\n      \"unitPrice\": 100,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"vat\": 18,\n      \"vatAmount\": 180,\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/invoices"
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"invoiceNo\": \"INV-2026-00001\",\n  \"invoiceDate\": \"2026-04-17\",\n  \"dueDate\": \"2026-05-17\",\n  \"totalAmount\": 2500.00,\n  \"currencyCode\": \"USD\",\n  \"status\": \"Open\"\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"invoiceType\": \"Sales\",\n  \"invoiceNo\": \"INV-1001\",\n  \"invoiceDate\": \"2026-03-22\",\n  \"dueDate\": \"2026-04-21\",\n  \"partnerNo\": \"CUS000001\",\n  \"partnerType\": \"customer\",\n  \"totalAmount\": 1000,\n  \"currencyCode\": \"INR\",\n  \"outstandingAmount\": 1000,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-INV-1001\",\n  \"linkedOrderNo\": \"SO-1001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Invoice line\",\n      \"lineAmount\": 1000,\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"quantity\": 10,\n      \"unitPrice\": 100,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"vat\": 18,\n      \"vatAmount\": 180,\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/invoices/businesscentral"
-          }
-        },
-        {
-          "name": "PUT by id",
+          "name": "Update Invoice",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/invoices/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"invoiceType\": \"Sales\",\n  \"invoiceNo\": \"INV-1001\",\n  \"invoiceDate\": \"2026-03-22\",\n  \"dueDate\": \"2026-04-21\",\n  \"partnerNo\": \"CUS000001\",\n  \"partnerType\": \"customer\",\n  \"totalAmount\": 1000,\n  \"currencyCode\": \"INR\",\n  \"outstandingAmount\": 1000,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-INV-1001\",\n  \"linkedOrderNo\": \"SO-1001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Invoice line\",\n      \"lineAmount\": 1000,\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"quantity\": 10,\n      \"unitPrice\": 100,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"vat\": 18,\n      \"vatAmount\": 180,\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}"
+              "raw": "{\n  \"dueDate\": \"2026-06-01\",\n  \"totalAmount\": 2750.00\n}"
+            }
           }
         },
         {
-          "name": "PATCH status",
+          "name": "Update Invoice Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/invoices/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Paid\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}/status"
+              "raw": "{\n  \"status\": \"Paid\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Invoice",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}"
+            "url": "{{base_url}}/api/invoices/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Purchase invoices",
+      "name": "Purchase Invoices",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Purchase Invoices",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-invoices?status=Pending&partnerNo={{partnerNo}}"
+            "url": "{{base_url}}/api/purchase-invoices",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Purchase Invoices by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-invoices/partner/{{partnerNo}}"
+            "url": "{{base_url}}/api/purchase-invoices/partner/VEND001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by invoice no",
+          "name": "Get Purchase Invoice by No",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-invoices/no/PINV-1001"
+            "url": "{{base_url}}/api/purchase-invoices/no/PINV-2026-00001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Purchase Invoice by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-invoices/{{purchaseInvoiceId}}"
+            "url": "{{base_url}}/api/purchase-invoices/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Purchase Invoice",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/purchase-invoices",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"invoiceType\": \"Purchase\",\n  \"invoiceNo\": \"PINV-1001\",\n  \"invoiceDate\": \"2026-03-22\",\n  \"dueDate\": \"2026-04-21\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"totalAmount\": 2000,\n  \"currencyCode\": \"INR\",\n  \"outstandingAmount\": 2000,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-PINV-1001\",\n  \"linkedOrderNo\": \"PO-1001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Purchase line\",\n      \"lineAmount\": 2000,\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"quantity\": 20,\n      \"unitPrice\": 100,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"vat\": 18,\n      \"vatAmount\": 360,\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-invoices"
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"invoiceNo\": \"PINV-2026-00001\",\n  \"invoiceDate\": \"2026-04-17\",\n  \"dueDate\": \"2026-05-17\",\n  \"totalAmount\": 6000.00,\n  \"currencyCode\": \"USD\",\n  \"status\": \"Open\"\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"invoiceType\": \"Purchase\",\n  \"invoiceNo\": \"PINV-1001\",\n  \"invoiceDate\": \"2026-03-22\",\n  \"dueDate\": \"2026-04-21\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"totalAmount\": 2000,\n  \"currencyCode\": \"INR\",\n  \"outstandingAmount\": 2000,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-PINV-1001\",\n  \"linkedOrderNo\": \"PO-1001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Purchase line\",\n      \"lineAmount\": 2000,\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"quantity\": 20,\n      \"unitPrice\": 100,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"vat\": 18,\n      \"vatAmount\": 360,\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-invoices/businesscentral"
-          }
-        },
-        {
-          "name": "PUT by id",
+          "name": "Update Purchase Invoice",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/purchase-invoices/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"invoiceType\": \"Purchase\",\n  \"invoiceNo\": \"PINV-1001\",\n  \"invoiceDate\": \"2026-03-22\",\n  \"dueDate\": \"2026-04-21\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"totalAmount\": 2000,\n  \"currencyCode\": \"INR\",\n  \"outstandingAmount\": 2000,\n  \"status\": \"Pending\",\n  \"bcInvoiceNo\": \"BC-PINV-1001\",\n  \"linkedOrderNo\": \"PO-1001\",\n  \"portalInvoiceLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Purchase line\",\n      \"lineAmount\": 2000,\n      \"lineDiscount\": 0,\n      \"lineDiscountAmount\": 0,\n      \"quantity\": 20,\n      \"unitPrice\": 100,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"vat\": 18,\n      \"vatAmount\": 360,\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-invoices/{{purchaseInvoiceId}}"
+              "raw": "{\n  \"dueDate\": \"2026-06-01\",\n  \"totalAmount\": 6250.00\n}"
+            }
           }
         },
         {
-          "name": "PATCH status",
+          "name": "Update Purchase Invoice Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/purchase-invoices/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Paid\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-invoices/{{purchaseInvoiceId}}/status"
+              "raw": "{\n  \"status\": \"Paid\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Purchase Invoice",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-invoices/{{purchaseInvoiceId}}"
+            "url": "{{base_url}}/api/purchase-invoices/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Purchase receipts",
+      "name": "Purchase Receipts",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Purchase Receipts",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-receipts?partnerNo={{partnerNo}}"
+            "url": "{{base_url}}/api/purchase-receipts",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Purchase Receipts by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-receipts/partner/{{partnerNo}}"
+            "url": "{{base_url}}/api/purchase-receipts/partner/VEND001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by shipment no",
+          "name": "Get Purchase Receipt by Shipment No",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-receipts/shipment/{{shipmentNo}}"
+            "url": "{{base_url}}/api/purchase-receipts/shipment/SHIP000001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Purchase Receipt by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-receipts/{{purchaseReceiptId}}"
+            "url": "{{base_url}}/api/purchase-receipts/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Purchase Receipt",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/purchase-receipts",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"deliveryType\": \"Receipt\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"linkedOrderNo\": \"PO-1001\",\n  \"shipmentNo\": \"SHP-1001\",\n  \"trackingNo\": \"TRK-1001\",\n  \"carrierCode\": \"DHL\",\n  \"shipmentDate\": \"2026-03-22\",\n  \"expectedDeliveryDate\": \"2026-03-28\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"bcDocumentNo\": \"BC-REC-1001\",\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Receipt line\",\n      \"expirationDate\": \"2027-03-22\",\n      \"lotNo\": \"LOT001\",\n      \"orderedQuantity\": 20,\n      \"remainingQuantity\": 0,\n      \"serialNo\": \"SER001\",\n      \"shippedQuantity\": 20,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-receipts"
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"purchaseOrderNo\": \"PO-2026-00001\",\n  \"receiptDate\": \"2026-04-17\",\n  \"locationCode\": \"WAREHOUSE\",\n  \"lines\": [\n    {\n      \"itemNo\": \"ITEM001\",\n      \"quantity\": 50,\n      \"unitOfMeasureCode\": \"PCS\"\n    }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"deliveryType\": \"Receipt\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"linkedOrderNo\": \"PO-1001\",\n  \"shipmentNo\": \"SHP-1001\",\n  \"trackingNo\": \"TRK-1001\",\n  \"carrierCode\": \"DHL\",\n  \"shipmentDate\": \"2026-03-22\",\n  \"expectedDeliveryDate\": \"2026-03-28\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"bcDocumentNo\": \"BC-REC-1001\",\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Receipt line\",\n      \"expirationDate\": \"2027-03-22\",\n      \"lotNo\": \"LOT001\",\n      \"orderedQuantity\": 20,\n      \"remainingQuantity\": 0,\n      \"serialNo\": \"SER001\",\n      \"shippedQuantity\": 20,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-receipts/businesscentral"
-          }
-        },
-        {
-          "name": "PUT by id",
+          "name": "Update Purchase Receipt",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/purchase-receipts/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"deliveryType\": \"Receipt\",\n  \"partnerNo\": \"VNR000001\",\n  \"partnerType\": \"vendor\",\n  \"linkedOrderNo\": \"PO-1001\",\n  \"shipmentNo\": \"SHP-1001\",\n  \"trackingNo\": \"TRK-1001\",\n  \"carrierCode\": \"DHL\",\n  \"shipmentDate\": \"2026-03-22\",\n  \"expectedDeliveryDate\": \"2026-03-28\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Processed\",\n  \"direction\": \"Inbound\",\n  \"bcDocumentNo\": \"BC-REC-1001\",\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM002\",\n      \"description\": \"Receipt line\",\n      \"expirationDate\": \"2027-03-22\",\n      \"lotNo\": \"LOT001\",\n      \"orderedQuantity\": 20,\n      \"remainingQuantity\": 0,\n      \"serialNo\": \"SER001\",\n      \"shippedQuantity\": 20,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-receipts/{{purchaseReceiptId}}"
+              "raw": "{\n  \"receiptDate\": \"2026-04-20\",\n  \"locationCode\": \"WAREHOUSE-2\"\n}"
+            }
           }
         },
         {
-          "name": "PATCH status",
+          "name": "Update Purchase Receipt Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/purchase-receipts/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Delivered\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-receipts/{{purchaseReceiptId}}/status"
+              "raw": "{\n  \"status\": \"Processed\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Purchase Receipt",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-receipts/{{purchaseReceiptId}}"
+            "url": "{{base_url}}/api/purchase-receipts/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Partner location links",
+      "name": "Sales Shipments",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Sales Shipments",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/partner-location-links?partnerNo={{partnerNo}}&partnerType=vendor&locationCode=LOC001"
+            "url": "{{base_url}}/api/sales-shipments",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Sales Shipment by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/partner-location-links/partner/{{partnerNo}}"
+            "url": "{{base_url}}/api/sales-shipments/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET default by partner",
+          "name": "Get Sales Shipment by Portal Doc No",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/partner-location-links/partner/{{partnerNo}}/default"
+            "url": "{{base_url}}/api/sales-shipments/portal/SHIP000001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/partner-location-links/{{partnerLinkId}}"
-          }
-        },
-        {
-          "name": "POST create",
+          "name": "Create Sales Shipment",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/sales-shipments",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"partnerType\": \"vendor\",\n  \"partnerNo\": \"VNR000001\",\n  \"description\": \"Main Warehouse\",\n  \"addressCode\": \"ADDR001\",\n  \"addressName\": \"Warehouse A\",\n  \"locationCode\": \"LOC001\",\n  \"address\": \"Line 1\",\n  \"address2\": \"Line 2\",\n  \"city\": \"Bengaluru\",\n  \"postCode\": \"560001\",\n  \"countryRegionCode\": \"IN\",\n  \"contact\": \"Warehouse Manager\",\n  \"phoneNo\": \"+919999999000\",\n  \"isDefault\": true,\n  \"blocked\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/partner-location-links"
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"salesOrderNo\": \"SO-2026-00001\",\n  \"shipmentDate\": \"2026-04-20\",\n  \"locationCode\": \"MAIN\",\n  \"lines\": [\n    {\n      \"itemNo\": \"ITEM001\",\n      \"quantity\": 10,\n      \"unitOfMeasureCode\": \"PCS\"\n    }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"partnerType\": \"vendor\",\n  \"partnerNo\": \"VNR000001\",\n  \"description\": \"Main Warehouse\",\n  \"addressCode\": \"ADDR001\",\n  \"addressName\": \"Warehouse A\",\n  \"locationCode\": \"LOC001\",\n  \"address\": \"Line 1\",\n  \"address2\": \"Line 2\",\n  \"city\": \"Bengaluru\",\n  \"postCode\": \"560001\",\n  \"countryRegionCode\": \"IN\",\n  \"contact\": \"Warehouse Manager\",\n  \"phoneNo\": \"+919999999000\",\n  \"isDefault\": true,\n  \"blocked\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/partner-location-links/businesscentral"
-          }
-        },
-        {
-          "name": "PUT by id",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"partnerType\": \"vendor\",\n  \"partnerNo\": \"VNR000001\",\n  \"description\": \"Secondary Warehouse\",\n  \"addressCode\": \"ADDR002\",\n  \"addressName\": \"Warehouse B\",\n  \"locationCode\": \"LOC002\",\n  \"address\": \"Line 1\",\n  \"address2\": \"Line 2\",\n  \"city\": \"Mumbai\",\n  \"postCode\": \"400001\",\n  \"countryRegionCode\": \"IN\",\n  \"contact\": \"Ops Manager\",\n  \"phoneNo\": \"+919999999111\",\n  \"isDefault\": false,\n  \"blocked\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/partner-location-links/{{partnerLinkId}}"
-          }
-        },
-        {
-          "name": "PATCH block",
+          "name": "Update Sales Shipment Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/sales-shipments/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"blocked\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/partner-location-links/{{partnerLinkId}}/block"
+              "raw": "{\n  \"status\": \"Shipped\"\n}"
+            }
           }
         },
         {
-          "name": "PATCH default",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"isDefault\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/partner-location-links/{{partnerLinkId}}/default"
-          }
-        },
-        {
-          "name": "DELETE by id",
+          "name": "Delete Sales Shipment",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/partner-location-links/{{partnerLinkId}}"
+            "url": "{{base_url}}/api/sales-shipments/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
-    {
-      "name": "No series",
-      "item": [
-        {
-          "name": "GET getall",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/no-series/getall"
-          }
-        },
-        {
-          "name": "GET by code",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/no-series/code/{{noSeriesCode}}"
-          }
-        },
-        {
-          "name": "GET by id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/no-series/{{noSeriesId}}"
-          }
-        },
-        {
-          "name": "POST create",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"SHIP\",\n  \"description\": \"Sales shipment numbers\",\n  \"startingNo\": 1,\n  \"endingNo\": 999999,\n  \"lastNoUsed\": 0,\n  \"warningNo\": 900000,\n  \"incrementByNo\": 1,\n  \"allowGaps\": false,\n  \"dateOrder\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/no-series"
-          }
-        },
-        {
-          "name": "PUT by id",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"SHIP\",\n  \"description\": \"Sales shipment numbers\",\n  \"startingNo\": 1,\n  \"endingNo\": 999999,\n  \"lastNoUsed\": 0,\n  \"warningNo\": 900000,\n  \"incrementByNo\": 1,\n  \"allowGaps\": false,\n  \"dateOrder\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/no-series/{{noSeriesId}}"
-          }
-        },
-        {
-          "name": "PATCH next-number",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/no-series/{{noSeriesId}}/next-number"
-          }
-        },
-        {
-          "name": "PATCH reset",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/no-series/{{noSeriesId}}/reset"
-          }
-        },
-        {
-          "name": "DELETE by id",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/no-series/{{noSeriesId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "VAT master",
-      "item": [
-        {
-          "name": "GET all",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vat-master?status=Active&vatType=Sales"
-          }
-        },
-        {
-          "name": "GET by code",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vat-master/code/{{vatCode}}"
-          }
-        },
-        {
-          "name": "GET by id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vat-master/{{vatMasterId}}"
-          }
-        },
-        {
-          "name": "POST create",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"vatCode\": \"VAT18\",\n  \"description\": \"Standard 18%\",\n  \"vatPercent\": 18,\n  \"vatType\": \"Sales\",\n  \"isInclusive\": false,\n  \"status\": \"Active\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vat-master"
-          }
-        },
-        {
-          "name": "PUT by id",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"vatCode\": \"VAT18\",\n  \"description\": \"Standard 18% (updated)\",\n  \"vatPercent\": 18,\n  \"vatType\": \"Sales\",\n  \"isInclusive\": false,\n  \"status\": \"Active\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vat-master/{{vatMasterId}}"
-          }
-        },
-        {
-          "name": "PATCH status",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"Inactive\",\n  \"isInclusive\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/vat-master/{{vatMasterId}}/status"
-          }
-        },
-        {
-          "name": "DELETE by id",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vat-master/{{vatMasterId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Purchase prices",
-      "item": [
-        {
-          "name": "GET all",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-prices?partnerNo={{partnerNo}}"
-          }
-        },
-        {
-          "name": "GET by id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-prices/{{purchasePriceId}}"
-          }
-        },
-        {
-          "name": "POST create",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"batchNo\": \"BATCH-1001\",\n  \"newPrice\": 135,\n  \"currencyCode\": \"INR\",\n  \"effectiveDate\": \"2026-04-01\",\n  \"endingDate\": null,\n  \"minimumQuantity\": 1,\n  \"partnerNo\": \"VNR000001\",\n  \"status\": \"_x0020_\",\n  \"rejectionReason\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-prices"
-          }
-        },
-        {
-          "name": "PUT by id",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"batchNo\": \"BATCH-1001\",\n  \"newPrice\": 140,\n  \"effectiveDate\": \"2026-05-01\",\n  \"endingDate\": null,\n  \"currencyCode\": \"INR\",\n  \"minimumQuantity\": 1,\n  \"partnerNo\": \"VNR000001\",\n  \"status\": \"_x0020_\",\n  \"rejectionReason\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/purchase-prices/{{purchasePriceId}}"
-          }
-        },
-        {
-          "name": "DELETE by id",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/purchase-prices/{{purchasePriceId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Item categories",
-      "item": [
-        {
-          "name": "GET all",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/item-categories"
-          }
-        },
-        {
-          "name": "POST sync",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/item-categories/sync"
-          }
-        }
-      ]
-    },
+
     {
       "name": "Payments",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Payments",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/payments?partnerNo={{customerPartnerNo}}&status=Pending"
+            "url": "{{base_url}}/api/payments",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by partner",
+          "name": "Get Payments by Partner",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/payments/partner/{{customerPartnerNo}}"
+            "url": "{{base_url}}/api/payments/partner/CUST001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Payment by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/payments/{{paymentId}}"
+            "url": "{{base_url}}/api/payments/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Payment",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/payments",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentNumber\": \"PAY-1001\",\n  \"invoiceId\": null,\n  \"partnerNo\": \"CUS000001\",\n  \"amount\": 1000,\n  \"paymentDate\": \"2026-03-22\",\n  \"method\": \"BankTransfer\",\n  \"status\": \"Pending\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/payments"
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"invoiceNo\": \"INV-2026-00001\",\n  \"paymentDate\": \"2026-04-17\",\n  \"amount\": 2500.00,\n  \"currencyCode\": \"USD\",\n  \"paymentMethod\": \"BankTransfer\",\n  \"referenceNo\": \"TXN-20260417-001\"\n}"
+            }
           }
         },
         {
-          "name": "PUT by id",
+          "name": "Update Payment",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/payments/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentNumber\": \"PAY-1001\",\n  \"invoiceId\": null,\n  \"partnerNo\": \"CUS000001\",\n  \"amount\": 1000,\n  \"paymentDate\": \"2026-03-22\",\n  \"method\": \"BankTransfer\",\n  \"status\": \"Pending\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/payments/{{paymentId}}"
+              "raw": "{\n  \"amount\": 2750.00,\n  \"referenceNo\": \"TXN-20260417-002\"\n}"
+            }
           }
         },
         {
-          "name": "PATCH status",
+          "name": "Update Payment Status",
           "request": {
             "method": "PATCH",
+            "url": "{{base_url}}/api/payments/1/status",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Completed\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/payments/{{paymentId}}/status"
+              "raw": "{\n  \"status\": \"Confirmed\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Payment",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/payments/{{paymentId}}"
+            "url": "{{base_url}}/api/payments/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Unit of measures",
+      "name": "Purchase Prices",
       "item": [
         {
-          "name": "GET all",
+          "name": "Get All Purchase Prices",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/unit-of-measures"
+            "url": "{{base_url}}/api/purchase-prices",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
+          "name": "Get Purchase Price by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/unit-of-measures/{{uomId}}"
+            "url": "{{base_url}}/api/purchase-prices/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create",
+          "name": "Create Purchase Price",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/purchase-prices",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"BOX\",\n  \"description\": \"Box (10 pcs)\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/unit-of-measures"
+              "raw": "{\n  \"partnerNo\": \"VEND001\",\n  \"itemNo\": \"ITEM001\",\n  \"unitOfMeasureCode\": \"PCS\",\n  \"directUnitCost\": 95.00,\n  \"currencyCode\": \"USD\",\n  \"startingDate\": \"2026-04-01\",\n  \"endingDate\": \"2026-12-31\",\n  \"minimumQuantity\": 10\n}"
+            }
           }
         },
         {
-          "name": "PUT by id",
+          "name": "Update Purchase Price",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/purchase-prices/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"BOX\",\n  \"description\": \"Box — updated\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/unit-of-measures/{{uomId}}"
+              "raw": "{\n  \"directUnitCost\": 90.00,\n  \"endingDate\": \"2026-12-31\",\n  \"minimumQuantity\": 20\n}"
+            }
           }
         },
         {
-          "name": "DELETE by id",
+          "name": "Delete Purchase Price",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/unit-of-measures/{{uomId}}"
+            "url": "{{base_url}}/api/purchase-prices/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
+    {
+      "name": "Partner Location Links",
+      "item": [
+        {
+          "name": "Get All Partner Location Links",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/partner-location-links",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get Links by Partner",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/partner-location-links/partner/CUST001",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get Default Link by Partner",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/partner-location-links/partner/CUST001/default",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get Partner Location Link by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/partner-location-links/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Create Partner Location Link",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/partner-location-links",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerNo\": \"CUST001\",\n  \"locationCode\": \"MAIN\",\n  \"isDefault\": true,\n  \"blocked\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Partner Location Link",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/api/partner-location-links/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"locationCode\": \"WAREHOUSE\",\n  \"isDefault\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Block Status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/api/partner-location-links/1/block",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blocked\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Default Status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/api/partner-location-links/1/default",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isDefault\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Partner Location Link",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/partner-location-links/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Item Categories",
+      "item": [
+        {
+          "name": "Get All Item Categories",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/item-categories",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Sync Item Categories",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/item-categories/sync",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Unit of Measures",
+      "item": [
+        {
+          "name": "Get All UOM (Public)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/unit-of-measures"
+          }
+        },
+        {
+          "name": "Get UOM by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/unit-of-measures/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Create UOM",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/unit-of-measures",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"KG\",\n  \"description\": \"Kilogram\",\n  \"internationalStandardCode\": \"KGM\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update UOM",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/api/unit-of-measures/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Kilogram (metric)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete UOM",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/unit-of-measures/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "VAT Master",
+      "item": [
+        {
+          "name": "Get All VAT Masters",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/vat-master",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get VAT by Code",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/vat-master/code/STANDARD",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get VAT by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/vat-master/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Create VAT Master",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/vat-master",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vatCode\": \"STANDARD\",\n  \"description\": \"Standard VAT Rate\",\n  \"vatPercent\": 20.00,\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update VAT Master",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/api/vat-master/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vatPercent\": 21.00,\n  \"description\": \"Standard VAT Rate (Updated)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update VAT Status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/api/vat-master/1/status",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete VAT Master",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/vat-master/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "No Series",
+      "item": [
+        {
+          "name": "Get All No Series",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/no-series/getall",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get No Series by Code",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/no-series/code/PORTAL",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get No Series by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/no-series/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Create No Series",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/no-series",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CUSTOM\",\n  \"description\": \"Custom Number Series\",\n  \"startingNo\": 1,\n  \"endingNo\": 999999,\n  \"lastNoUsed\": 0,\n  \"incrementByNo\": 1,\n  \"allowGaps\": false,\n  \"dateOrder\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Update No Series",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/api/no-series/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PORTAL\",\n  \"description\": \"Partner Portal Number Series (Updated)\",\n  \"startingNo\": 1,\n  \"endingNo\": 9999999,\n  \"lastNoUsed\": 0,\n  \"incrementByNo\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Next Number",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/api/no-series/1/next-number",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Reset No Series",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/api/no-series/1/reset",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Delete No Series",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/no-series/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Countries",
+      "item": [
+        {
+          "name": "Get Active Country",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/countries/active",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get All Countries",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/countries",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get Country by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/countries/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Create Country",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/countries",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"IN\",\n  \"name\": \"India\",\n  \"currencyCode\": \"INR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Country",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/api/countries/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"IN\",\n  \"name\": \"India (Republic)\",\n  \"currencyCode\": \"INR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Activate Country",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/api/countries/1/activate",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Country",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/countries/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "BC User Registrations",
+      "item": [
+        {
+          "name": "Generate Invite",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/bc-user-registrations/invite",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"partnerNo\": \"CUST001\",\n  \"role\": \"customer\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify Invite",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/bc-user-registrations/invite/verify?token=INVITE_TOKEN_HERE",
+              "query": [{ "key": "token", "value": "INVITE_TOKEN_HERE" }]
+            }
+          }
+        },
+        {
+          "name": "Get All BC User Registrations",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/bc-user-registrations",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get BC User Registration by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/bc-user-registrations/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Create BC User Registration (Public)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/bc-user-registrations",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inviteToken\": \"INVITE_TOKEN_HERE\",\n  \"name\": \"New User\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"SecurePass@123\",\n  \"phoneNo\": \"+1-555-0300\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update BC User Registration Status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/api/bc-user-registrations/1/status",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete BC User Registration",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/bc-user-registrations/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+
     {
       "name": "Permissions",
       "item": [
         {
-          "name": "GET screens",
+          "name": "Get All Screens",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permissions/screens"
+            "url": "{{base_url}}/api/permissions/screens",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET me",
+          "name": "Get My Permissions",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permissions/me"
+            "url": "{{base_url}}/api/permissions/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET check",
+          "name": "Check Permission",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permissions/check/USERS/read"
+            "url": "{{base_url}}/api/permissions/check/SALES_ORDERS/read",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST sync-tables (super_admin)",
+          "name": "Get Permissions by Role",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/permissions/role/customer",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Set Role Permissions",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/permissions/role/customer",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permissions/sync-tables"
-          }
-        },
-        {
-          "name": "GET by role",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permissions/role/{{role}}"
-          }
-        },
-        {
-          "name": "POST set role permission",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"screen_id\": 1,\n  \"can_read\": true,\n  \"can_write\": true,\n  \"can_modify\": false,\n  \"can_delete\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/permissions/role/{{role}}"
+              "raw": "{\n  \"screenCode\": \"SALES_ORDERS\",\n  \"read\": true,\n  \"write\": true,\n  \"modify\": false,\n  \"delete\": false\n}"
+            }
           }
         },
         {
-          "name": "POST bulk role permissions",
+          "name": "Bulk Set Role Permissions",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/permissions/role/customer/bulk",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"permissions\": [\n    {\n      \"screen_id\": 1,\n      \"can_read\": true,\n      \"can_write\": false,\n      \"can_modify\": false,\n      \"can_delete\": false\n    },\n    {\n      \"screen_id\": 2,\n      \"can_read\": true,\n      \"can_write\": true,\n      \"can_modify\": true,\n      \"can_delete\": false\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/permissions/role/{{role}}/bulk"
+              "raw": "{\n  \"permissions\": [\n    { \"screenCode\": \"SALES_ORDERS\", \"read\": true, \"write\": true,  \"modify\": false, \"delete\": false },\n    { \"screenCode\": \"INVOICES\",     \"read\": true, \"write\": false, \"modify\": false, \"delete\": false },\n    { \"screenCode\": \"PAYMENTS\",     \"read\": true, \"write\": true,  \"modify\": false, \"delete\": false }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "GET user permissions",
+          "name": "Get User Permissions",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permissions/user/{{userId}}"
+            "url": "{{base_url}}/api/permissions/user/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST set user permission",
+          "name": "Set User Permissions",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/permissions/user/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"screen_id\": 1,\n  \"can_read\": true,\n  \"can_write\": true,\n  \"can_modify\": false,\n  \"can_delete\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/permissions/user/{{userId}}"
+              "raw": "{\n  \"screenCode\": \"SALES_ORDERS\",\n  \"read\": true,\n  \"write\": true,\n  \"modify\": true,\n  \"delete\": false\n}"
+            }
           }
         },
         {
-          "name": "DELETE user override",
+          "name": "Remove User Permission Override",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permissions/user/{{userId}}/screen/{{screenId}}"
+            "url": "{{base_url}}/api/permissions/user/1/screen/5",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Sync Database Tables",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/permissions/sync-tables",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Permission groups",
+      "name": "Permission Groups",
       "item": [
         {
-          "name": "GET groups",
+          "name": "Get All Groups",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/groups"
+            "url": "{{base_url}}/api/permission-groups/groups",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST create group",
+          "name": "Create Group",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/permission-groups/groups",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"group_name\": \"Warehouse Ops\",\n  \"description\": \"Warehouse team access\",\n  \"is_active\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/permission-groups/groups"
+              "raw": "{\n  \"group_name\": \"Sales Team\",\n  \"description\": \"Access for sales team members\"\n}"
+            }
           }
         },
         {
-          "name": "GET group by id",
+          "name": "Get Group by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}"
+            "url": "{{base_url}}/api/permission-groups/groups/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "PUT update group",
+          "name": "Update Group",
           "request": {
             "method": "PUT",
+            "url": "{{base_url}}/api/permission-groups/groups/1",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"group_name\": \"Warehouse Ops\",\n  \"description\": \"Updated description\",\n  \"is_active\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}"
+              "raw": "{\n  \"group_name\": \"Sales Team (Updated)\",\n  \"description\": \"Extended access for sales team\"\n}"
+            }
           }
         },
         {
-          "name": "DELETE group",
+          "name": "Delete Group",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}"
+            "url": "{{base_url}}/api/permission-groups/groups/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET group permissions",
+          "name": "Get Group Permissions",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}/permissions"
+            "url": "{{base_url}}/api/permission-groups/groups/1/permissions",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST set group permission",
+          "name": "Set Group Permission",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/permission-groups/groups/1/permissions",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"screen_id\": 1,\n  \"can_read\": true,\n  \"can_write\": true,\n  \"can_modify\": false,\n  \"can_delete\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}/permissions"
+              "raw": "{\n  \"screenCode\": \"SALES_ORDERS\",\n  \"read\": true,\n  \"write\": true,\n  \"modify\": true,\n  \"delete\": false\n}"
+            }
           }
         },
         {
-          "name": "POST bulk group permissions",
+          "name": "Bulk Set Group Permissions",
           "request": {
             "method": "POST",
+            "url": "{{base_url}}/api/permission-groups/groups/1/permissions/bulk",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"permissions\": [\n    {\n      \"screen_id\": 1,\n      \"can_read\": true,\n      \"can_write\": true,\n      \"can_modify\": false,\n      \"can_delete\": false\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}/permissions/bulk"
+              "raw": "{\n  \"permissions\": [\n    { \"screenCode\": \"SALES_ORDERS\", \"read\": true, \"write\": true,  \"modify\": true,  \"delete\": false },\n    { \"screenCode\": \"INVOICES\",     \"read\": true, \"write\": false, \"modify\": false, \"delete\": false }\n  ]\n}"
+            }
           }
         },
         {
-          "name": "DELETE group permission",
+          "name": "Remove Group Permission",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}/permissions/{{screenId}}"
+            "url": "{{base_url}}/api/permission-groups/groups/1/permissions/5",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "POST assign group to user",
+          "name": "Assign Group to User",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/users/{{userId}}/groups/{{permissionGroupId}}"
+            "url": "{{base_url}}/api/permission-groups/users/1/groups/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "DELETE remove group from user",
+          "name": "Remove Group from User",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/users/{{userId}}/groups/{{permissionGroupId}}"
+            "url": "{{base_url}}/api/permission-groups/users/1/groups/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET user groups",
+          "name": "Get User Groups",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/users/{{userId}}/groups"
+            "url": "{{base_url}}/api/permission-groups/users/1/groups",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET user effective permissions",
+          "name": "Get User Effective Permissions",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/users/{{userId}}/effective-permissions"
+            "url": "{{base_url}}/api/permission-groups/users/1/effective-permissions",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET group users",
+          "name": "Get Group Users",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/permission-groups/groups/{{permissionGroupId}}/users"
+            "url": "{{base_url}}/api/permission-groups/groups/1/users",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         }
       ]
     },
+
     {
-      "name": "Sales shipments",
+      "name": "Data Management",
       "item": [
         {
-          "name": "GET all",
+          "name": "List Tables",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-shipments?partnerNo={{customerPartnerNo}}"
+            "url": "{{base_url}}/api/data-management/tables",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-shipments/{{salesShipmentId}}"
-          }
-        },
-        {
-          "name": "GET by portal document no",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-shipments/portal/{{portalDocumentNo}}"
-          }
-        },
-        {
-          "name": "POST create",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"shipmentNo\": \"SHP-SO-1001\",\n  \"partnerNo\": \"CUS000001\",\n  \"deliveryType\": \"Shipment\",\n  \"partnerType\": \"Customer\",\n  \"linkedOrderNo\": \"SO-1001\",\n  \"trackingNo\": \"TRK-555\",\n  \"carrierCode\": \"FEDEX\",\n  \"shipmentDate\": \"2026-03-22\",\n  \"expectedDeliveryDate\": \"2026-03-28\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Inserted\",\n  \"direction\": \"Outbound\",\n  \"bcDocumentNo\": \"BC-SHIP-001\",\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Shipment line\",\n      \"expirationDate\": \"2027-03-22\",\n      \"lotNo\": \"LOT-A\",\n      \"orderedQuantity\": 5,\n      \"remainingQuantity\": 0,\n      \"serialNo\": \"\",\n      \"shippedQuantity\": 5,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/sales-shipments"
-          }
-        },
-        {
-          "name": "POST businesscentral",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-register-token",
-                "value": "{{registerToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"shipmentNo\": \"SHP-SO-1001\",\n  \"partnerNo\": \"CUS000001\",\n  \"deliveryType\": \"Shipment\",\n  \"partnerType\": \"Customer\",\n  \"linkedOrderNo\": \"SO-1001\",\n  \"trackingNo\": \"TRK-555\",\n  \"carrierCode\": \"FEDEX\",\n  \"shipmentDate\": \"2026-03-22\",\n  \"expectedDeliveryDate\": \"2026-03-28\",\n  \"locationCode\": \"LOC001\",\n  \"shipToCode\": \"SHIP001\",\n  \"status\": \"Inserted\",\n  \"direction\": \"Outbound\",\n  \"bcDocumentNo\": \"BC-SHIP-001\",\n  \"deliveryStagingsLine\": [\n    {\n      \"lineNo\": 10000,\n      \"itemNo\": \"ITEM001\",\n      \"description\": \"Shipment line\",\n      \"expirationDate\": \"2027-03-22\",\n      \"lotNo\": \"LOT-A\",\n      \"orderedQuantity\": 5,\n      \"remainingQuantity\": 0,\n      \"serialNo\": \"\",\n      \"shippedQuantity\": 5,\n      \"unitOfMeasureCode\": \"PCS\",\n      \"variantCode\": \"STD\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/sales-shipments/businesscentral"
-          }
-        },
-        {
-          "name": "PATCH status",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"In Transit\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/sales-shipments/{{salesShipmentId}}/status"
-          }
-        },
-        {
-          "name": "DELETE by id",
+          "name": "Delete All Data",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/sales-shipments/{{salesShipmentId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "BC user registrations",
-      "item": [
-        {
-          "name": "GET all",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/bc-user-registrations?requesterUserId=BC-USER-001&status=Draft"
+            "url": "{{base_url}}/api/data-management/all",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
           }
         },
         {
-          "name": "GET by id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/api/bc-user-registrations/{{bcUserRegistrationId}}"
-          }
-        },
-        {
-          "name": "POST create (no auth)",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"New Partner LLC\",\n  \"requesterUserId\": \"BC-USER-001\",\n  \"partnerType\": \"Customer\",\n  \"regType\": \"Create\",\n  \"scope\": \"Current_x0020_Company\",\n  \"partnerNo\": \"\",\n  \"centralPartnerNo\": \"\",\n  \"resultPartnerNo\": \"\",\n  \"businessJustification\": \"Onboarding new distributor\",\n  \"name2\": \"Trading Division\",\n  \"address\": \"Plot 12\",\n  \"address2\": \"Industrial Area\",\n  \"city\": \"Dubai\",\n  \"postCode\": \"00000\",\n  \"countryRegionCode\": \"AE\",\n  \"phoneNo\": \"+971500000000\",\n  \"email\": \"finance@newpartner.com\",\n  \"vatRegistrationNo\": \"AE123456789\",\n  \"currencyCode\": \"AED\",\n  \"paymentTermsCode\": \"NET30\",\n  \"paymentMethodCode\": \"BANK\",\n  \"partnerPostingGroup\": \"DOMESTIC\",\n  \"genBusPostingGroup\": \"GENERAL\",\n  \"vatBusPostingGroup\": \"DOMESTIC\",\n  \"partnerEmail\": \"contact@newpartner.com\",\n  \"tradeName\": \"New Partner\",\n  \"tradeLicenseNumber\": \"TL-2026-001\",\n  \"tradeLicenseExpiryDate\": \"2027-12-31\",\n  \"companyRegNumber\": \"CR-998877\",\n  \"entityType\": \"LLC\",\n  \"countryOfIncorporation\": \"AE\",\n  \"placeOfRegistration\": \"Dubai\",\n  \"website\": \"https://newpartner.example.com\",\n  \"partnerCategory\": \"Distributor\",\n  \"partnerRegContactLines\": [\n    {\n      \"lineNo\": 10000,\n      \"fullName\": \"Jane Smith\",\n      \"designation\": \"Finance Manager\",\n      \"mobileNumber\": \"+971501111111\",\n      \"emailAddress\": \"jane@newpartner.com\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/bc-user-registrations"
-          }
-        },
-        {
-          "name": "PATCH status",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"Pending\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{baseUrl}}/api/bc-user-registrations/{{bcUserRegistrationId}}/status"
-          }
-        },
-        {
-          "name": "DELETE by id",
+          "name": "Delete Selected Tables",
           "request": {
             "method": "DELETE",
+            "url": "{{base_url}}/api/data-management/tables",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": "{{baseUrl}}/api/bc-user-registrations/{{bcUserRegistrationId}}"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tables\": [\"sales_orders\", \"purchase_orders\"]\n}"
+            }
           }
         }
       ]
     }
+
   ]
 }

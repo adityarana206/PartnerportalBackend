@@ -26,6 +26,8 @@ const PermissionRoutes = require("./routes/permission.routes");
 const PermissionGroupRoutes = require("./routes/permissionGroup.routes");
 const SalesShipmentRoutes = require("./routes/salesShipment.routes");
 const BCUserRegisterRoutes = require("./routes/bcUserRegister.routes");
+const DataManagementRoutes = require("./routes/dataManagement.routes");
+const CountryRoutes = require("./routes/country.routes");
 const app = express();
 
 /* =======================
@@ -88,6 +90,8 @@ app.use("/api/permissions", PermissionRoutes);
 app.use("/api/permission-groups", PermissionGroupRoutes);
 app.use("/api/sales-shipments", SalesShipmentRoutes);
 app.use("/api/bc-user-registrations", BCUserRegisterRoutes);
+app.use("/api/data-management", DataManagementRoutes);
+app.use("/api/countries", CountryRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

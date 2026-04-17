@@ -8,19 +8,18 @@ const {
   update,
   remove,
 } = require("../controllers/Customer.controller");
-const { protect, protectRegister, isSuperAdmin } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
+const { protect, isSuperAdmin } = require("../middleware/auth.middleware");
 
 // ─── WRITE (Register) ──────────────────────────────────────
 router.post("/register", register);
 
 // ─── READ ──────────────────────────────────────────────────
-router.get("/", protect, canRead("USERS"), getAll);
+router.get("/", protect, getAll);
 router.get("/me", protect, getMe);
-router.get("/:id", protect, canRead("USERS"), getById);
+router.get("/:id", protect, getById);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
-router.put("/:id", protect, canModify("USERS"), update);
+router.put("/:id", protect, update);
 
 // ─── DELETE ────────────────────────────────────────────────
 router.delete("/:id", protect, isSuperAdmin, remove);

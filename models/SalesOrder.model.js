@@ -224,6 +224,33 @@ const SalesOrder = {
     );
     return result.rows[0] || null;
   },
+
+  // ─── Approved items lookup ─────────────────────────────
+  async findApprovedItemsByPartner(partnerNo) {
+    const result = await pool.query(
+      `SELECT batch_no, item_name, description, base_unit_of_measure,
+              unit_price, price_currency_code, item_category_code,
+              net_weight, gross_weight, shelf_life_days
+       FROM item_requests
+       WHERE partner_no = $1 AND status = 'Approved' AND block = false
+       ORDER BY item_name`,
+      [partnerNo]
+    );
+    return result.rows;
+  },
+
+  // ─── Single approved item detail ──────────────────────
+  async findApprovedItemDetail(partnerNo, batchNo) {
+    const result = await pool.query(
+      `SELECT batch_no, item_name, description, base_unit_of_measure,
+              unit_price, price_currency_code, item_category_code,
+              net_weight, gross_weight, shelf_life_days
+       FROM item_requests
+       WHERE partner_no = $1 AND batch_no = $2 AND status = 'Approved' AND block = false`,
+      [partnerNo, batchNo]
+    );
+    return result.rows[0] || null;
+  },
 };
 
 module.exports = SalesOrder;

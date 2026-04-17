@@ -1,4 +1,6 @@
 const SalesOrder = require("../models/SalesOrder.model");
+const PartnerLocationLink = require("../models/PartnerLocationLink.model");
+const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
 // ─── Create ────────────────────────────────────────────────
@@ -20,12 +22,29 @@ const createSalesOrder = async (req, res) => {
         message: "At least one order line is required",
       });
     }
+
     const userId = req.user ? req.user.id : null;
+
+    // Save to local DB
     const order = await SalesOrder.create(req.body, userId);
+
+    // Sync to Business Central
+    let bcResponse = null;
+    let bcError = null;
+    try {
+      const bcData = { ...req.body, orderType: "Sales_x0020_Order" };
+      bcResponse = await bcService.createOrderStaging(bcData);
+      console.log("✅ Sales Order synced to Business Central:", bcResponse);
+    } catch (bcErr) {
+      bcError = bcErr.response?.data || bcErr.message;
+      console.error("⚠️  Failed to sync to Business Central:", bcError);
+    }
+
     res.status(201).json({
       success: true,
       message: "Sales order created successfully",
       data: order,
+      businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -190,6 +209,44 @@ const deleteSalesOrder = async (req, res) => {
   }
 };
 
+// ─── Items for Partner ─────────────────────────────────────
+const getApprovedItemsForPartner = async (req, res) => {
+  try {
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    if (!partnerNo)
+      return res.status(400).json({ success: false, message: "Invalid partner number" });
+    const items = await SalesOrder.findApprovedItemsByPartner(partnerNo);
+    res.status(200).json({ success: true, count: items.length, data: items });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─── Item Detail ───────────────────────────────────────────
+const getApprovedItemDetail = async (req, res) => {
+  try {
+    const partnerNo = sanitizeString(req.params.partnerNo);
+    const batchNo = sanitizeString(req.params.batchNo);
+    const item = await SalesOrder.findApprovedItemDetail(partnerNo, batchNo);
+    if (!item)
+      return res.status(404).json({ success: false, message: "Approved item not found" });
+    res.status(200).json({ success: true, data: item });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─── Locations ─────────────────────────────────────────────
+const getLocationsForPartner = async (_req, res) => {
+  try {
+    const all = await PartnerLocationLink.findAll();
+    const locations = all.filter(l => !l.blocked);
+    res.status(200).json({ success: true, count: locations.length, data: locations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createSalesOrder,
   getAllSalesOrders,
@@ -198,4 +255,7 @@ module.exports = {
   updateSalesOrder,
   updateSalesOrderStatus,
   deleteSalesOrder,
+  getApprovedItemsForPartner,
+  getApprovedItemDetail,
+  getLocationsForPartner,
 };

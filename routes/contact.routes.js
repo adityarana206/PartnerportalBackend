@@ -12,23 +12,22 @@ const {
   deleteContact,
 } = require("../controllers/ContactController");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
-router.get("/", protect, canRead("CONTACTS"), getAllContacts);
-router.get("/partner/:partnerNo", protect, canRead("CONTACTS"), getContactsByPartner);
-router.get("/:id", protect, canRead("CONTACTS"), getContactById);
+router.get("/", protect, getAllContacts);
+router.get("/partner/:partnerNo", protect, getContactsByPartner);
+router.get("/:id", protect, getContactById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
-router.post("/", protect, canWrite("CONTACTS"), createContact);
-router.post("/businesscentral",protectRegister , createContactbc);
+router.post("/", protect, createContact);
+router.post("/businesscentral", protectRegister, createContactbc);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
-router.put("/:id", protect, canModify("CONTACTS"), updateContact);
-router.patch("/:id/sync", protect, canModify("CONTACTS"), updateSyncStatus);
-router.patch("/:id/portal", protect, canModify("CONTACTS"), updatePortalAccess);
+router.put("/:id", protect, updateContact);
+router.patch("/:id/sync", protect, updateSyncStatus);
+router.patch("/:id/portal", protect, updatePortalAccess);
 
 // ─── DELETE ────────────────────────────────────────────────
-router.delete("/:id", protect, canDelete("CONTACTS"), deleteContact);
+router.delete("/:id", protect, deleteContact);
 
 module.exports = router;

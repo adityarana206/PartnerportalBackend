@@ -11,23 +11,22 @@ const {
   deletePurchaseReceipt,
 } = require("../controllers/PurchaseReceipt.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
-router.get("/", protect, canRead("PURCHASE_RECEIPTS"), getAllPurchaseReceipts);
-router.get("/partner/:partnerNo", protect, canRead("PURCHASE_RECEIPTS"), getPurchaseReceiptsByPartner);
-router.get("/shipment/:shipmentNo", protect, canRead("PURCHASE_RECEIPTS"), getPurchaseReceiptByShipmentNo);
-router.get("/:id", protect, canRead("PURCHASE_RECEIPTS"), getPurchaseReceiptById);
+router.get("/", protect, getAllPurchaseReceipts);
+router.get("/partner/:partnerNo", protect, getPurchaseReceiptsByPartner);
+router.get("/shipment/:shipmentNo", protect, getPurchaseReceiptByShipmentNo);
+router.get("/:id", protect, getPurchaseReceiptById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
-router.post("/", protect, canWrite("PURCHASE_RECEIPTS"), createPurchaseReceipt);
+router.post("/", protect, createPurchaseReceipt);
 router.post("/businesscentral", protectRegister, createPurchaseReceipt);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
-router.put("/:id", protect, canModify("PURCHASE_RECEIPTS"), updatePurchaseReceipt);
-router.patch("/:id/status", protect, canModify("PURCHASE_RECEIPTS"), updatePurchaseReceiptStatus);
+router.put("/:id", protect, updatePurchaseReceipt);
+router.patch("/:id/status", protect, updatePurchaseReceiptStatus);
 
 // ─── DELETE ────────────────────────────────────────────────
-router.delete("/:id", protect, canDelete("PURCHASE_RECEIPTS"), deletePurchaseReceipt);
+router.delete("/:id", protect, deletePurchaseReceipt);
 
 module.exports = router;

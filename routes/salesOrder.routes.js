@@ -8,24 +8,29 @@ const {
   updateSalesOrder,
   updateSalesOrderStatus,
   deleteSalesOrder,
+  getApprovedItemsForPartner,
+  getApprovedItemDetail,
+  getLocationsForPartner,
 } = require("../controllers/SalesOrder.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
-router.get("/", protect, canRead("SALES_ORDERS"), getAllSalesOrders);
-router.get("/partner/:partnerNo", protect, canRead("SALES_ORDERS"), getOrdersByPartner);
-router.get("/:id", protect, canRead("SALES_ORDERS"), getSalesOrderById);
+router.get("/", protect, getAllSalesOrders);
+router.get("/locations", protect, getLocationsForPartner);
+router.get("/partner/:partnerNo", protect, getOrdersByPartner);
+router.get("/items/:partnerNo", protect, getApprovedItemsForPartner);
+router.get("/items/:partnerNo/:batchNo", protect, getApprovedItemDetail);
+router.get("/:id", protect, getSalesOrderById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
-router.post("/", protect, canWrite("SALES_ORDERS"), createSalesOrder);
+router.post("/", protect, createSalesOrder);
 router.post("/businesscentral", protectRegister, createSalesOrder);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
-router.put("/:id", protect, canModify("SALES_ORDERS"), updateSalesOrder);
-router.patch("/:id/status", protect, canModify("SALES_ORDERS"), updateSalesOrderStatus);
+router.put("/:id", protect, updateSalesOrder);
+router.patch("/:id/status", protect, updateSalesOrderStatus);
 
 // ─── DELETE ────────────────────────────────────────────────
-router.delete("/:id", protect, canDelete("SALES_ORDERS"), deleteSalesOrder);
+router.delete("/:id", protect, deleteSalesOrder);
 
 module.exports = router;

@@ -5,13 +5,12 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { pool } = require("../config/db");
 const { login } = require("../controllers/Customer.controller");
-const { protect } = require("../middleware/auth.middleware");
 
 let currentSecretKey = null;
 let secretKeyExpiry = null;
 
 
-router.post("/get-register-token", (req, res) => {
+router.post("/get-register-token", (_req, res) => {
   try {
     currentSecretKey = crypto.randomBytes(32).toString("hex");
     secretKeyExpiry = Date.now() + 60 * 60 * 1000;
@@ -209,30 +208,52 @@ router.post("/refresh-token", async (req, res) => {
 // POST /api/auth/logout
 // Body: { refreshToken: "..." }
 // Blacklists the current access token + deletes the refresh token from DB.
-router.post("/logout", protect, async (req, res) => {
+// Does NOT require a valid token — expired tokens are decoded without verification
+// so the client is always logged out, even after token expiry.
+router.post("/logout", async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    const accessToken = req.token; // set by protect middleware
 
-    // ─── Blacklist the current access token ───────────────
+    let accessToken;
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      accessToken = req.headers.authorization.split(" ")[1];
+    }
+
+    // ─── Blacklist the access token (valid or expired) ────
     if (accessToken) {
-      const decoded = jwt.decode(accessToken);
+      const decoded = jwt.decode(accessToken); // decode only, no expiry check
+      const userId = decoded?.id;
       const expiresAt = decoded?.exp
         ? new Date(decoded.exp * 1000)
         : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      await pool.query(
-        `INSERT INTO blacklisted_tokens (token, user_id, expires_at)
-         VALUES ($1, $2, $3) ON CONFLICT (token) DO NOTHING`,
-        [accessToken, req.user.id, expiresAt]
-      );
-    }
+      try {
+        await pool.query(
+          `INSERT INTO blacklisted_tokens (token, user_id, expires_at)
+           VALUES ($1, $2, $3) ON CONFLICT (token) DO NOTHING`,
+          [accessToken, userId, expiresAt]
+        );
+      } catch (_) {
+        // blacklist table may not exist — non-fatal
+      }
 
-    // ─── Delete the refresh token from DB ─────────────────
-    if (refreshToken) {
+      // ─── Delete the refresh token from DB ───────────────
+      if (refreshToken && userId) {
+        await pool.query(
+          "DELETE FROM refresh_tokens WHERE token = $1 AND user_id = $2",
+          [refreshToken, userId]
+        );
+      } else if (refreshToken) {
+        await pool.query(
+          "DELETE FROM refresh_tokens WHERE token = $1",
+          [refreshToken]
+        );
+      }
+    } else if (refreshToken) {
+      // No access token provided — delete refresh token by value alone
       await pool.query(
-        "DELETE FROM refresh_tokens WHERE token = $1 AND user_id = $2",
-        [refreshToken, req.user.id]
+        "DELETE FROM refresh_tokens WHERE token = $1",
+        [refreshToken]
       );
     }
 

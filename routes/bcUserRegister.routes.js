@@ -10,23 +10,22 @@ const {
   deleteBCUserRegister,
 } = require("../controllers/BCUserRegister.controller");
 const { protect } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // INVITE (admin only)
 router.post("/invite", generateInvite);
 router.get("/invite/verify", verifyInvite);
 
 // READ
-router.get("/", protect, canRead("BC_USER_REGISTRATIONS"), getAllBCUserRegistrations);
-router.get("/:id", protect, canRead("BC_USER_REGISTRATIONS"), getBCUserRegisterById);
+router.get("/", protect, getAllBCUserRegistrations);
+router.get("/:id", protect, getBCUserRegisterById);
 
 // WRITE (public — token validated inside controller)
 router.post("/", createBCUserRegister);
 
 // MODIFY
-router.patch("/:id/status", protect, canModify("BC_USER_REGISTRATIONS"), updateBCUserRegisterStatus);
+router.patch("/:id/status", protect, updateBCUserRegisterStatus);
 
 // DELETE
-router.delete("/:id", protect, canDelete("BC_USER_REGISTRATIONS"), deleteBCUserRegister);
+router.delete("/:id", protect, deleteBCUserRegister);
 
 module.exports = router;

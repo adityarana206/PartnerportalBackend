@@ -11,23 +11,22 @@ const {
   deleteInvoice,
 } = require("../controllers/Invoice.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
-const { canRead, canWrite, canModify, canDelete } = require("../middleware/permission.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
-router.get("/", protect, canRead("INVOICES"), getAllInvoices);
-router.get("/partner/:partnerNo", protect, canRead("INVOICES"), getInvoicesByPartner);
-router.get("/no/:invoiceNo", protect, canRead("INVOICES"), getInvoiceByNo);
-router.get("/:id", protect, canRead("INVOICES"), getInvoiceById);
+router.get("/", protect, getAllInvoices);
+router.get("/partner/:partnerNo", protect, getInvoicesByPartner);
+router.get("/no/:invoiceNo", protect, getInvoiceByNo);
+router.get("/:id", protect, getInvoiceById);
 
 // ─── WRITE (Create) ────────────────────────────────────────
-router.post("/", protect, canWrite("INVOICES"), createInvoice);
+router.post("/", protect, createInvoice);
 router.post("/businesscentral", protectRegister, createInvoice);
 
 // ─── MODIFY (Update) ───────────────────────────────────────
-router.put("/:id", protect, canModify("INVOICES"), updateInvoice);
-router.patch("/:id/status", protect, canModify("INVOICES"), updateInvoiceStatus);
+router.put("/:id", protect, updateInvoice);
+router.patch("/:id/status", protect, updateInvoiceStatus);
 
 // ─── DELETE ────────────────────────────────────────────────
-router.delete("/:id", protect, canDelete("INVOICES"), deleteInvoice);
+router.delete("/:id", protect, deleteInvoice);
 
 module.exports = router;
