@@ -12,6 +12,7 @@ const {
   getApprovedItemsForPartner,
   getApprovedItemDetail,
   getLocationsForPartner,
+  getEligiblePOsForDO,
 } = require("../controllers/PurchaseOrder.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
 
@@ -20,6 +21,7 @@ router.get("/", protect, getAllPurchaseOrders);
 router.get("/partner/:partnerNo", protect, getOrdersByPartner);
 router.get("/items/:partnerNo", protect, getApprovedItemsForPartner);
 router.get("/items/:partnerNo/:batchNo", protect, getApprovedItemDetail);
+router.get("/eligible-for-do", protect, getEligiblePOsForDO);
 router.get("/locations", protect, getLocationsForPartner);
 router.get("/:id", protect, getPurchaseOrderById);
 

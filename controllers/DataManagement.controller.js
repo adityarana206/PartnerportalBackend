@@ -54,9 +54,63 @@ const ALLOWED_TABLES = [
   "users",
 ];
 
+// In-memory metadata cache
+let tableMetadataCache = null;
+
 // GET /api/data-management/tables — list all allowed tables
 const listTables = (req, res) => {
   res.json({ success: true, tables: ALLOWED_TABLES });
+};
+
+// POST /api/data-management/sync — refresh metadata cache and return live table list
+const syncTables = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    // Clear cache
+    tableMetadataCache = null;
+
+    // Refresh: fetch existing tables with row counts from DB
+    const placeholders = ALLOWED_TABLES.map((_, i) => `$${i + 1}`).join(", ");
+    const r = await client.query(
+      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN (${placeholders})`,
+      ALLOWED_TABLES
+    );
+    const existingSet = new Set(r.rows.map((row) => row.tablename));
+    const existing = ALLOWED_TABLES.filter((t) => existingSet.has(t));
+
+    const counts = {};
+    for (const table of existing) {
+      const cr = await client.query(`SELECT COUNT(*)::int AS n FROM ${table}`);
+      counts[table] = cr.rows[0].n;
+    }
+
+    // Populate cache
+    tableMetadataCache = { tables: existing, counts, refreshedAt: new Date().toISOString() };
+
+    res.json({
+      success: true,
+      message: "Sync complete",
+      tables: existing,
+      rowCounts: counts,
+      refreshedAt: tableMetadataCache.refreshedAt,
+    });
+  } catch (error) {
+    console.error("syncTables error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  } finally {
+    client.release();
+  }
+};
+
+// Helper: filter to only tables that exist in the DB
+const getExistingTables = async (client, tables) => {
+  const placeholders = tables.map((_, i) => `$${i + 1}`).join(", ");
+  const r = await client.query(
+    `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN (${placeholders})`,
+    tables
+  );
+  const existing = new Set(r.rows.map((row) => row.tablename));
+  return tables.filter((t) => existing.has(t));
 };
 
 // Helper: get row count before deletion
@@ -74,9 +128,9 @@ const deleteAllData = async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const counts = await getRowCounts(client, ALLOWED_TABLES);
-    // TRUNCATE with CASCADE handles FK order automatically
-    await client.query(`TRUNCATE ${ALLOWED_TABLES.join(", ")} CASCADE`);
+    const existing = await getExistingTables(client, ALLOWED_TABLES);
+    const counts = await getRowCounts(client, existing);
+    await client.query(`TRUNCATE ${existing.join(", ")} CASCADE`);
     await client.query("COMMIT");
     res.json({ success: true, message: "All table data deleted", deleted: counts });
   } catch (error) {
@@ -107,9 +161,9 @@ const deleteSelectedTables = async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const counts = await getRowCounts(client, ordered);
-    // TRUNCATE with CASCADE handles FK order automatically
-    await client.query(`TRUNCATE ${ordered.join(", ")} CASCADE`);
+    const existing = await getExistingTables(client, ordered);
+    const counts = await getRowCounts(client, existing);
+    await client.query(`TRUNCATE ${existing.join(", ")} CASCADE`);
     await client.query("COMMIT");
     res.json({ success: true, message: "Selected table data deleted", deleted: counts });
   } catch (error) {
@@ -121,4 +175,4 @@ const deleteSelectedTables = async (req, res) => {
   }
 };
 
-module.exports = { listTables, deleteAllData, deleteSelectedTables };
+module.exports = { listTables, syncTables, deleteAllData, deleteSelectedTables };

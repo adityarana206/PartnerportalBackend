@@ -17,6 +17,7 @@
   "scripts": {
     "start": "node app.js",
     "seed:admin": "node seedAdmin.js",
+    "seed:purchase-orders": "node scripts/seedPurchaseOrders.js",
     "dev": "nodemon app.js",
     "test": "jest",
     "postman:generate": "node scripts/generate-postman-collection.js"

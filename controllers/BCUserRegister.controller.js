@@ -64,7 +64,6 @@ const createBCUserRegister = async (req, res) => {
   try {
     const { name, requesterUserId, token } = req.body;
 
-    // ─── Validate invite token ────────────────────────────
     if (!token) {
       return res.status(400).json({ success: false, message: "Invite token is required" });
     }
@@ -81,44 +80,30 @@ const createBCUserRegister = async (req, res) => {
       });
     }
 
-    // Merge invite data (role → partnerType, partnerNo) into body
     const registrationData = {
       ...req.body,
       partnerType: invite.role === "vendor" ? "Vendor" : "Customer",
       partnerNo: invite.partner_no || req.body.partnerNo || "",
     };
 
-    const registration = await BCUserRegister.create(registrationData);
+    // ─── Send directly to Business Central ────────────────
+    const bcResponse = await bcService.createPartnerRegistration(registrationData);
+    console.log("✅ Partner registration sent to Business Central:", bcResponse);
 
-    // Mark token as used
+    // Mark token as used only after successful BC submission
     await pool.query(
       `UPDATE registration_invites SET used = TRUE WHERE token = $1`,
       [token]
     );
 
-    // ─── Send to Business Central ──────────────────────────
-    let bcResponse = null;
-    let bcError = null;
-    try {
-      bcResponse = await bcService.createPartnerRegistration(registrationData);
-      console.log("✅ Partner registration synced to Business Central:", bcResponse);
-    } catch (bcErr) {
-      bcError = bcErr.response?.data || bcErr.message;
-      console.error("⚠️  Failed to sync to Business Central:", bcError);
-    }
-
     res.status(201).json({
       success: true,
-      message: "BC user registration created successfully",
-      data: registration,
-      businessCentral: {
-        synced: !!bcResponse,
-        response: bcResponse,
-        error: bcError,
-      },
+      message: "Registration submitted successfully",
+      data: bcResponse,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Registration error:", error.response?.data || error.message);
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
   }
 };
 

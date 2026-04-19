@@ -158,6 +158,23 @@ const PurchaseOrder = {
     return result;
   },
 
+  // ─── Find Released POs eligible for DO ───────────────
+  async findEligibleForDO(partnerNo) {
+    const q = partnerNo
+      ? `SELECT po.*, json_agg(pol.* ORDER BY pol.line_no) AS "orderStagingLines"
+         FROM purchase_orders po
+         LEFT JOIN purchase_order_lines pol ON pol.order_id = po.id
+         WHERE po.status = 'Released' AND po.partner_no = $1
+         GROUP BY po.id ORDER BY po.created_at DESC`
+      : `SELECT po.*, json_agg(pol.* ORDER BY pol.line_no) AS "orderStagingLines"
+         FROM purchase_orders po
+         LEFT JOIN purchase_order_lines pol ON pol.order_id = po.id
+         WHERE po.status = 'Released'
+         GROUP BY po.id ORDER BY po.created_at DESC`;
+    const { rows } = await pool.query(q, partnerNo ? [partnerNo] : []);
+    return rows;
+  },
+
   // ─── Update Order ──────────────────────────────────────
   async update(id, data) {
     const client = await pool.connect();
@@ -266,6 +283,46 @@ const PurchaseOrder = {
       [status, id]
     );
     return result.rows[0] || null;
+  },
+
+  // ─── Update Shipped Quantities and Check if Fully Shipped ───
+  async updateShippedQuantities(poId, deliveryLines) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // Update shipped_qty for each line in the delivery order
+      for (const line of deliveryLines) {
+        if (line.poId === poId && line.poLineId) {
+          await client.query(
+            `UPDATE purchase_order_lines 
+             SET shipped_qty = shipped_qty + $1, updated_at = NOW() 
+             WHERE id = $2`,
+            [line.toBeShipped, line.poLineId]
+          );
+        }
+      }
+
+      // Check if all lines are fully shipped
+      const result = await client.query(
+        `SELECT 
+           COUNT(*) as total_lines,
+           COUNT(*) FILTER (WHERE quantity <= shipped_qty) as fully_shipped_lines
+         FROM purchase_order_lines 
+         WHERE order_id = $1`,
+        [poId]
+      );
+
+      await client.query("COMMIT");
+
+      const { total_lines, fully_shipped_lines } = result.rows[0];
+      return parseInt(total_lines) === parseInt(fully_shipped_lines) && parseInt(total_lines) > 0;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
   // ─── Approved items lookup ─────────────────────────────

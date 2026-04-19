@@ -69,6 +69,17 @@ const createPurchaseOrderbc = async (req, res) => {
 
 
 
+// ─── Get POs eligible for DO (Released / Processed) ──────
+const getEligiblePOsForDO = async (req, res) => {
+  try {
+    const partnerNo = sanitizeString(req.query.partnerNo);
+    const orders = await PurchaseOrder.findEligibleForDO(partnerNo || null);
+    res.status(200).json({ success: true, count: orders.length, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const getLocationsForPartner = async (req, res) => {
   try {
     const all = await PartnerLocationLink.findAll();
@@ -205,13 +216,7 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     const { status } = req.body;
 
-    const validStatuses = [
-      "Processed",
-      "Pending",
-      "Approved",
-      "Rejected",
-      "Cancelled",
-    ];
+    const validStatuses = ["Open", "Released", "Processed for DO"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -274,4 +279,5 @@ module.exports = {
   getApprovedItemsForPartner,
   getApprovedItemDetail,
   getLocationsForPartner,
+  getEligiblePOsForDO,
 };

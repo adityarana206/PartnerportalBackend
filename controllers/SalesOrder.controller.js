@@ -3,24 +3,50 @@ const PartnerLocationLink = require("../models/PartnerLocationLink.model");
 const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
+const VALID_STATUSES = ["Draft", "Confirmed", "Shipped", "Paid"];
+
+// ─── Shared validation ─────────────────────────────────────
+const validateSalesOrderPayload = (body) => {
+  const errors = [];
+
+  // Header mandatory fields
+  if (!body.partnerNo)    errors.push("Customer (partnerNo) is required");
+  if (!body.orderDate)    errors.push("Order Date is required");
+  if (!body.locationCode) errors.push("Location Code is required");
+
+  // Status — optional but must be one of the allowed values when provided
+  if (body.status && !VALID_STATUSES.includes(body.status)) {
+    errors.push(`Invalid status. Allowed: ${VALID_STATUSES.join(", ")}`);
+  }
+
+  // Lines
+  if (!Array.isArray(body.orderStagingLines) || body.orderStagingLines.length === 0) {
+    errors.push("At least one order line is required");
+  } else {
+    body.orderStagingLines.forEach((line, idx) => {
+      const pos = `Line ${idx + 1}`;
+      if (!line.itemNo)               errors.push(`${pos}: Item No is required`);
+      if (!line.description)          errors.push(`${pos}: Description is required`);
+      if (line.quantity == null || line.quantity === "") errors.push(`${pos}: Qty is required`);
+      if (line.unitPrice == null || line.unitPrice === "") errors.push(`${pos}: Unit Price is required`);
+      if (line.lineAmountInclVat == null || line.lineAmountInclVat === "") errors.push(`${pos}: Line Amount (inc VAT) is required`);
+      if (line.vatAmount == null || line.vatAmount === "") errors.push(`${pos}: VAT Amount is required`);
+      // Variant Code mandatory only when a variant is present on the line
+      if (line.variantApplicable && !line.variantCode) {
+        errors.push(`${pos}: Variant Code is required when variant is applicable`);
+      }
+    });
+  }
+
+  return errors;
+};
+
 // ─── Create ────────────────────────────────────────────────
 const createSalesOrder = async (req, res) => {
   try {
-    if (!req.body.partnerNo) {
-      return res.status(400).json({
-        success: false,
-        message: "Partner number is required",
-      });
-    }
-
-    if (
-      !req.body.orderStagingLines ||
-      req.body.orderStagingLines.length === 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one order line is required",
-      });
+    const errors = validateSalesOrderPayload(req.body);
+    if (errors.length) {
+      return res.status(400).json({ success: false, message: errors[0], errors });
     }
 
     const userId = req.user ? req.user.id : null;
@@ -118,20 +144,12 @@ const updateSalesOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     const order = await SalesOrder.findById(req.params.id);
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Sales order not found",
-      });
+      return res.status(404).json({ success: false, message: "Sales order not found" });
     }
 
-    if (
-      !req.body.orderStagingLines ||
-      req.body.orderStagingLines.length === 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one order line is required",
-      });
+    const errors = validateSalesOrderPayload(req.body);
+    if (errors.length) {
+      return res.status(400).json({ success: false, message: errors[0], errors });
     }
 
     const updated = await SalesOrder.update(req.params.id, req.body);
@@ -150,28 +168,19 @@ const updateSalesOrderStatus = async (req, res) => {
   try {
     if (!isValidId(req.params.id))
       return res.status(400).json({ success: false, message: "Invalid ID" });
-    const { status } = req.body;
 
-    const validStatuses = [
-      "Processed",
-      "Pending",
-      "Approved",
-      "Rejected",
-      "Cancelled",
-    ];
-    if (!status || !validStatuses.includes(status)) {
+    const { status, reason } = req.body;
+
+    if (!status || !VALID_STATUSES.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
+        message: `Invalid status. Allowed: ${VALID_STATUSES.join(", ")}`,
       });
     }
 
     const order = await SalesOrder.findById(req.params.id);
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Sales order not found",
-      });
+      return res.status(404).json({ success: false, message: "Sales order not found" });
     }
 
     const updated = await SalesOrder.updateStatus(req.params.id, status);
