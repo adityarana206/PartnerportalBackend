@@ -4,6 +4,21 @@ const { isValidId, sanitizeString } = require("../utils/validation.utils");
 const crypto = require("crypto");
 const { pool } = require("../config/db");
 
+const VALID_ENTITY_TYPES = [
+  "", "LLC", "FZE", "FZCO", "Sole Establishment", "Partnership",
+  "Public Joint Stock", "Private Joint Stock", "Branch Office", "Other",
+];
+
+// ─── Get Registration Options (for frontend dropdowns) ────
+const getRegistrationOptions = (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: {
+      entityTypes: VALID_ENTITY_TYPES.filter(Boolean),
+    },
+  });
+};
+
 const VALID_INVITE_ROLES = ["vendor", "customer"];
 
 // ─── Generate Invite Link ─────────────────────────────────
@@ -28,6 +43,7 @@ const generateInvite = async (req, res) => {
     );
 
     const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    // const baseUrl =  "http://localhost:5173";
     const registrationUrl = `${baseUrl}/register?token=${token}`;
 
     return res.status(201).json({
@@ -311,4 +327,5 @@ module.exports = {
   getBCUserRegisterById,
   updateBCUserRegisterStatus,
   deleteBCUserRegister,
+  getRegistrationOptions,
 };

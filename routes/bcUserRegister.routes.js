@@ -8,8 +8,12 @@ const {
   getBCUserRegisterById,
   updateBCUserRegisterStatus,
   deleteBCUserRegister,
+  getRegistrationOptions,
 } = require("../controllers/BCUserRegister.controller");
 const { protect } = require("../middleware/auth.middleware");
+
+// OPTIONS (public — for dropdowns)
+router.get("/options", getRegistrationOptions);
 
 // INVITE (admin only)
 router.post("/invite", generateInvite);

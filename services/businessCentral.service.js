@@ -1,5 +1,19 @@
 const axios = require("axios");
 
+// Valid BC enum values for entityType
+const VALID_ENTITY_TYPES = [
+  "", "LLC", "FZE", "FZCO", "Sole Establishment", "Partnership",
+  "Public Joint Stock", "Private Joint Stock", "Branch Office", "Other",
+];
+
+const sanitizeEntityType = (value) => {
+  if (!value) return "";
+  const match = VALID_ENTITY_TYPES.find(
+    (v) => v.toLowerCase() === value.trim().toLowerCase()
+  );
+  return match !== undefined ? match : "Other";
+};
+
 // Business Central API Configuration
 const BC_CONFIG = {
   baseUrl: process.env.BC_BASE_URL ,
@@ -463,7 +477,7 @@ class BusinessCentralService {
       tradeLicenseNumber:     data.tradeLicenseNumber     || "",
       tradeLicenseExpiryDate: data.tradeLicenseExpiryDate || "0001-01-01",
       companyRegNumber:       data.companyRegNumber       || "",
-      entityType:             data.entityType             || "",
+      entityType:             sanitizeEntityType(data.entityType),
       countryOfIncorporation: data.countryOfIncorporation || "",
       placeOfRegistration:    data.placeOfRegistration    || "",
       website:                data.website                || "",
@@ -531,7 +545,7 @@ class BusinessCentralService {
       tradeLicenseNumber:    data.tradeLicenseNumber    || "",
       tradeLicenseExpiryDate: data.tradeLicenseExpiryDate || "0001-01-01",
       companyRegNumber:      data.companyRegNumber      || "",
-      entityType:            data.entityType            || "",
+      entityType:            sanitizeEntityType(data.entityType),
       countryOfIncorporation: data.countryOfIncorporation || "",
       placeOfRegistration:   data.placeOfRegistration   || "",
       website:               data.website               || "",
