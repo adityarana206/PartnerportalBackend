@@ -1,4 +1,5 @@
 const PartnerLocationLink = require("../models/PartnerLocationLink.model");
+const bcService = require("../services/businessCentral.service");
 
 // ─── Create ────────────────────────────────────────────────
 const createPartnerLocationLink = async (req, res) => {
@@ -223,6 +224,33 @@ const deletePartnerLocationLink = async (req, res) => {
   }
 };
 
+// ─── Get Locations from BC ────────────────────────────────
+const getLocationsFromBC = async (req, res) => {
+  try {
+    const raw = await bcService.getLocations();
+    const data = raw.map(l => ({
+      systemId:           l.systemId,
+      code:               l.code,
+      name:               l.name,
+      address:            l.address,
+      address2:           l.address2,
+      city:               l.city,
+      postCode:           l.postCode,
+      countryRegionCode:  l.countryRegionCode,
+      phoneNo:            l.phoneNo,
+      faxNo:              l.faxNo,
+      contact:            l.contact,
+      eMail:              l.eMail,
+      homePage:           l.homePage,
+      county:             l.county,
+      useAsInTransit:     l.useAsInTransit,
+    }));
+    res.status(200).json({ success: true, count: data.length, data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createPartnerLocationLink,
   getAllPartnerLocationLinks,
@@ -233,4 +261,5 @@ module.exports = {
   updateBlockStatus,
   updateDefaultStatus,
   deletePartnerLocationLink,
+  getLocationsFromBC,
 };

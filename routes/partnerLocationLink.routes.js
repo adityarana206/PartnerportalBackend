@@ -10,11 +10,13 @@ const {
   updateBlockStatus,
   updateDefaultStatus,
   deletePartnerLocationLink,
+  getLocationsFromBC,
 } = require("../controllers/PartnerLocationLink.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
 
 // ─── READ ──────────────────────────────────────────────────
 router.get("/", protect, getAllPartnerLocationLinks);
+router.get("/bc/locations", protect, getLocationsFromBC);
 router.get("/partner/:partnerNo", protect, getLinksByPartner);
 router.get("/partner/:partnerNo/default", protect, getDefaultLinkByPartner);
 router.get("/:id", protect, getPartnerLocationLinkById);

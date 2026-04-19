@@ -123,10 +123,20 @@ const BCUserRegister = {
   },
 
   async findAll() {
-    const result = await pool.query(
-      "SELECT * FROM bc_user_registrations ORDER BY created_at DESC"
-    );
-    return result.rows;
+    try {
+      const result = await pool.query(
+        "SELECT * FROM bc_user_registrations ORDER BY created_at DESC"
+      );
+      return result.rows;
+    } catch (error) {
+      console.error("Error in BCUserRegister.findAll:", error);
+      // If table doesn't exist, return empty array
+      if (error.code === '42P01') {
+        console.warn("bc_user_registrations table does not exist");
+        return [];
+      }
+      throw error;
+    }
   },
 
   async findById(id) {

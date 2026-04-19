@@ -113,12 +113,26 @@ const getAllBCUserRegistrations = async (req, res) => {
     const status = sanitizeString(req.query.status);
 
     let registrations;
-    if (requesterUserId) {
-      registrations = await BCUserRegister.findByRequesterUserId(requesterUserId);
-    } else if (status) {
-      registrations = await BCUserRegister.findByStatus(status);
-    } else {
-      registrations = await BCUserRegister.findAll();
+    try {
+      if (requesterUserId) {
+        registrations = await BCUserRegister.findByRequesterUserId(requesterUserId);
+      } else if (status) {
+        registrations = await BCUserRegister.findByStatus(status);
+      } else {
+        registrations = await BCUserRegister.findAll();
+      }
+    } catch (dbError) {
+      console.error("Database error fetching registrations:", dbError);
+      // Return empty array if table doesn't exist yet
+      if (dbError.code === '42P01') { // Table doesn't exist
+        return res.status(200).json({
+          success: true,
+          count: 0,
+          data: [],
+          message: "Registration table not initialized"
+        });
+      }
+      throw dbError;
     }
 
     res.status(200).json({
@@ -127,7 +141,12 @@ const getAllBCUserRegistrations = async (req, res) => {
       data: registrations,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error in getAllBCUserRegistrations:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 

@@ -329,6 +329,14 @@ class BusinessCentralService {
     return await this.callAPI("ItemChangeRequest", "POST", bcData);
   }
 
+  // ─── Locations ──────────────────────────────────────────
+  async getLocations() {
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/locations`;
+    const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    return response.data.value || [];
+  }
+
   // ─── Item Category API ─────────────────────────────────
   async getItemCategories() {
     const token = await this.getAccessToken();
