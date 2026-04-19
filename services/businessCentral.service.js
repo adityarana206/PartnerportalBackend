@@ -50,7 +50,7 @@ class BusinessCentralService {
   }
 
   // Generic API Call Method
-  async callAPI(endpoint, method = "GET", data = null, expand = null) {
+  async callAPI(endpoint, method = "GET", data = null, expand = null, etag = null) {
     try {
       const token = await this.getAccessToken();
       
@@ -66,6 +66,7 @@ class BusinessCentralService {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          ...(etag && { "If-Match": etag }),
         },
       };
 
@@ -416,6 +417,85 @@ class BusinessCentralService {
     });
 
     return response.data;
+  }
+
+  // ─── Get Partner Registration by No ───────────────────────
+  async getPartnerRegistration(registrationNo) {
+    return await this.callAPI(
+      `partnerRegistrations('${registrationNo}')?$expand=partnerRegContactLines,partnerRegBankLines`
+    );
+  }
+
+  // ─── Patch Partner Registration by No ──────────────────
+  async patchPartnerRegistration(registrationNo, etag, data) {
+    return await this.callAPI(
+      `partnerRegistrations('${registrationNo}')`,
+      "PATCH",
+      data,
+      null,
+      etag || "*"
+    );
+  }
+
+  // ─── Update Registration Action ────────────────────────
+  async updateRegistration(registrationNo, data) {
+    const header = {
+      partnerType:            data.partnerType            || "",
+      businessJustification:  data.businessJustification  || "",
+      name:                   data.name                   || "",
+      name2:                  data.name2                  || "",
+      address:                data.address                || "",
+      address2:               data.address2               || "",
+      city:                   data.city                   || "",
+      postCode:               data.postCode               || "",
+      countryRegionCode:      data.countryRegionCode      || "",
+      phoneNo:                data.phoneNo                || "",
+      email:                  data.email                  || "",
+      vatRegistrationNo:      data.vatRegistrationNo      || "",
+      currencyCode:           data.currencyCode           || "",
+      paymentTermsCode:       data.paymentTermsCode       || "",
+      paymentMethodCode:      data.paymentMethodCode      || "",
+      partnerPostingGroup:    data.partnerPostingGroup     || "",
+      genBusPostingGroup:     data.genBusPostingGroup      || "",
+      vatBusPostingGroup:     data.vatBusPostingGroup      || "",
+      partnerEmail:           data.partnerEmail           || "",
+      tradeName:              data.tradeName              || "",
+      tradeLicenseNumber:     data.tradeLicenseNumber     || "",
+      tradeLicenseExpiryDate: data.tradeLicenseExpiryDate || "0001-01-01",
+      companyRegNumber:       data.companyRegNumber       || "",
+      entityType:             data.entityType             || "",
+      countryOfIncorporation: data.countryOfIncorporation || "",
+      placeOfRegistration:    data.placeOfRegistration    || "",
+      website:                data.website                || "",
+      partnerCategory:        data.partnerCategory        || "",
+    };
+
+    const contactLines = (data.partnerRegContactLines || []).map((c, i) => ({
+      lineNo:       c.lineNo       || (i + 1) * 10000,
+      fullName:     c.fullName     || "",
+      designation:  c.designation  || "",
+      mobileNumber: c.mobileNumber || "",
+      emailAddress: c.emailAddress || "",
+    }));
+
+    const bankLines = (data.partnerRegBankLines || []).map((b, i) => ({
+      lineNo:         b.lineNo         || (i + 1) * 10000,
+      bankCode:       b.bankCode       || "",
+      name:           b.name           || "",
+      bankBranchNo:   b.bankBranchNo   || "",
+      bankAccountNo:  b.bankAccountNo  || "",
+      iban:           b.iban           || "",
+      swiftCode:      b.swiftCode      || "",
+      currencyCode:   b.currencyCode   || "",
+      isPrimary:      b.isPrimary      || false,
+    }));
+
+    const payload = JSON.stringify({ header, contactLines, bankLines });
+    return await this.callAPI(
+      `partnerRegistrations('${registrationNo}')/Microsoft.NAV.updateRegistration`,
+      "POST",
+      { payload }
+    );
   }
 
   // ─── Partner Registration ──────────────────────────────
