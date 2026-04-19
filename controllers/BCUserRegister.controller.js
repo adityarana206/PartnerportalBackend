@@ -86,24 +86,44 @@ const createBCUserRegister = async (req, res) => {
       partnerNo: invite.partner_no || req.body.partnerNo || "",
     };
 
-    // ─── Send directly to Business Central ────────────────
-    const bcResponse = await bcService.createPartnerRegistration(registrationData);
-    console.log("✅ Partner registration sent to Business Central:", bcResponse);
+    // ─── Save to local DB and send to BC simultaneously ──────
+    const [localRecord, bcResponse] = await Promise.allSettled([
+      BCUserRegister.create({ ...registrationData, status: "Draft" }),
+      bcService.createPartnerRegistration(registrationData),
+    ]);
 
-    // Mark token as used only after successful BC submission
-    await pool.query(
-      `UPDATE registration_invites SET used = TRUE WHERE token = $1`,
-      [token]
-    );
+    const local = localRecord.status === "fulfilled" ? localRecord.value : null;
+    const bc    = bcResponse.status === "fulfilled"  ? bcResponse.value  : null;
+    const bcErr = bcResponse.status === "rejected"   ? (bcResponse.reason?.response?.data || bcResponse.reason?.message) : null;
+
+    if (!local) {
+      console.error("❌ Local DB save failed:", localRecord.reason?.message);
+      throw localRecord.reason;
+    }
+
+    if (bc) {
+      await BCUserRegister.updateStatus(local.id, "Pending");
+      console.log("✅ Partner registration sent to Business Central:", bc);
+    } else {
+      console.error("⚠️  BC sync failed:", bcErr);
+    }
+
+    // Mark token as used
+    await pool.query(`UPDATE registration_invites SET used = TRUE WHERE token = $1`, [token]);
 
     res.status(201).json({
       success: true,
-      message: "Registration submitted successfully",
-      data: bcResponse,
+      message: bc ? "Registration submitted successfully" : "Registration saved locally (BC sync pending)",
+      data: local,
+      businessCentral: { synced: !!bc, response: bc, error: bcErr },
     });
   } catch (error) {
     console.error("Registration error:", error.response?.data || error.message);
-    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
+    res.status(500).json({
+      success: false,
+      message: error.response?.data?.message || error.message,
+      detail: error.response?.data || null,
+    });
   }
 };
 
