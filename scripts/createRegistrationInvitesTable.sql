@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS registration_invites (
   token VARCHAR(255) UNIQUE NOT NULL,
   role VARCHAR(50) NOT NULL CHECK (role IN ('customer', 'vendor')),
   partner_no VARCHAR(50),
+  email VARCHAR(255),
   expires_at TIMESTAMP NOT NULL,
   used BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),

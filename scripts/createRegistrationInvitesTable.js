@@ -19,6 +19,21 @@ async function createRegistrationInvitesTable() {
 
     if (tableCheck.rows[0].exists) {
       console.log("✅ Table registration_invites already exists");
+
+      // Add email column if missing
+      const colCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_schema = 'public'
+          AND table_name = 'registration_invites'
+          AND column_name = 'email'
+        )
+      `);
+      if (!colCheck.rows[0].exists) {
+        await client.query(`ALTER TABLE registration_invites ADD COLUMN email VARCHAR(255)`);
+        console.log("✅ Added missing email column to registration_invites");
+      }
+
       await client.query("COMMIT");
       return;
     }
@@ -30,6 +45,7 @@ async function createRegistrationInvitesTable() {
         token VARCHAR(255) UNIQUE NOT NULL,
         role VARCHAR(50) NOT NULL,
         partner_no VARCHAR(50),
+        email VARCHAR(255),
         expires_at TIMESTAMP NOT NULL,
         used BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW(),
