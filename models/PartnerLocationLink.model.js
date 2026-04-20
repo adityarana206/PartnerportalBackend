@@ -5,31 +5,39 @@ const PartnerLocationLink = {
   async create(data, userId) {
     const query = `
       INSERT INTO partner_location_links (
-        partner_type, partner_no, description, address_code,
-        address_name, location_code, address, address2,
+        system_id, partner_type, partner_no, description, address_code,
+        address_name, location_code, name, address, address2,
         city, post_code, country_region_code, contact,
-        phone_no, is_default, blocked, created_by
+        phone_no, fax_no, e_mail, home_page, county,
+        use_as_in_transit, is_default, blocked, created_by
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23
       ) RETURNING *;
     `;
     const values = [
-      data.partnerType || null, // $1
-      data.partnerNo || null, // $2
-      data.description || null, // $3
-      data.addressCode || null, // $4
-      data.addressName || null, // $5
-      data.locationCode || null, // $6
-      data.address || null, // $7
-      data.address2 || null, // $8
-      data.city || null, // $9
-      data.postCode || null, // $10
-      data.countryRegionCode || null, // $11
-      data.contact || null, // $12
-      data.phoneNo || null, // $13
-      data.isDefault || false, // $14
-      data.blocked || false, // $15
-      userId || null, // $16
+      data.systemId          || null,
+      data.partnerType       || null,
+      data.partnerNo         || null,
+      data.description       || null,
+      data.addressCode       || null,
+      data.addressName       || null,
+      data.locationCode      || null,
+      data.name              || null,
+      data.address           || null,
+      data.address2          || null,
+      data.city              || null,
+      data.postCode          || null,
+      data.countryRegionCode || null,
+      data.contact           || null,
+      data.phoneNo           || null,
+      data.faxNo             || null,
+      data.eMail             || null,
+      data.homePage          || null,
+      data.county            || null,
+      data.useAsInTransit    || false,
+      data.isDefault         || false,
+      data.blocked           || false,
+      userId                 || null,
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
@@ -97,30 +105,38 @@ const PartnerLocationLink = {
   async update(id, data) {
     const query = `
       UPDATE partner_location_links SET
-        partner_type=$1, partner_no=$2, description=$3,
-        address_code=$4, address_name=$5, location_code=$6,
-        address=$7, address2=$8, city=$9, post_code=$10,
-        country_region_code=$11, contact=$12, phone_no=$13,
-        is_default=$14, blocked=$15, updated_at=NOW()
-      WHERE id=$16 RETURNING *;
+        system_id=$1, partner_type=$2, partner_no=$3, description=$4,
+        address_code=$5, address_name=$6, location_code=$7, name=$8,
+        address=$9, address2=$10, city=$11, post_code=$12,
+        country_region_code=$13, contact=$14, phone_no=$15,
+        fax_no=$16, e_mail=$17, home_page=$18, county=$19,
+        use_as_in_transit=$20, is_default=$21, blocked=$22, updated_at=NOW()
+      WHERE id=$23 RETURNING *;
     `;
     const values = [
-      data.partnerType || null, // $1
-      data.partnerNo || null, // $2
-      data.description || null, // $3
-      data.addressCode || null, // $4
-      data.addressName || null, // $5
-      data.locationCode || null, // $6
-      data.address || null, // $7
-      data.address2 || null, // $8
-      data.city || null, // $9
-      data.postCode || null, // $10
-      data.countryRegionCode || null, // $11
-      data.contact || null, // $12
-      data.phoneNo || null, // $13
-      data.isDefault || false, // $14
-      data.blocked || false, // $15
-      id, // $16
+      data.systemId          || null,
+      data.partnerType       || null,
+      data.partnerNo         || null,
+      data.description       || null,
+      data.addressCode       || null,
+      data.addressName       || null,
+      data.locationCode      || null,
+      data.name              || null,
+      data.address           || null,
+      data.address2          || null,
+      data.city              || null,
+      data.postCode          || null,
+      data.countryRegionCode || null,
+      data.contact           || null,
+      data.phoneNo           || null,
+      data.faxNo             || null,
+      data.eMail             || null,
+      data.homePage          || null,
+      data.county            || null,
+      data.useAsInTransit    || false,
+      data.isDefault         || false,
+      data.blocked           || false,
+      id,
     ];
     const result = await pool.query(query, values);
     return result.rows[0] || null;
@@ -165,6 +181,49 @@ const PartnerLocationLink = {
       throw error;
     } finally {
       client.release();
+    }
+  },
+
+  // ─── Upsert from BC ────────────────────────────────────
+  async upsertFromBC(loc) {
+    const existing = await pool.query(
+      `SELECT id FROM partner_location_links WHERE location_code = $1 AND partner_no IS NULL`,
+      [loc.code]
+    );
+    if (existing.rows.length > 0) {
+      const result = await pool.query(
+        `UPDATE partner_location_links SET
+           system_id=$1, name=$2, address=$3, address2=$4, city=$5,
+           post_code=$6, country_region_code=$7, phone_no=$8, fax_no=$9,
+           contact=$10, e_mail=$11, home_page=$12, county=$13,
+           use_as_in_transit=$14, updated_at=NOW()
+         WHERE location_code=$15 AND partner_no IS NULL RETURNING *`,
+        [
+          loc.systemId, loc.name, loc.address, loc.address2, loc.city,
+          loc.postCode, loc.countryRegionCode, loc.phoneNo, loc.faxNo,
+          loc.contact, loc.eMail, loc.homePage, loc.county,
+          loc.useAsInTransit, loc.code,
+        ]
+      );
+      return { row: result.rows[0], action: 'updated' };
+    } else {
+      const result = await pool.query(
+        `INSERT INTO partner_location_links
+           (system_id, location_code, name, description, address, address2,
+            city, post_code, country_region_code, phone_no, fax_no,
+            contact, e_mail, home_page, county, use_as_in_transit,
+            is_default, blocked)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,false,false)
+         RETURNING *`,
+        [
+          loc.systemId, loc.code, loc.name, loc.name,
+          loc.address, loc.address2, loc.city, loc.postCode,
+          loc.countryRegionCode, loc.phoneNo, loc.faxNo,
+          loc.contact, loc.eMail, loc.homePage, loc.county,
+          loc.useAsInTransit,
+        ]
+      );
+      return { row: result.rows[0], action: 'inserted' };
     }
   },
 

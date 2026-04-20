@@ -224,7 +224,31 @@ const deletePartnerLocationLink = async (req, res) => {
   }
 };
 
-// ─── Get Locations from BC ────────────────────────────────
+// ─── Sync Locations from BC ──────────────────────────────
+const syncLocationsFromBC = async (req, res) => {
+  try {
+    const locations = await bcService.getLocations();
+    let inserted = 0, updated = 0;
+
+    for (const loc of locations) {
+      const { action } = await PartnerLocationLink.upsertFromBC(loc);
+      if (action === 'inserted') inserted++;
+      else updated++;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Sync complete — ${inserted} inserted, ${updated} updated`,
+      total: locations.length,
+      inserted,
+      updated,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─── Get Locations from BC (read-only) ──────────────────
 const getLocationsFromBC = async (req, res) => {
   try {
     const raw = await bcService.getLocations();
@@ -262,4 +286,5 @@ module.exports = {
   updateDefaultStatus,
   deletePartnerLocationLink,
   getLocationsFromBC,
+  syncLocationsFromBC,
 };

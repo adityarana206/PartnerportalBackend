@@ -182,7 +182,7 @@ class BusinessCentralService {
   // ─── Order Staging ─────────────────────────────────────
   async createOrderStaging(orderData) {
     const bcData = {
-      orderType: orderData.orderType || "",
+      orderType: "Sales Order",
       partnerNo: orderData.partnerNo || "",
       partnerType: orderData.partnerType || "",
       shipToCode: orderData.shipToCode || "",
@@ -191,7 +191,9 @@ class BusinessCentralService {
       requestedDeliveryDate: orderData.requestedDeliveryDate || null,
       currencyCode: orderData.currencyCode || "",
       externalDocumentNo: orderData.externalDocumentNo || "",
-      status: "Created",
+      partnerOrderNo: orderData.partnerOrderNo || "",
+      partnerOrderStatus: "Confirmed",
+      status: "Confirmed",
       direction: orderData.direction || "Portal_x002D_to_x002D_BC",
       submittedDate: orderData.submittedDate || new Date().toISOString(),
       orderStagingLines: (orderData.orderStagingLines || []).map(line => ({
@@ -203,7 +205,7 @@ class BusinessCentralService {
         unitPrice: parseFloat(line.unitPrice) || 0,
         lineDiscountPercent: parseFloat(line.lineDiscountPercent) || 0,
         lineDiscountAmount: parseFloat(line.lineDiscountAmount) || 0,
-        lineAmount: parseFloat(line.lineAmount) || 0,
+        lineAmount: parseFloat(line.lineAmountExclVat ?? line.lineAmount) || 0,
         locationCode: line.locationCode || "",
         deliveryDate: line.deliveryDate || null,
         variantCode: line.variantCode || "",

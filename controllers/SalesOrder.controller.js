@@ -58,9 +58,16 @@ const createSalesOrder = async (req, res) => {
     let bcResponse = null;
     let bcError = null;
     try {
-      const bcData = { ...req.body, orderType: "Sales_x0020_Order" };
+      const bcData = {
+        ...req.body,
+        orderType: "Sales_x0020_Order",
+        direction: "Portal_x002D_to_x002D_BC",
+        submittedDate: new Date().toISOString(),
+        externalDocumentNo: order.partner_order_no,
+        partnerOrderNo: order.partner_order_no,
+      };
       bcResponse = await bcService.createOrderStaging(bcData);
-      console.log("✅ Sales Order synced to Business Central:", bcResponse);
+      console.log("✅ Sales Order synced to Business Central:", bcResponse?.id || bcResponse);
     } catch (bcErr) {
       bcError = bcErr.response?.data || bcErr.message;
       console.error("⚠️  Failed to sync to Business Central:", bcError);
@@ -245,6 +252,23 @@ const getApprovedItemDetail = async (req, res) => {
   }
 };
 
+// ─── Patch by partnerOrderNo ──────────────────────────────
+const patchSalesOrderByPartnerOrderNo = async (req, res) => {
+  try {
+    const { partnerOrderNo } = req.params;
+    if (!partnerOrderNo)
+      return res.status(400).json({ success: false, message: 'partnerOrderNo is required' });
+
+    const updated = await SalesOrder.patchByPartnerOrderNo(partnerOrderNo, req.body);
+    if (!updated)
+      return res.status(404).json({ success: false, message: 'Sales order not found' });
+
+    res.status(200).json({ success: true, message: 'Sales order updated', data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // ─── Locations ─────────────────────────────────────────────
 const getLocationsForPartner = async (_req, res) => {
   try {
@@ -264,6 +288,7 @@ module.exports = {
   updateSalesOrder,
   updateSalesOrderStatus,
   deleteSalesOrder,
+  patchSalesOrderByPartnerOrderNo,
   getApprovedItemsForPartner,
   getApprovedItemDetail,
   getLocationsForPartner,

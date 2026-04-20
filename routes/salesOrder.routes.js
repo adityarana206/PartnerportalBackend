@@ -7,6 +7,7 @@ const {
   getOrdersByPartner,
   updateSalesOrder,
   updateSalesOrderStatus,
+  patchSalesOrderByPartnerOrderNo,
   deleteSalesOrder,
   getApprovedItemsForPartner,
   getApprovedItemDetail,
@@ -29,6 +30,7 @@ router.post("/businesscentral", protectRegister, createSalesOrder);
 // ─── MODIFY (Update) ───────────────────────────────────────
 router.put("/:id", protect, updateSalesOrder);
 router.patch("/:id/status", protect, updateSalesOrderStatus);
+router.patch("/order/:partnerOrderNo", protect, patchSalesOrderByPartnerOrderNo);
 
 // ─── DELETE ────────────────────────────────────────────────
 router.delete("/:id", protect, deleteSalesOrder);
