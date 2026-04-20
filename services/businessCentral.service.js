@@ -228,7 +228,7 @@ class BusinessCentralService {
     if (!bcConfirmId) {
       throw new Error("BC confirm ID is required to patch purchase order confirmation");
     }
-    return await this.callAPI(`purchaseOrderConfirms(${bcConfirmId})`, "PATCH", data, null, etag);
+    return await this.callAPI(`purchaseOrderConfirms('${bcConfirmId}')`, "PATCH", data, null, etag);
   }
 
   // ─── Delivery Staging ──────────────────────────────────
