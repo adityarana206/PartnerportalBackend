@@ -46,14 +46,23 @@ const getPaymentsByPartner = async (req, res) => {
 
 const createPayment = async (req, res) => {
   try {
-    if (!req.body.paymentNumber)
-      return res.status(400).json({ success: false, message: "Payment number is required" });
+    if (!req.body.paymentNumber && !req.body.referenceNo)
+      return res.status(400).json({ success: false, message: "paymentNumber or referenceNo is required" });
     if (req.body.amount === undefined || req.body.amount === null)
       return res.status(400).json({ success: false, message: "Amount is required" });
 
     const userId = req.user ? req.user.id : null;
     const partnerNo = req.body.partnerNo || (req.user ? req.user.refNo : null);
-    const payment = await Payment.create({ ...req.body, partnerNo }, userId);
+    const data = {
+      ...req.body,
+      partnerNo,
+      paymentNumber: req.body.paymentNumber || req.body.referenceNo,
+      invoiceNo: req.body.invoiceNo || req.body.invoiceNo,
+      orderNo: req.body.OrderNo || req.body.orderNo,
+      dueDate: req.body.DueDate || req.body.dueDate,
+      paymentMethod: req.body.paymentMethod || req.body.method,
+    };
+    const payment = await Payment.create(data, userId);
     res.status(201).json({ success: true, message: "Payment created successfully", data: payment });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

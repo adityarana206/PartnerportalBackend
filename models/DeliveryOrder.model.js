@@ -24,24 +24,34 @@ async function insertLines(client, deliveryOrderId, lines) {
     const r = await client.query(
       `INSERT INTO delivery_order_lines (
          delivery_order_id, line_no, po_id, po_line_id,
+         po_no, po_line_no, po_date_time, po_total_amount,
          item_no, variant_code, description,
-         order_qty, to_be_shipped, remaining,
-         unit_of_measure, lot_no, serial_no
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+         order_qty, ordered_quantity, to_be_shipped, shipped_quantity,
+         remaining, remaining_quantity,
+         unit_of_measure, unit_price, lot_no, serial_no
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING *`,
       [
         deliveryOrderId,
         line.lineNo,
-        line.poId       || null,
-        line.poLineId   || null,
+        line.poId              || null,
+        line.poLineId          || line.poLineNo || null,
+        line.poNo              || null,
+        line.poLineNo          || null,
+        line.poDateTime        || null,
+        line.poTotalAmount     || null,
         line.itemNo,
-        line.variantCode  || null,
+        line.variantCode       || null,
         line.description,
-        line.orderQty     || 0,
-        line.toBeShipped  || 0,
-        line.remaining    || 0,
-        line.unitOfMeasure,
-        line.lotNo        || null,
-        line.serialNo     || null,
+        line.orderQty          || line.orderedQuantity || 0,
+        line.orderedQuantity   || line.orderQty || 0,
+        line.toBeShipped       || line.shippedQuantity || 0,
+        line.shippedQuantity   || line.toBeShipped || 0,
+        line.remaining         || line.remainingQuantity || 0,
+        line.remainingQuantity || line.remaining || 0,
+        line.unitOfMeasure     || line.unitOfMeasureCode || null,
+        line.unitPrice         || null,
+        line.lotNo             || null,
+        line.serialNo          || null,
       ]
     );
     result.push(r.rows[0]);
@@ -60,29 +70,44 @@ const DeliveryOrder = {
 
       const r = await client.query(
         `INSERT INTO delivery_orders (
-           delivery_order_no, partner_no, partner_name, erp_po_nos,
+           delivery_order_no, partner_no, partner_name, partner_type, erp_po_nos,
+           delivery_date_time, delivery_type, direction,
            shipment_date, expected_delivery_date, actual_delivery_date,
-           location_code, carrier_name, transport_mode,
+           location_code, warehouse_location, carrier_name, transport_mode,
+           total_amount, currency_code,
+           ship_address, ship_city, ship_state, ship_post_code, ship_country_code,
            status, remarks, created_by
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25) RETURNING *`,
         [
-          doNo,
+          data.deliveryOrderNo       || doNo,
           data.partnerNo,
           data.partnerName           || null,
+          data.partnerType           || null,
           JSON.stringify(data.erpPoNos || []),
+          data.deliveryDateTime      || null,
+          data.deliveryType          || null,
+          data.direction             || null,
           data.shipmentDate,
           data.expectedDeliveryDate  || null,
           data.actualDeliveryDate    || null,
           data.locationCode          || null,
+          data.warehouseLocation     || null,
           data.carrierName           || null,
           data.transportMode         || null,
+          data.totalAmount           || null,
+          data.currencyCode          || null,
+          data.shipAddress           || null,
+          data.shipCity              || null,
+          data.shipState             || null,
+          data.shipPostCode          || null,
+          data.shipCountryCode       || null,
           data.status                || "Draft",
           data.remarks               || null,
           userId                     || null,
         ]
       );
       const order = r.rows[0];
-      const lines = await insertLines(client, order.id, data.lines || []);
+      const lines = await insertLines(client, order.id, data.lines || data.deliveryStagingsLine || []);
 
       await client.query("COMMIT");
       return { ...order, ...computeTotals(lines), lines };
@@ -169,21 +194,36 @@ const DeliveryOrder = {
 
       const r = await client.query(
         `UPDATE delivery_orders SET
-           partner_no=$1, partner_name=$2, erp_po_nos=$3,
-           shipment_date=$4, expected_delivery_date=$5, actual_delivery_date=$6,
-           location_code=$7, carrier_name=$8, transport_mode=$9,
-           status=$10, remarks=$11, updated_at=NOW()
-         WHERE id=$12 RETURNING *`,
+           partner_no=$1, partner_name=$2, partner_type=$3, erp_po_nos=$4,
+           delivery_date_time=$5, delivery_type=$6, direction=$7,
+           shipment_date=$8, expected_delivery_date=$9, actual_delivery_date=$10,
+           location_code=$11, warehouse_location=$12, carrier_name=$13, transport_mode=$14,
+           total_amount=$15, currency_code=$16,
+           ship_address=$17, ship_city=$18, ship_state=$19, ship_post_code=$20, ship_country_code=$21,
+           status=$22, remarks=$23, updated_at=NOW()
+         WHERE id=$24 RETURNING *`,
         [
           data.partnerNo,
           data.partnerName           || null,
+          data.partnerType           || null,
           JSON.stringify(data.erpPoNos || []),
+          data.deliveryDateTime      || null,
+          data.deliveryType          || null,
+          data.direction             || null,
           data.shipmentDate,
           data.expectedDeliveryDate  || null,
           data.actualDeliveryDate    || null,
           data.locationCode          || null,
+          data.warehouseLocation     || null,
           data.carrierName           || null,
           data.transportMode         || null,
+          data.totalAmount           || null,
+          data.currencyCode          || null,
+          data.shipAddress           || null,
+          data.shipCity              || null,
+          data.shipState             || null,
+          data.shipPostCode          || null,
+          data.shipCountryCode       || null,
           data.status                || "Draft",
           data.remarks               || null,
           id,
@@ -195,7 +235,7 @@ const DeliveryOrder = {
         "DELETE FROM delivery_order_lines WHERE delivery_order_id = $1",
         [id]
       );
-      const lines = await insertLines(client, id, data.lines || []);
+      const lines = await insertLines(client, id, data.lines || data.deliveryStagingsLine || []);
 
       await client.query("COMMIT");
       return { ...order, ...computeTotals(lines), lines };

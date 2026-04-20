@@ -1,36 +1,26 @@
 const DeliveryOrder = require("../models/DeliveryOrder.model");
 const PurchaseOrder = require("../models/PurchaseOrder.model");
+const bcService = require("../services/businessCentral.service");
 
 const VALID_STATUSES = ["Draft", "Submitted", "In Transit", "Delivered"];
 
 // ─── Create ────────────────────────────────────────────────
 const createDeliveryOrder = async (req, res) => {
   try {
-    const { partnerNo, erpPoNos, shipmentDate, expectedDeliveryDate, lines } = req.body;
-    if (!partnerNo) {
+    const { partnerNo, shipmentDate, expectedDeliveryDate } = req.body;
+    const lines = req.body.lines || req.body.deliveryStagingsLine || [];
+
+    if (!partnerNo)
       return res.status(400).json({ success: false, message: "partnerNo is required" });
-    }
-    if (!erpPoNos || !Array.isArray(erpPoNos) || erpPoNos.length === 0) {
-      return res.status(400).json({ success: false, message: "At least one PO number is required in erpPoNos" });
-    }
-    if (!shipmentDate) {
+    if (!shipmentDate)
       return res.status(400).json({ success: false, message: "shipmentDate is required" });
-    }
-    if (!expectedDeliveryDate) {
-      return res.status(400).json({ success: false, message: "expectedDeliveryDate is required" });
-    }
-    if (!lines || !Array.isArray(lines) || lines.length === 0) {
+    if (!lines || lines.length === 0)
       return res.status(400).json({ success: false, message: "At least one line item is required" });
-    }
-    for (const line of lines) {
-      if (!line.itemNo || !line.toBeShipped || line.toBeShipped <= 0) {
-        return res.status(400).json({ success: false, message: "Each line must have itemNo and toBeShipped > 0" });
-      }
-    }
-    
-    const order = await DeliveryOrder.create(req.body, req.user?.id);
-    
-    // Update shipped quantities and check if PO is fully shipped
+
+    // ─── Save to local DB ──────────────────────────────────
+    const order = await DeliveryOrder.create({ ...req.body, lines }, req.user?.id);
+
+    // ─── Update PO shipped quantities ──────────────────────
     const poIds = [...new Set(lines.map(l => l.poId).filter(Boolean))];
     for (const poId of poIds) {
       try {
@@ -38,15 +28,71 @@ const createDeliveryOrder = async (req, res) => {
         if (isFullyShipped) {
           await PurchaseOrder.updateStatus(poId, "Processed for DO");
           console.log(`✅ PO ${poId} fully shipped - status updated to 'Processed for DO'`);
-        } else {
-          console.log(`📦 PO ${poId} partially shipped - status remains 'Released'`);
         }
       } catch (err) {
         console.error(`Failed to update PO ${poId}:`, err);
       }
     }
-    
-    res.status(201).json({ success: true, message: "Delivery order created successfully", data: order });
+
+    // ─── Push to Business Central ──────────────────────────
+    let bcResult = null;
+    let bcError = null;
+    try {
+      const bcPayload = {
+        deliveryOrderNo:      order.delivery_order_no,
+        deliveryType:         req.body.deliveryType         || "ASN",
+        partnerNo:            req.body.partnerNo,
+        partnerType:          req.body.partnerType          || "Vendor",
+        direction:            req.body.direction            || "Portal_x002D_to_x002D_BC",
+        shipmentDate:         req.body.shipmentDate,
+        expectedDeliveryDate: req.body.expectedDeliveryDate || null,
+        locationCode:         req.body.locationCode         || "",
+        warehouseLocation:    req.body.warehouseLocation    || "",
+        totalAmount:          req.body.totalAmount          || 0,
+        currencyCode:         req.body.currencyCode         || "",
+        shipAddress:          req.body.shipAddress          || "",
+        shipCity:             req.body.shipCity             || "",
+        shipState:            req.body.shipState            || "",
+        shipPostCode:         req.body.shipPostCode         || "",
+        shipCountryCode:      req.body.shipCountryCode      || "",
+        status:               "Created",
+        deliveryStagingsLine: lines.map(l => ({
+          lineNo:            l.lineNo            || 0,
+          poNo:              l.poNo              || "",
+          poLineNo:          l.poLineNo          || 0,
+          poDateTime:        l.poDateTime        || null,
+          poTotalAmount:     l.poTotalAmount     || 0,
+          itemNo:            l.itemNo            || "",
+          description:       l.description       || "",
+          orderedQuantity:   l.orderedQuantity   || l.orderQty    || 0,
+          shippedQuantity:   l.shippedQuantity   || l.toBeShipped || 0,
+          remainingQuantity: l.remainingQuantity || l.remaining   || 0,
+          serialNo:          l.serialNo          || "",
+          lotNo:             l.lotNo             || "",
+          unitOfMeasureCode: l.unitOfMeasureCode || l.unitOfMeasure || "",
+          unitPrice:         l.unitPrice         || 0,
+          variantCode:       l.variantCode       || "",
+          expirationDate:    l.expirationDate    || "0001-01-01",
+        })),
+      };
+
+      bcResult = await bcService.createDeliveryStaging(bcPayload);
+      console.log(`✅ BC deliveryStaging created: ${order.delivery_order_no}`);
+    } catch (err) {
+      bcError = err.response?.data || err.message;
+      console.error("⚠️  BC deliveryStaging failed:", bcError);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Delivery order created successfully",
+      data: order,
+      businessCentral: {
+        synced: !!bcResult,
+        response: bcResult,
+        error: bcError,
+      },
+    });
   } catch (err) {
     console.error("Create delivery order error:", err);
     res.status(500).json({ success: false, message: err.message });

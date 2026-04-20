@@ -42,8 +42,8 @@ const generateInvite = async (req, res) => {
       [token, role, partnerNo || null, email || null, expiresAt]
     );
 
-    const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    // const baseUrl =  "http://localhost:5173";
+    // const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const baseUrl =  "http://localhost:5173";
     const registrationUrl = `${baseUrl}/register?token=${token}`;
 
     return res.status(201).json({
@@ -121,14 +121,14 @@ const createBCUserRegister = async (req, res) => {
     let bcUpdateErr = null;
 
     if (partnerNo) {
-      await BCUserRegister.updateStatus(local.id, "Pending");
+      await BCUserRegister.updateStatus(local.id, "Draft");
 
       // ─── PATCH: set status on existing BC registration ────────
       try {
         bcPatchResult = await bcService.patchPartnerRegistration(
           partnerNo,
           "*",
-          { status: "Pending_x0020_Approval" }
+          { status: "Draft" }
         );
         console.log("✅ BC PATCH succeeded for:", partnerNo);
       } catch (patchErr) {

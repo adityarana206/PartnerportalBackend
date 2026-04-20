@@ -30,16 +30,22 @@ const Payment = {
   async create(data, userId) {
     const result = await pool.query(
       `INSERT INTO payments (
-        payment_number, invoice_id, partner_no,
-        amount, payment_date, method, status, created_by
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+        payment_number, invoice_id, invoice_no, order_no, partner_no,
+        amount, payment_date, due_date, currency_code, method,
+        reference_no, status, created_by
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
       [
         data.paymentNumber,
         data.invoiceId || null,
+        data.invoiceNo || null,
+        data.orderNo || null,
         data.partnerNo || null,
         data.amount,
         data.paymentDate || null,
-        data.method || null,
+        data.dueDate || null,
+        data.currencyCode || null,
+        data.method || data.paymentMethod || null,
+        data.referenceNo || null,
         data.status || "Pending",
         userId || null,
       ]
@@ -50,17 +56,23 @@ const Payment = {
   async update(id, data) {
     const result = await pool.query(
       `UPDATE payments SET
-        payment_number=$1, invoice_id=$2, partner_no=$3,
-        amount=$4, payment_date=$5, method=$6,
-        status=$7, updated_at=NOW()
-       WHERE id=$8 RETURNING *`,
+        payment_number=$1, invoice_id=$2, invoice_no=$3, order_no=$4,
+        partner_no=$5, amount=$6, payment_date=$7, due_date=$8,
+        currency_code=$9, method=$10, reference_no=$11,
+        status=$12, updated_at=NOW()
+       WHERE id=$13 RETURNING *`,
       [
         data.paymentNumber,
         data.invoiceId || null,
+        data.invoiceNo || null,
+        data.orderNo || null,
         data.partnerNo || null,
         data.amount,
         data.paymentDate || null,
-        data.method || null,
+        data.dueDate || null,
+        data.currencyCode || null,
+        data.method || data.paymentMethod || null,
+        data.referenceNo || null,
         data.status || "Pending",
         id,
       ]
