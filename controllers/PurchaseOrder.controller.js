@@ -7,23 +7,11 @@ const { isValidId, sanitizeString } = require("../utils/validation.utils");
 const createPurchaseOrder = async (req, res) => {
   try {
     if (!req.body.partnerNo) {
-      return res.status(400).json({
-        success: false,
-        message: "Partner number is required",
-      });
+      return res.status(400).json({ success: false, message: "Partner number is required" });
     }
-
-    if (
-      !req.body.orderStagingLines ||
-      req.body.orderStagingLines.length === 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one order line is required",
-      });
+    if (!req.body.orderStagingLines || req.body.orderStagingLines.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one order line is required" });
     }
-    const userId = req.user ? req.user.id : null;
-    // const order = await PurchaseOrder.create(req.body, userId);
 
     let bcResponse = null;
     let bcError = null;
@@ -39,7 +27,6 @@ const createPurchaseOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Purchase order created successfully",
-      // data: order,
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {
@@ -54,7 +41,6 @@ const createPurchaseOrderbc = async (req, res) => {
       return res.status(400).json({ success: false, message: "Partner number is required" });
     }
 
-    // Normalize BC payload: 'lines' → 'orderStagingLines', map field names
     const lines = req.body.lines || req.body.orderStagingLines || [];
     if (!lines.length) {
       return res.status(400).json({ success: false, message: "At least one order line is required" });
@@ -94,14 +80,11 @@ const createPurchaseOrderbc = async (req, res) => {
 
     const userId = req.user ? req.user.id : null;
     const order = await PurchaseOrder.create(normalized, userId);
-
     res.status(201).json({ success: true, message: "Purchase order created successfully", data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
 
 
 // ─── Get POs eligible for DO (Accepted) ──────
@@ -165,11 +148,7 @@ const getAllPurchaseOrders = async (req, res) => {
       orders = await PurchaseOrder.findAll();
     }
 
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      data: orders,
-    });
+    res.status(200).json({ success: true, count: orders.length, data: orders });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -181,12 +160,8 @@ const getPurchaseOrderById = async (req, res) => {
     if (!isValidId(req.params.id))
       return res.status(400).json({ success: false, message: "Invalid ID" });
     const order = await PurchaseOrder.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Purchase order not found",
-      });
-    }
+    if (!order)
+      return res.status(404).json({ success: false, message: "Purchase order not found" });
     res.status(200).json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -200,11 +175,7 @@ const getOrdersByPartner = async (req, res) => {
     if (!partnerNo)
       return res.status(400).json({ success: false, message: "Invalid partner number" });
     const orders = await PurchaseOrder.findByPartnerNo(partnerNo);
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      data: orders,
-    });
+    res.status(200).json({ success: true, count: orders.length, data: orders });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -216,20 +187,17 @@ const getPurchaseOrderBCConfirm = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID" });
 
     const order = await PurchaseOrder.findById(req.params.id);
-    if (!order) {
+    if (!order)
       return res.status(404).json({ success: false, message: "Purchase order not found" });
-    }
 
     const documentNo = order.no || order.external_document_no;
-    if (!documentNo) {
+    if (!documentNo)
       return res.status(400).json({ success: false, message: "Purchase order does not have a BC document number" });
-    }
 
     const bcResponse = await bcService.getPurchaseOrderConfirmByDocumentNo(documentNo);
     const bcConfirm = Array.isArray(bcResponse.value) ? bcResponse.value[0] : null;
-    if (!bcConfirm) {
+    if (!bcConfirm)
       return res.status(404).json({ success: false, message: `BC confirm record not found for documentNo ${documentNo}` });
-    }
 
     res.status(200).json({ success: true, data: { bcConfirmId: bcConfirm.id || null, bcConfirm } });
   } catch (error) {
@@ -243,29 +211,13 @@ const updatePurchaseOrder = async (req, res) => {
     if (!isValidId(req.params.id))
       return res.status(400).json({ success: false, message: "Invalid ID" });
     const order = await PurchaseOrder.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Purchase order not found",
-      });
-    }
-
-    if (
-      !req.body.orderStagingLines ||
-      req.body.orderStagingLines.length === 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one order line is required",
-      });
-    }
+    if (!order)
+      return res.status(404).json({ success: false, message: "Purchase order not found" });
+    if (!req.body.orderStagingLines || req.body.orderStagingLines.length === 0)
+      return res.status(400).json({ success: false, message: "At least one order line is required" });
 
     const updated = await PurchaseOrder.update(req.params.id, req.body);
-    res.status(200).json({
-      success: true,
-      message: "Purchase order updated successfully",
-      data: updated,
-    });
+    res.status(200).json({ success: true, message: "Purchase order updated successfully", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -287,46 +239,41 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const order = await PurchaseOrder.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Purchase order not found",
-      });
-    }
+    if (!order)
+      return res.status(404).json({ success: false, message: "Purchase order not found" });
 
     const documentNo = order.no || order.external_document_no;
-    if (!documentNo) {
-      return res.status(400).json({ success: false, message: "Purchase order does not have a BC document number" });
-    }
+    console.log(`[PO Status Update] Order ${req.params.id} → status: ${status}, documentNo: ${documentNo}`);
 
     let bcResponse = null;
-    try {
-      const confirmResponse = await bcService.getPurchaseOrderConfirmByDocumentNo(documentNo);
-      const bcConfirm = Array.isArray(confirmResponse.value) ? confirmResponse.value[0] : null;
-      if (!bcConfirm) {
-        return res.status(404).json({
-          success: false,
-          message: `BC confirm record not found for documentNo ${documentNo}`,
+    let bcSyncError = null;
+
+    if (documentNo) {
+      try {
+        // Step 1: GET the BC GUID using documentNo filter
+        const confirmResponse = await bcService.getPurchaseOrderConfirmByDocumentNo(documentNo);
+        const bcConfirm = Array.isArray(confirmResponse.value) ? confirmResponse.value[0] : null;
+
+        console.log(`[PO Status Update] BC confirm record:`, JSON.stringify(bcConfirm));
+
+        const bcGuid = bcConfirm?.systemId || bcConfirm?.id;
+        if (!bcConfirm || !bcGuid) {
+          console.warn(`[PO Status Update] No BC confirm record found for documentNo: ${documentNo}`);
+          bcSyncError = `No BC confirm record found for documentNo: ${documentNo}`;
+        } else {
+          const bcPayload = { vendorConfirmed: status === "Accepted" ? "true" : "false" };
+          console.log(`[PO Status Update] Patching BC GUID ${bcGuid} with:`, bcPayload);
+          bcResponse = await bcService.patchPurchaseOrderConfirmByGuid(bcGuid, bcPayload);
+          console.log(`[PO Status Update] BC patch successful`);
+        }
+      } catch (bcError) {
+        bcSyncError = bcError.response?.data || bcError.message;
+        console.error(`[PO Status Update] BC sync failed:`, {
+          httpStatus: bcError.response?.status,
+          data: bcError.response?.data,
+          url: bcError.config?.url,
         });
       }
-
-      const bcConfirmId = bcConfirm.id;
-      if (!bcConfirmId) {
-        return res.status(502).json({
-          success: false,
-          message: "BC confirm record returned no ID for patching",
-          data: bcConfirm,
-        });
-      }
-
-      bcResponse = await bcService.patchPurchaseOrderConfirm(bcConfirmId, { status }, bcConfirm['@odata.etag'] || "*");
-    } catch (bcError) {
-      console.error("Error patching BC purchaseOrderConfirm:", bcError.response?.data || bcError.message);
-      return res.status(502).json({
-        success: false,
-        message: "Failed to update Business Central purchase order confirmation",
-        error: bcError.response?.data || bcError.message,
-      });
     }
 
     const updated = await PurchaseOrder.updateStatus(req.params.id, status);
@@ -334,7 +281,11 @@ const updateOrderStatus = async (req, res) => {
       success: true,
       message: `Order status updated to ${status}`,
       data: updated,
-      businessCentral: { synced: true, response: bcResponse },
+      businessCentral: {
+        synced: !!bcResponse,
+        response: bcResponse,
+        error: bcSyncError,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -347,19 +298,11 @@ const deletePurchaseOrder = async (req, res) => {
     if (!isValidId(req.params.id))
       return res.status(400).json({ success: false, message: "Invalid ID" });
     const order = await PurchaseOrder.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Purchase order not found",
-      });
-    }
+    if (!order)
+      return res.status(404).json({ success: false, message: "Purchase order not found" });
 
     const deleted = await PurchaseOrder.delete(req.params.id);
-    res.status(200).json({
-      success: true,
-      message: "Purchase order deleted successfully",
-      data: deleted,
-    });
+    res.status(200).json({ success: true, message: "Purchase order deleted successfully", data: deleted });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
