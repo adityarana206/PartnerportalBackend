@@ -30,7 +30,7 @@ router.post("/businesscentral", protectRegister, createSalesOrder);
 // ─── MODIFY (Update) ───────────────────────────────────────
 router.put("/:id", protect, updateSalesOrder);
 router.patch("/:id/status", protect, updateSalesOrderStatus);
-router.patch("/order/:partnerOrderNo", protect, patchSalesOrderByPartnerOrderNo);
+router.patch("/order/:partnerOrderNo", protectRegister, patchSalesOrderByPartnerOrderNo);
 
 // ─── DELETE ────────────────────────────────────────────────
 router.delete("/:id", protect, deleteSalesOrder);
