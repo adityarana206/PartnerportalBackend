@@ -104,7 +104,7 @@ const createPurchaseOrderbc = async (req, res) => {
 
 
 
-// ─── Get POs eligible for DO (Released / Processed) ──────
+// ─── Get POs eligible for DO (Accepted) ──────
 const getEligiblePOsForDO = async (req, res) => {
   try {
     const partnerNo = sanitizeString(req.query.partnerNo);
@@ -210,6 +210,33 @@ const getOrdersByPartner = async (req, res) => {
   }
 };
 
+const getPurchaseOrderBCConfirm = async (req, res) => {
+  try {
+    if (!isValidId(req.params.id))
+      return res.status(400).json({ success: false, message: "Invalid ID" });
+
+    const order = await PurchaseOrder.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Purchase order not found" });
+    }
+
+    const documentNo = order.no || order.external_document_no;
+    if (!documentNo) {
+      return res.status(400).json({ success: false, message: "Purchase order does not have a BC document number" });
+    }
+
+    const bcResponse = await bcService.getPurchaseOrderConfirmByDocumentNo(documentNo);
+    const bcConfirm = Array.isArray(bcResponse.value) ? bcResponse.value[0] : null;
+    if (!bcConfirm) {
+      return res.status(404).json({ success: false, message: `BC confirm record not found for documentNo ${documentNo}` });
+    }
+
+    res.status(200).json({ success: true, data: { bcConfirmId: bcConfirm.id || null, bcConfirm } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // ─── Update Purchase Order ─────────────────────────────────
 const updatePurchaseOrder = async (req, res) => {
   try {
@@ -251,7 +278,7 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     const { status } = req.body;
 
-    const validStatuses = ["Released", "Accepted", "Processed for DO"];
+    const validStatuses = ["Released", "Accepted", "Rejected", "Processed for DO"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -267,11 +294,47 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    const documentNo = order.no || order.external_document_no;
+    if (!documentNo) {
+      return res.status(400).json({ success: false, message: "Purchase order does not have a BC document number" });
+    }
+
+    let bcResponse = null;
+    try {
+      const confirmResponse = await bcService.getPurchaseOrderConfirmByDocumentNo(documentNo);
+      const bcConfirm = Array.isArray(confirmResponse.value) ? confirmResponse.value[0] : null;
+      if (!bcConfirm) {
+        return res.status(404).json({
+          success: false,
+          message: `BC confirm record not found for documentNo ${documentNo}`,
+        });
+      }
+
+      const bcConfirmId = bcConfirm.id;
+      if (!bcConfirmId) {
+        return res.status(502).json({
+          success: false,
+          message: "BC confirm record returned no ID for patching",
+          data: bcConfirm,
+        });
+      }
+
+      bcResponse = await bcService.patchPurchaseOrderConfirm(bcConfirmId, { status }, bcConfirm['@odata.etag'] || "*");
+    } catch (bcError) {
+      console.error("Error patching BC purchaseOrderConfirm:", bcError.response?.data || bcError.message);
+      return res.status(502).json({
+        success: false,
+        message: "Failed to update Business Central purchase order confirmation",
+        error: bcError.response?.data || bcError.message,
+      });
+    }
+
     const updated = await PurchaseOrder.updateStatus(req.params.id, status);
     res.status(200).json({
       success: true,
       message: `Order status updated to ${status}`,
       data: updated,
+      businessCentral: { synced: true, response: bcResponse },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -311,6 +374,7 @@ module.exports = {
   updateOrderStatus,
   deletePurchaseOrder,
   createPurchaseOrderbc,
+  getPurchaseOrderBCConfirm,
   getApprovedItemsForPartner,
   getApprovedItemDetail,
   getLocationsForPartner,

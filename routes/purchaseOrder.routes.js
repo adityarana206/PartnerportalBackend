@@ -23,6 +23,7 @@ router.get("/items/:partnerNo", protect, getApprovedItemsForPartner);
 router.get("/items/:partnerNo/:batchNo", protect, getApprovedItemDetail);
 router.get("/eligible-for-do", protect, getEligiblePOsForDO);
 router.get("/locations", protect, getLocationsForPartner);
+router.get("/:id/businesscentral-confirm", protect, getPurchaseOrderBCConfirm);
 router.get("/:id", protect, getPurchaseOrderById);
 
 // ─── WRITE (Create) ────────────────────────────────────────

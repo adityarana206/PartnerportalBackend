@@ -215,6 +215,22 @@ class BusinessCentralService {
     return await this.callAPI("orderStagings?$expand=orderStagingLines", "POST", bcData);
   }
 
+  async getPurchaseOrderConfirmByDocumentNo(documentNo) {
+    if (!documentNo) {
+      throw new Error("documentNo is required to lookup purchase order confirmation");
+    }
+    const escapedDocumentNo = documentNo.replace(/'/g, "''");
+    const filter = `documentNo eq '${escapedDocumentNo}'`;
+    return await this.callAPI(`purchaseOrderConfirms?$filter=${encodeURIComponent(filter)}`);
+  }
+
+  async patchPurchaseOrderConfirm(bcConfirmId, data, etag = "*") {
+    if (!bcConfirmId) {
+      throw new Error("BC confirm ID is required to patch purchase order confirmation");
+    }
+    return await this.callAPI(`purchaseOrderConfirms(${bcConfirmId})`, "PATCH", data, null, etag);
+  }
+
   // ─── Delivery Staging ──────────────────────────────────
   async createDeliveryStaging(deliveryData) {
     const bcData = {
