@@ -59,7 +59,7 @@ const PurchaseOrder = {
 
         const lineResult = await client.query(
           `INSERT INTO purchase_order_lines (
-            order_id, document_no, line_no, item_no, description,
+            order_id, line_document_no, line_no, item_no, description,
             quantity, unit_of_measure_code, unit_price,
             line_discount_percent, line_discount_amount,
             line_amount, location_code, delivery_date, variant_code,
@@ -164,12 +164,12 @@ const PurchaseOrder = {
       ? `SELECT po.*, json_agg(pol.* ORDER BY pol.line_no) AS "orderStagingLines"
          FROM purchase_orders po
          LEFT JOIN purchase_order_lines pol ON pol.order_id = po.id
-         WHERE po.status = 'Released' AND po.partner_no = $1
+         WHERE po.status IN ('Released','Accepted') AND po.partner_no = $1
          GROUP BY po.id ORDER BY po.created_at DESC`
       : `SELECT po.*, json_agg(pol.* ORDER BY pol.line_no) AS "orderStagingLines"
          FROM purchase_orders po
          LEFT JOIN purchase_order_lines pol ON pol.order_id = po.id
-         WHERE po.status = 'Released'
+         WHERE po.status IN ('Released','Accepted')
          GROUP BY po.id ORDER BY po.created_at DESC`;
     const { rows } = await pool.query(q, partnerNo ? [partnerNo] : []);
     return rows;
@@ -200,7 +200,7 @@ const PurchaseOrder = {
           data.requestedDeliveryDate || null,
           data.currencyCode || null,
           data.externalDocumentNo || null,
-          data.status || "Processed",
+          data.status || 'Released',
           data.direction || null,
           data.submittedDate || null,
           id,
@@ -236,7 +236,7 @@ const PurchaseOrder = {
 
         const lineResult = await client.query(
           `INSERT INTO purchase_order_lines (
-            order_id, document_no, line_no, item_no, description,
+            order_id, line_document_no, line_no, item_no, description,
             quantity, unit_of_measure_code, unit_price,
             line_discount_percent, line_discount_amount,
             line_amount, location_code, delivery_date, variant_code,

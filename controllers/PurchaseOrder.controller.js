@@ -53,14 +53,49 @@ const createPurchaseOrderbc = async (req, res) => {
     if (!req.body.partnerNo) {
       return res.status(400).json({ success: false, message: "Partner number is required" });
     }
-    if (!req.body.orderStagingLines || req.body.orderStagingLines.length === 0) {
+
+    // Normalize BC payload: 'lines' → 'orderStagingLines', map field names
+    const lines = req.body.lines || req.body.orderStagingLines || [];
+    if (!lines.length) {
       return res.status(400).json({ success: false, message: "At least one order line is required" });
     }
 
-    const userId = req.user ? req.user.id : null;
-    const order = await PurchaseOrder.create(req.body, userId);
+    const normalized = {
+      orderType:              req.body.orderType || null,
+      No:                     req.body.no || req.body.No || null,
+      partnerNo:              req.body.partnerNo,
+      partnerType:            req.body.partnerType || null,
+      shipToCode:             req.body.shipToCode || null,
+      locationCode:           req.body.locationCode || null,
+      orderDate:              req.body.orderDate || null,
+      requestedDeliveryDate:  req.body.requestedDeliveryDate || null,
+      currencyCode:           req.body.currencyCode || null,
+      externalDocumentNo:     req.body.externalDocumentNo || null,
+      status:                 req.body.status || 'Open',
+      direction:              req.body.direction || null,
+      submittedDate:          req.body.submittedDate || null,
+      orderStagingLines: lines.map(l => ({
+        documentNo:           l.lineDocumentNo || l.documentNo || null,
+        lineNo:               l.lineNo || null,
+        itemNo:               l.itemNo || null,
+        description:          l.description || null,
+        quantity:             l.quantity || 0,
+        unitOfMeasureCode:    l.unitOfMeasureCode || null,
+        unitPrice:            l.unitPrice || 0,
+        lineDiscountPercent:  l.lineDiscountPercent || 0,
+        lineDiscountAmount:   l.lineDiscountAmount || 0,
+        lineAmount:           l.lineAmount || 0,
+        locationCode:         l.locationCode || null,
+        deliveryDate:         l.deliveryDate || null,
+        variantCode:          l.variantCode || null,
+        vatCode:              l.vatCode || null,
+      })),
+    };
 
-    res.status(201).json({ success: true, message: "Purchase order created successfully" ,data : order});
+    const userId = req.user ? req.user.id : null;
+    const order = await PurchaseOrder.create(normalized, userId);
+
+    res.status(201).json({ success: true, message: "Purchase order created successfully", data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -216,7 +251,7 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     const { status } = req.body;
 
-    const validStatuses = ["Open", "Released", "Processed for DO"];
+    const validStatuses = ["Released", "Accepted", "Processed for DO"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
