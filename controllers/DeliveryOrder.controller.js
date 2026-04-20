@@ -7,7 +7,7 @@ const VALID_STATUSES = ["Draft", "Submitted", "In Transit", "Delivered"];
 // ─── Create ────────────────────────────────────────────────
 const createDeliveryOrder = async (req, res) => {
   try {
-    const { partnerNo, shipmentDate, expectedDeliveryDate } = req.body;
+    const { partnerNo, shipmentDate } = req.body;
     const lines = req.body.lines || req.body.deliveryStagingsLine || [];
 
     if (!partnerNo)
@@ -19,6 +19,7 @@ const createDeliveryOrder = async (req, res) => {
 
     // ─── Save to local DB ──────────────────────────────────
     const order = await DeliveryOrder.create({ ...req.body, lines }, req.user?.id);
+    console.log("[DO Create] Saved to DB:", order.delivery_order_no);
 
     // ─── Update PO shipped quantities ──────────────────────
     const poIds = [...new Set(lines.map(l => l.poId).filter(Boolean))];
@@ -30,7 +31,7 @@ const createDeliveryOrder = async (req, res) => {
           console.log(`✅ PO ${poId} fully shipped - status updated to 'Processed for DO'`);
         }
       } catch (err) {
-        console.error(`Failed to update PO ${poId}:`, err);
+        console.error(`Failed to update PO ${poId}:`, err.message);
       }
     }
 
@@ -40,37 +41,38 @@ const createDeliveryOrder = async (req, res) => {
     try {
       const bcPayload = {
         deliveryOrderNo:      order.delivery_order_no,
-        deliveryType:         req.body.deliveryType         || "ASN",
+        deliveryDateTime:     req.body.deliveryDateTime      || new Date().toISOString(),
+        deliveryType:         req.body.deliveryType          || "ASN",
         partnerNo:            req.body.partnerNo,
-        partnerType:          req.body.partnerType          || "Vendor",
-        direction:            req.body.direction            || "Portal_x002D_to_x002D_BC",
+        partnerType:          req.body.partnerType           || "Vendor",
+        direction:            "Portal-to-BC",
         shipmentDate:         req.body.shipmentDate,
-        expectedDeliveryDate: req.body.expectedDeliveryDate || null,
-        locationCode:         req.body.locationCode         || "",
-        warehouseLocation:    req.body.warehouseLocation    || "",
-        totalAmount:          req.body.totalAmount          || 0,
-        currencyCode:         req.body.currencyCode         || "",
-        shipAddress:          req.body.shipAddress          || "",
-        shipCity:             req.body.shipCity             || "",
-        shipState:            req.body.shipState            || "",
-        shipPostCode:         req.body.shipPostCode         || "",
-        shipCountryCode:      req.body.shipCountryCode      || "",
-        status:               "Created",
-        deliveryStagingsLine: lines.map(l => ({
-          lineNo:            l.lineNo            || 0,
+        expectedDeliveryDate: req.body.expectedDeliveryDate  || null,
+        status:               "Inserted",
+        locationCode:         req.body.locationCode          || "",
+        warehouseLocation:    req.body.warehouseLocation     || "",
+        totalAmount:          req.body.totalAmount           || 0,
+        currencyCode:         req.body.currencyCode          || "",
+        shipAddress:          req.body.shipAddress           || "",
+        shipCity:             req.body.shipCity              || "",
+        shipState:            req.body.shipState             || "",
+        shipPostCode:         req.body.shipPostCode          || "",
+        shipCountryCode:      req.body.shipCountryCode       || "",
+        deliveryStagingsLine: lines.map((l, i) => ({
+          lineNo:            (i + 1) * 10000,
           poNo:              l.poNo              || "",
           poLineNo:          l.poLineNo          || 0,
           poDateTime:        l.poDateTime        || null,
           poTotalAmount:     l.poTotalAmount     || 0,
           itemNo:            l.itemNo            || "",
           description:       l.description       || "",
-          orderedQuantity:   l.orderedQuantity   || l.orderQty    || 0,
-          shippedQuantity:   l.shippedQuantity   || l.toBeShipped || 0,
-          remainingQuantity: l.remainingQuantity || l.remaining   || 0,
+          orderedQuantity:   parseFloat(l.orderedQuantity || l.orderQty    || 0),
+          shippedQuantity:   parseFloat(l.shippedQuantity || l.toBeShipped || 0),
+          remainingQuantity: parseFloat(l.remainingQuantity || l.remaining || 0),
           serialNo:          l.serialNo          || "",
           lotNo:             l.lotNo             || "",
           unitOfMeasureCode: l.unitOfMeasureCode || l.unitOfMeasure || "",
-          unitPrice:         l.unitPrice         || 0,
+          unitPrice:         parseFloat(l.unitPrice || 0),
           variantCode:       l.variantCode       || "",
           expirationDate:    l.expirationDate    || "0001-01-01",
         })),
@@ -87,14 +89,10 @@ const createDeliveryOrder = async (req, res) => {
       success: true,
       message: "Delivery order created successfully",
       data: order,
-      businessCentral: {
-        synced: !!bcResult,
-        response: bcResult,
-        error: bcError,
-      },
+      businessCentral: { synced: !!bcResult, response: bcResult, error: bcError },
     });
   } catch (err) {
-    console.error("Create delivery order error:", err);
+    console.error("[DO Create] ERROR:", err.message, err.stack);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -104,9 +102,9 @@ const getAllDeliveryOrders = async (req, res) => {
   try {
     const { status, partnerNo } = req.query;
     let orders;
-    if (status)     orders = await DeliveryOrder.findByStatus(status);
-    else if (partnerNo) orders = await DeliveryOrder.findByPartnerNo(partnerNo);
-    else            orders = await DeliveryOrder.findAll();
+    if (status)          orders = await DeliveryOrder.findByStatus(status);
+    else if (partnerNo)  orders = await DeliveryOrder.findByPartnerNo(partnerNo);
+    else                 orders = await DeliveryOrder.findAll();
     res.status(200).json({ success: true, count: orders.length, data: orders });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -139,9 +137,8 @@ const updateDeliveryOrder = async (req, res) => {
   try {
     const existing = await DeliveryOrder.findById(req.params.id);
     if (!existing) return res.status(404).json({ success: false, message: "Delivery order not found" });
-    if (!req.body.lines || req.body.lines.length === 0) {
+    if (!req.body.lines || req.body.lines.length === 0)
       return res.status(400).json({ success: false, message: "At least one line is required" });
-    }
     const updated = await DeliveryOrder.update(req.params.id, req.body);
     res.status(200).json({ success: true, message: "Delivery order updated successfully", data: updated });
   } catch (err) {
@@ -153,9 +150,8 @@ const updateDeliveryOrder = async (req, res) => {
 const updateDeliveryOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    if (!status || !VALID_STATUSES.includes(status)) {
+    if (!status || !VALID_STATUSES.includes(status))
       return res.status(400).json({ success: false, message: `Invalid status. Allowed: ${VALID_STATUSES.join(", ")}` });
-    }
     const existing = await DeliveryOrder.findById(req.params.id);
     if (!existing) return res.status(404).json({ success: false, message: "Delivery order not found" });
     const updated = await DeliveryOrder.updateStatus(req.params.id, status);

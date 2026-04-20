@@ -20,7 +20,9 @@ function computeTotals(lines) {
 
 async function insertLines(client, deliveryOrderId, lines) {
   const result = [];
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineNo = line.poLineNo || line.lineNo || (i + 1) * 10000;
     const r = await client.query(
       `INSERT INTO delivery_order_lines (
          delivery_order_id, line_no, po_id, po_line_id,
@@ -28,30 +30,31 @@ async function insertLines(client, deliveryOrderId, lines) {
          item_no, variant_code, description,
          order_qty, ordered_quantity, to_be_shipped, shipped_quantity,
          remaining, remaining_quantity,
-         unit_of_measure, unit_price, lot_no, serial_no
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING *`,
+         unit_of_measure, unit_price, lot_no, serial_no, expiration_date
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22) RETURNING *`,
       [
         deliveryOrderId,
-        line.lineNo,
+        lineNo,
         line.poId              || null,
-        line.poLineId          || line.poLineNo || null,
+        line.poLineId          || null,
         line.poNo              || null,
         line.poLineNo          || null,
         line.poDateTime        || null,
         line.poTotalAmount     || null,
-        line.itemNo,
+        line.itemNo            || '',
         line.variantCode       || null,
-        line.description,
-        line.orderQty          || line.orderedQuantity || 0,
-        line.orderedQuantity   || line.orderQty || 0,
-        line.toBeShipped       || line.shippedQuantity || 0,
-        line.shippedQuantity   || line.toBeShipped || 0,
-        line.remaining         || line.remainingQuantity || 0,
-        line.remainingQuantity || line.remaining || 0,
-        line.unitOfMeasure     || line.unitOfMeasureCode || null,
+        line.description       || '',
+        parseFloat(line.orderQty)        || parseFloat(line.orderedQuantity)  || 0,
+        parseFloat(line.orderedQuantity) || parseFloat(line.orderQty)         || 0,
+        parseFloat(line.toBeShipped)     || parseFloat(line.shippedQuantity)  || 0,
+        parseFloat(line.shippedQuantity) || parseFloat(line.toBeShipped)      || 0,
+        parseFloat(line.remaining)       || parseFloat(line.remainingQuantity)|| 0,
+        parseFloat(line.remainingQuantity)|| parseFloat(line.remaining)       || 0,
+        line.unitOfMeasure     || line.unitOfMeasureCode || 'PCS',
         line.unitPrice         || null,
         line.lotNo             || null,
         line.serialNo          || null,
+        line.expirationDate && line.expirationDate !== '0001-01-01' ? line.expirationDate : null,
       ]
     );
     result.push(r.rows[0]);
@@ -66,6 +69,7 @@ const DeliveryOrder = {
     try {
       await client.query("BEGIN");
 
+      // Get next DO number inside transaction so rollback doesn't waste numbers
       const doNo = await NoSeries.getNextNumberByCode("DO");
 
       const r = await client.query(
@@ -83,7 +87,7 @@ const DeliveryOrder = {
           data.partnerNo,
           data.partnerName           || null,
           data.partnerType           || null,
-          JSON.stringify(data.erpPoNos || []),
+          Array.isArray(data.erpPoNos) ? data.erpPoNos : [],
           data.deliveryDateTime      || null,
           data.deliveryType          || null,
           data.direction             || null,
@@ -206,7 +210,7 @@ const DeliveryOrder = {
           data.partnerNo,
           data.partnerName           || null,
           data.partnerType           || null,
-          JSON.stringify(data.erpPoNos || []),
+          Array.isArray(data.erpPoNos) ? data.erpPoNos : [],
           data.deliveryDateTime      || null,
           data.deliveryType          || null,
           data.direction             || null,
