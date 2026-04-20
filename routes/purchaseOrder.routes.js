@@ -9,6 +9,7 @@ const {
   updateOrderStatus,
   deletePurchaseOrder,
   createPurchaseOrderbc,
+  getPurchaseOrderBCConfirm,
   getApprovedItemsForPartner,
   getApprovedItemDetail,
   getLocationsForPartner,
