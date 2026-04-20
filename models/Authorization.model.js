@@ -11,16 +11,16 @@ const User = {
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
       )
-      ON CONFLICT (ref_no) DO UPDATE SET
+      ON CONFLICT (email) DO UPDATE SET
         name = EXCLUDED.name,
         name2 = EXCLUDED.name2,
+        ref_no = EXCLUDED.ref_no,
         address = EXCLUDED.address,
         address2 = EXCLUDED.address2,
         city = EXCLUDED.city,
         post_code = EXCLUDED.post_code,
         country_region_code = EXCLUDED.country_region_code,
         phone_no = EXCLUDED.phone_no,
-        email = EXCLUDED.email,
         vat_registration_no = EXCLUDED.vat_registration_no,
         currency_code = EXCLUDED.currency_code,
         payment_terms_code = EXCLUDED.payment_terms_code,

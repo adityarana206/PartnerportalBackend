@@ -1,4 +1,5 @@
 const User = require("../models/Authorization.model");
+const LoginUser = require("../models/LoginUser.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
@@ -99,11 +100,19 @@ const register = async (req, res) => {
     // ─── Hash password ────────────────────────────────────
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-    // ─── Save to DB ───────────────────────────────────────
+    // ─── Save to users table ──────────────────────────────
     const user = await User.create(
       { ...req.body, password: hashedPassword },
       role,
     );
+
+    // ─── Save to login_users table ────────────────────────
+    await LoginUser.create({
+      userId: user.id,
+      email: user.email,
+      password: hashedPassword,
+      role: user.role,
+    });
 
     // ─── Generate token AFTER save so id is available ─────
     const token = generateToken({
@@ -149,15 +158,16 @@ const login = async (req, res) => {
       });
     }
 
-    const user = await User.findByEmailWithPassword(email);
-    if (!user) {
+    // ─── Check credentials from login_users ──────────────
+    const loginUser = await LoginUser.findByEmail(email);
+    if (!loginUser) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, loginUser.password);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -165,11 +175,20 @@ const login = async (req, res) => {
       });
     }
 
+    // ─── Fetch full profile from users table ──────────────
+    const user = await User.findById(loginUser.user_id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User profile not found",
+      });
+    }
+
     const token = generateToken({
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: loginUser.role,
       refNo: user.ref_no || null,
     });
 

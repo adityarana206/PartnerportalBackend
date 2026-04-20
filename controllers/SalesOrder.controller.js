@@ -63,7 +63,7 @@ const createSalesOrder = async (req, res) => {
         orderType: "Sales_x0020_Order",
         direction: "Portal_x002D_to_x002D_BC",
         submittedDate: new Date().toISOString(),
-        externalDocumentNo: order.partner_order_no,
+        externalDocumentNo: req.body.externalDocumentNo || null,
         partnerOrderNo: order.partner_order_no,
       };
       bcResponse = await bcService.createOrderStaging(bcData);
