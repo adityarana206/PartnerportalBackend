@@ -49,18 +49,19 @@ const User = {
   },
 
   async findAll(role) {
+    const contactNameSubquery = `(SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name`;
     const query = role
-      ? `SELECT id, ref_no, name, name2, address, address2, city, post_code,
-               country_region_code, phone_no, email, vat_registration_no, currency_code,
-               payment_terms_code, role, created_at, updated_at
-         FROM users
-         WHERE role = $1
-         ORDER BY created_at DESC`
-      : `SELECT id, ref_no, name, name2, address, address2, city, post_code,
-               country_region_code, phone_no, email, vat_registration_no, currency_code,
-               payment_terms_code, role, created_at, updated_at
-         FROM users
-         ORDER BY created_at DESC`;
+      ? `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+               u.payment_terms_code, u.role, u.created_at, u.updated_at, ${contactNameSubquery}
+         FROM users u
+         WHERE u.role = $1
+         ORDER BY u.created_at DESC`
+      : `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+               u.payment_terms_code, u.role, u.created_at, u.updated_at, ${contactNameSubquery}
+         FROM users u
+         ORDER BY u.created_at DESC`;
     const values = role ? [role] : [];
     const result = await pool.query(query, values);
     return result.rows;
@@ -68,11 +69,12 @@ const User = {
 
   async findById(id) {
     const result = await pool.query(
-      `SELECT id, ref_no, name, name2, address, address2, city, post_code,
-              country_region_code, phone_no, email, vat_registration_no, currency_code,
-              payment_terms_code, role, created_at, updated_at
-       FROM users
-       WHERE id = $1`,
+      `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+              u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+              u.payment_terms_code, u.role, u.created_at, u.updated_at,
+              (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
+       FROM users u
+       WHERE u.id = $1`,
       [id],
     );
     return result.rows[0] || null;
@@ -80,12 +82,13 @@ const User = {
 
   async findAllByRoles(roles) {
     const result = await pool.query(
-      `SELECT id, ref_no, name, name2, address, address2, city, post_code,
-              country_region_code, phone_no, email, vat_registration_no, currency_code,
-              payment_terms_code, role, created_at, updated_at
-       FROM users
-       WHERE role = ANY($1::text[])
-       ORDER BY created_at DESC`,
+      `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+              u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+              u.payment_terms_code, u.role, u.created_at, u.updated_at,
+              (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
+       FROM users u
+       WHERE u.role = ANY($1::text[])
+       ORDER BY u.created_at DESC`,
       [roles],
     );
     return result.rows;
@@ -93,16 +96,23 @@ const User = {
 
   async findByIdAndRole(id, role) {
     const result = await pool.query(
-      "SELECT * FROM users WHERE id = $1 AND role = $2",
+      `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
+              u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
+              u.payment_terms_code, u.role, u.created_at, u.updated_at,
+              (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
+       FROM users u
+       WHERE u.id = $1 AND u.role = $2`,
       [id, role],
     );
     return result.rows[0] || null;
   },
 
   async findByRefNo(refNo) {
-    const result = await pool.query("SELECT * FROM users WHERE ref_no = $1", [
-      refNo,
-    ]);
+    const result = await pool.query(
+      `SELECT u.*, (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
+       FROM users u WHERE u.ref_no = $1`,
+      [refNo],
+    );
     return result.rows[0] || null;
   },
 
@@ -154,6 +164,13 @@ const User = {
       [id],
     );
     return result.rows[0] || null;
+  },
+
+  async deleteAll() {
+    const result = await pool.query(
+      "DELETE FROM users WHERE role != 'super_admin' RETURNING *"
+    );
+    return result.rows;
   },
 };
 

@@ -7,6 +7,7 @@ const {
   getMe,
   update,
   remove,
+  removeAll,
 } = require("../controllers/Customer.controller");
 const { protect, isSuperAdmin } = require("../middleware/auth.middleware");
 
@@ -22,6 +23,7 @@ router.get("/:id", protect, getById);
 router.put("/:id", protect, update);
 
 // ─── DELETE ────────────────────────────────────────────────
+router.delete("/", protect, isSuperAdmin, removeAll);
 router.delete("/:id", protect, isSuperAdmin, remove);
 
 module.exports = router;

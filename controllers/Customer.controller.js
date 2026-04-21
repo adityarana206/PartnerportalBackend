@@ -1,6 +1,4 @@
 const User = require("../models/Authorization.model");
-const LoginUser = require("../models/LoginUser.model");
-const { pool } = require("../config/db");
 const bcrypt = require("bcryptjs");
 
 const VALID_ROLES = [
@@ -92,14 +90,7 @@ const register = async (req, res) => {
 // ─── Get All ──────────────────────────────────────────────
 const getAll = async (req, res) => {
   try {
-    const { rows: users } = await pool.query(
-      `SELECT lu.id, lu.email, lu.role, lu.is_active, lu.created_at, lu.updated_at,
-              u.name, u.ref_no, u.city, u.phone_no, u.currency_code, u.payment_terms_code,
-              u.address, u.address2, u.post_code, u.country_region_code, u.vat_registration_no
-       FROM login_users lu
-       LEFT JOIN users u ON u.id = lu.user_id
-       ORDER BY lu.created_at DESC`
-    );
+    const users = await User.findAll();
     res.status(200).json({ success: true, count: users.length, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -213,4 +204,18 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { register, getAll, getById, getMe, update, remove };
+// ─── Delete All ──────────────────────────────────────────
+const removeAll = async (req, res) => {
+  try {
+    const deleted = await User.deleteAll();
+    res.status(200).json({
+      success: true,
+      message: `${deleted.length} user(s) deleted successfully`,
+      count: deleted.length,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { register, getAll, getById, getMe, update, remove, removeAll };
