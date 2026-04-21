@@ -6,6 +6,7 @@ const LoginUser = {
       CREATE TABLE IF NOT EXISTS login_users (
         id           SERIAL PRIMARY KEY,
         user_id      INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        partner_no   VARCHAR(50),
         email        VARCHAR(255) UNIQUE NOT NULL,
         password     VARCHAR(255) NOT NULL,
         role         VARCHAR(50) NOT NULL,
@@ -14,18 +15,23 @@ const LoginUser = {
         updated_at   TIMESTAMP DEFAULT NOW()
       )
     `);
+    // Add partner_no to existing tables that were created before this column was introduced
+    await pool.query(`
+      ALTER TABLE login_users ADD COLUMN IF NOT EXISTS partner_no VARCHAR(50)
+    `);
   },
 
   async create(data) {
     const result = await pool.query(
-      `INSERT INTO login_users (user_id, email, password, role)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO login_users (user_id, partner_no, email, password, role)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (email) DO UPDATE SET
+         partner_no = EXCLUDED.partner_no,
          password   = EXCLUDED.password,
          role       = EXCLUDED.role,
          updated_at = NOW()
        RETURNING *`,
-      [data.userId, data.email, data.password, data.role]
+      [data.userId, data.partnerNo || null, data.email, data.password, data.role]
     );
     return result.rows[0];
   },

@@ -29,6 +29,8 @@ const DeliveryOrderRoutes = require("./routes/deliveryOrder.routes");
 const BCUserRegisterRoutes = require("./routes/bcUserRegister.routes");
 const DataManagementRoutes = require("./routes/dataManagement.routes");
 const CountryRoutes = require("./routes/country.routes");
+const VendorPaymentHistoryRoutes = require("./routes/vendorPaymentHistory.routes");
+const CustomerPaymentHistoryRoutes = require("./routes/customerPaymentHistory.routes");
 const app = express();
 
 /* =======================
@@ -94,6 +96,8 @@ app.use("/api/delivery-orders", DeliveryOrderRoutes);
 app.use("/api/bc-user-registrations", BCUserRegisterRoutes);
 app.use("/api/data-management", DataManagementRoutes);
 app.use("/api/countries", CountryRoutes);
+app.use("/api/vendor-payment-history", VendorPaymentHistoryRoutes);
+app.use("/api/customer-payment-history", CustomerPaymentHistoryRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

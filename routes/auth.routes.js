@@ -4,7 +4,9 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { pool } = require("../config/db");
-const { login } = require("../controllers/Customer.controller");
+const { login } = require("../controllers/Login.controller");
+const LoginUser = require("../models/LoginUser.model");
+const User = require("../models/Authorization.model");
 
 let currentSecretKey = null;
 let secretKeyExpiry = null;
@@ -331,6 +333,60 @@ router.post("/change-password", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Password changed successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ─── Create Login User ─────────────────────────────────────
+// POST /api/auth/create-login-user
+// Body: { partnerNo, email, password }
+// Creates or updates a login_users record for an existing user.
+router.post("/create-login-user", async (req, res) => {
+  try {
+    const { partnerNo, email, password } = req.body;
+
+    if (!partnerNo || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "partnerNo, email, and password are required",
+      });
+    }
+
+    // ─── Verify user exists by partner number ──────────────
+    const user = await User.findByRefNo(partnerNo);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found for the given partnerNo",
+      });
+    }
+
+    // ─── Email must match the user record ──────────────────
+    if (user.email !== email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email does not match the user record",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const loginUser = await LoginUser.create({
+      userId: user.id,
+      partnerNo: user.ref_no,
+      email: user.email,
+      password: hashedPassword,
+      role: user.role,
+    });
+
+    const { password: pwd, ...loginUserWithoutPassword } = loginUser;
+
+    return res.status(201).json({
+      success: true,
+      message: "Login user created successfully",
+      data: loginUserWithoutPassword,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

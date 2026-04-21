@@ -1,9 +1,7 @@
 const User = require("../models/Authorization.model");
 const LoginUser = require("../models/LoginUser.model");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
 const { pool } = require("../config/db");
+const bcrypt = require("bcryptjs");
 
 const VALID_ROLES = [
   "customer",
@@ -12,33 +10,6 @@ const VALID_ROLES = [
   "vendor_admin",
   "super_admin",
 ];
-
-// ─── Generate Access Token (short-lived) ─────────────────
-const generateToken = (payload) => {
-  try {
-    return jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
-    });
-  } catch (error) {
-    return null;
-  }
-};
-
-// ─── Generate + Store Refresh Token (long-lived) ─────────
-const generateRefreshToken = async (userId) => {
-  try {
-    const token = crypto.randomBytes(64).toString("hex");
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-    await pool.query(
-      `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
-      [userId, token, expiresAt]
-    );
-    return token;
-  } catch (err) {
-    console.error("⚠️  Could not store refresh token:", err.message);
-    return null;
-  }
-};
 
 // ─── Register ─────────────────────────────────────────────
 const register = async (req, res) => {
@@ -106,111 +77,11 @@ const register = async (req, res) => {
       role,
     );
 
-    // ─── Save to login_users table ────────────────────────
-    await LoginUser.create({
-      userId: user.id,
-      email: user.email,
-      password: hashedPassword,
-      role: user.role,
-    });
-
-    // ─── Generate token AFTER save so id is available ─────
-    const token = generateToken({
-      id: user.id,
-      name: user.name,
-      email: user.email || null,
-      refNo: user.ref_no || null,
-      role: user.role,
-    });
-
-    if (!token) {
-      return res.status(500).json({
-        success: false,
-        message: "Token generation failed. Registration aborted.",
-      });
-    }
-
-    const refreshToken = await generateRefreshToken(user.id);
-
     const { password, ...userWithoutPassword } = user;
 
     return res.status(201).json({
       success: true,
       message: `${role} registered successfully`,
-      token,
-      refreshToken,
-      data: userWithoutPassword,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─── Single Login for ALL roles ───────────────────────────
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
-    }
-
-    // ─── Check credentials from login_users ──────────────
-    let loginUser = await LoginUser.findByEmail(email);
-
-    // ─── Fallback: check users table directly ─────────────
-    if (!loginUser) {
-      const directUser = await User.findByEmailWithPassword(email);
-      if (!directUser) {
-        return res.status(401).json({ success: false, message: "Invalid email or password" });
-      }
-      const isMatch = await bcrypt.compare(password, directUser.password);
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: "Invalid email or password" });
-      }
-      // Auto-create login_users entry so future logins work normally
-      await LoginUser.create({ userId: directUser.id, email: directUser.email, password: directUser.password, role: directUser.role });
-      loginUser = await LoginUser.findByEmail(email);
-    }
-
-    const isMatch = await bcrypt.compare(password, loginUser.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-    }
-
-    // ─── Fetch full profile from users table ──────────────
-    const user = await User.findById(loginUser.user_id);
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User profile not found",
-      });
-    }
-
-    const token = generateToken({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: loginUser.role,
-      refNo: user.ref_no || null,
-    });
-
-    const refreshToken = await generateRefreshToken(user.id);
-
-    const { password: pwd, ...userWithoutPassword } = user;
-
-    return res.status(200).json({
-      success: true,
-      message: `${user.role} logged in successfully`,
-      role: user.role,
-      token,
-      refreshToken,
       data: userWithoutPassword,
     });
   } catch (error) {
@@ -221,19 +92,14 @@ const login = async (req, res) => {
 // ─── Get All ──────────────────────────────────────────────
 const getAll = async (req, res) => {
   try {
-    const { role } = req.user;
-    let users;
-
-    if (role === "super_admin") {
-      users = await User.findAll(null);
-    } else if (role === "customer_admin") {
-      users = await User.findAllByRoles(["customer", "customer_admin"]);
-    } else if (role === "vendor_admin") {
-      users = await User.findAllByRoles(["vendor", "vendor_admin"]);
-    } else {
-      users = await User.findAll(role);
-    }
-
+    const { rows: users } = await pool.query(
+      `SELECT lu.id, lu.email, lu.role, lu.is_active, lu.created_at, lu.updated_at,
+              u.name, u.ref_no, u.city, u.phone_no, u.currency_code, u.payment_terms_code,
+              u.address, u.address2, u.post_code, u.country_region_code, u.vat_registration_no
+       FROM login_users lu
+       LEFT JOIN users u ON u.id = lu.user_id
+       ORDER BY lu.created_at DESC`
+    );
     res.status(200).json({ success: true, count: users.length, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -347,4 +213,4 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getAll, getById, getMe, update, remove };
+module.exports = { register, getAll, getById, getMe, update, remove };

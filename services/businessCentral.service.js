@@ -610,6 +610,22 @@ class BusinessCentralService {
     );
   }
 
+  // ─── Customer Payment History ───────────────────────────
+  async getCustomerPaymentHistory(customerNo) {
+    if (!customerNo) throw new Error("customerNo is required");
+    const escapedCustomerNo = customerNo.replace(/'/g, "''");
+    const filter = `customerNo eq '${escapedCustomerNo}'`;
+    return await this.callAPI(`customerPaymentHistories?$filter=${encodeURIComponent(filter)}`);
+  }
+
+  // ─── Vendor Payment History ────────────────────────────
+  async getVendorPaymentHistory(vendorNo) {
+    if (!vendorNo) throw new Error("vendorNo is required");
+    const escapedVendorNo = vendorNo.replace(/'/g, "''");
+    const filter = `vendorNo eq '${escapedVendorNo}'`;
+    return await this.callAPI(`vendorPaymentHistories?$filter=${encodeURIComponent(filter)}`);
+  }
+
   // ─── Customer Registration ─────────────────────────────
   async createCustomerRegistration(customerData) {
     const bcData = {
