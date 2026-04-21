@@ -159,12 +159,21 @@ const login = async (req, res) => {
     }
 
     // ─── Check credentials from login_users ──────────────
-    const loginUser = await LoginUser.findByEmail(email);
+    let loginUser = await LoginUser.findByEmail(email);
+
+    // ─── Fallback: check users table directly ─────────────
     if (!loginUser) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      const directUser = await User.findByEmailWithPassword(email);
+      if (!directUser) {
+        return res.status(401).json({ success: false, message: "Invalid email or password" });
+      }
+      const isMatch = await bcrypt.compare(password, directUser.password);
+      if (!isMatch) {
+        return res.status(401).json({ success: false, message: "Invalid email or password" });
+      }
+      // Auto-create login_users entry so future logins work normally
+      await LoginUser.create({ userId: directUser.id, email: directUser.email, password: directUser.password, role: directUser.role });
+      loginUser = await LoginUser.findByEmail(email);
     }
 
     const isMatch = await bcrypt.compare(password, loginUser.password);
@@ -216,13 +225,13 @@ const getAll = async (req, res) => {
     let users;
 
     if (role === "super_admin") {
-      users = await User.findAll(null); // sees everyone
+      users = await User.findAll(null);
     } else if (role === "customer_admin") {
       users = await User.findAllByRoles(["customer", "customer_admin"]);
     } else if (role === "vendor_admin") {
       users = await User.findAllByRoles(["vendor", "vendor_admin"]);
     } else {
-      users = await User.findAll(role); // own role only
+      users = await User.findAll(role);
     }
 
     res.status(200).json({ success: true, count: users.length, data: users });
