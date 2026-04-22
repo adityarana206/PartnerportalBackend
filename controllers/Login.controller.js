@@ -1,5 +1,4 @@
 const User = require("../models/Authorization.model");
-const LoginUser = require("../models/LoginUser.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
@@ -35,48 +34,24 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
+      return res.status(400).json({ success: false, message: "Email and password are required" });
     }
 
-    let loginUser = await LoginUser.findByEmail(email);
-
-    if (!loginUser) {
-      const directUser = await User.findByEmailWithPassword(email);
-      if (!directUser) {
-        return res.status(401).json({ success: false, message: "Invalid email or password" });
-      }
-      const isMatch = await bcrypt.compare(password, directUser.password);
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: "Invalid email or password" });
-      }
-      await LoginUser.create({ userId: directUser.id, partnerNo: directUser.ref_no || null, email: directUser.email, password: directUser.password, role: directUser.role });
-      loginUser = await LoginUser.findByEmail(email);
-    }
-
-    const isMatch = await bcrypt.compare(password, loginUser.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-    }
-
-    const user = await User.findById(loginUser.user_id);
+    const user = await User.findByEmailWithPassword(email);
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User profile not found",
-      });
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
     const token = generateToken({
       id: user.id,
       name: user.name,
       email: user.email,
-      role: loginUser.role,
+      role: user.role,
       refNo: user.ref_no || null,
     });
 

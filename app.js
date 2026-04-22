@@ -117,7 +117,7 @@ const startServer = async () => {
     // Connect to PostgreSQL first
     await connectDB();
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌐 Base URL: http://localhost:${PORT}`);
 
@@ -133,6 +133,15 @@ const startServer = async () => {
 
         console.log(`\n✅ Total Routes: ${routes.length}`);
         console.log("\n========================================\n");
+      }
+    });
+
+    server.on("error", (err) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(`❌ Port ${PORT} is already in use. Run: lsof -ti :${PORT} | xargs kill -9`);
+        process.exit(1);
+      } else {
+        throw err;
       }
     });
   } catch (error) {

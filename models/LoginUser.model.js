@@ -38,7 +38,7 @@ const LoginUser = {
 
   async findByEmail(email) {
     const result = await pool.query(
-      "SELECT * FROM login_users WHERE email = $1 AND is_active = true",
+      "SELECT * FROM login_users WHERE LOWER(email) = LOWER($1) AND is_active = true",
       [email]
     );
     return result.rows[0] || null;
