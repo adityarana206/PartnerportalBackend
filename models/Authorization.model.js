@@ -7,9 +7,9 @@ const User = {
         ref_no, name, name2,
         address, address2, city, post_code, country_region_code,
         phone_no, email, vat_registration_no, currency_code,
-        payment_terms_code, password, role
+        payment_terms_code, password, role, vendor_name
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
       )
       ON CONFLICT (email) DO UPDATE SET
         name = EXCLUDED.name,
@@ -24,6 +24,7 @@ const User = {
         vat_registration_no = EXCLUDED.vat_registration_no,
         currency_code = EXCLUDED.currency_code,
         payment_terms_code = EXCLUDED.payment_terms_code,
+        vendor_name = EXCLUDED.vendor_name,
         updated_at = NOW()
       RETURNING *;
     `;
@@ -43,23 +44,23 @@ const User = {
       data.paymentTermsCode || null,
       data.password || null,
       role,
+      data.vendorName || null,
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
   },
 
   async findAll(role) {
-    const contactNameSubquery = `(SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name`;
     const query = role
       ? `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
                u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-               u.payment_terms_code, u.role, u.created_at, u.updated_at, ${contactNameSubquery}
+               u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
          FROM users u
          WHERE u.role = $1
          ORDER BY u.created_at DESC`
       : `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
                u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-               u.payment_terms_code, u.role, u.created_at, u.updated_at, ${contactNameSubquery}
+               u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
          FROM users u
          ORDER BY u.created_at DESC`;
     const values = role ? [role] : [];
@@ -71,8 +72,7 @@ const User = {
     const result = await pool.query(
       `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-              u.payment_terms_code, u.role, u.created_at, u.updated_at,
-              (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
+              u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
        FROM users u
        WHERE u.id = $1`,
       [id],
@@ -84,8 +84,7 @@ const User = {
     const result = await pool.query(
       `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-              u.payment_terms_code, u.role, u.created_at, u.updated_at,
-              (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
+              u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
        FROM users u
        WHERE u.role = ANY($1::text[])
        ORDER BY u.created_at DESC`,
@@ -98,8 +97,7 @@ const User = {
     const result = await pool.query(
       `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-              u.payment_terms_code, u.role, u.created_at, u.updated_at,
-              (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
+              u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
        FROM users u
        WHERE u.id = $1 AND u.role = $2`,
       [id, role],
@@ -109,8 +107,7 @@ const User = {
 
   async findByRefNo(refNo) {
     const result = await pool.query(
-      `SELECT u.*, (SELECT c.contact_name FROM contacts c WHERE c.partner_no = u.ref_no LIMIT 1) AS contact_name
-       FROM users u WHERE u.ref_no = $1`,
+      `SELECT u.* FROM users u WHERE u.ref_no = $1`,
       [refNo],
     );
     return result.rows[0] || null;
@@ -136,8 +133,8 @@ const User = {
         name=$1, name2=$2, address=$3, address2=$4, city=$5,
         post_code=$6, country_region_code=$7, phone_no=$8,
         email=$9, vat_registration_no=$10, currency_code=$11,
-        payment_terms_code=$12, updated_at=NOW()
-      WHERE id=$13 RETURNING *;
+        payment_terms_code=$12, vendor_name=$13, updated_at=NOW()
+      WHERE id=$14 RETURNING *;
     `;
     const values = [
       data.name,
@@ -152,6 +149,7 @@ const User = {
       data.vatRegistrationNo || null,
       data.currencyCode || null,
       data.paymentTermsCode || null,
+      data.vendorName || null,
       id,
     ];
     const result = await pool.query(query, values);
