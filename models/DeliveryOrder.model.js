@@ -105,7 +105,7 @@ const DeliveryOrder = {
           data.shipState             || null,
           data.shipPostCode          || null,
           data.shipCountryCode       || null,
-          data.status                || "Draft",
+          data.status                || "Created",
           data.remarks               || null,
           userId                     || null,
         ]
@@ -228,7 +228,7 @@ const DeliveryOrder = {
           data.shipState             || null,
           data.shipPostCode          || null,
           data.shipCountryCode       || null,
-          data.status                || "Draft",
+          data.status                || "Created",
           data.remarks               || null,
           id,
         ]

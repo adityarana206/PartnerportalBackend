@@ -31,6 +31,7 @@ const DataManagementRoutes = require("./routes/dataManagement.routes");
 const CountryRoutes = require("./routes/country.routes");
 const VendorPaymentHistoryRoutes = require("./routes/vendorPaymentHistory.routes");
 const CustomerPaymentHistoryRoutes = require("./routes/customerPaymentHistory.routes");
+const LocationRoutes = require("./routes/location.routes");
 const app = express();
 
 /* =======================
@@ -98,6 +99,7 @@ app.use("/api/data-management", DataManagementRoutes);
 app.use("/api/countries", CountryRoutes);
 app.use("/api/vendor-payment-history", VendorPaymentHistoryRoutes);
 app.use("/api/customer-payment-history", CustomerPaymentHistoryRoutes);
+app.use("/api/locations", LocationRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

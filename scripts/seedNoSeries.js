@@ -2,6 +2,22 @@ const { pool } = require("../config/db");
 
 const series = [
   {
+    code: "SO",
+    description: "Sales Order Number Series",
+    starting_no: 1,
+    ending_no: 999999,
+    last_no_used: 0,
+    increment_by_no: 1,
+  },
+  {
+    code: "DO",
+    description: "Delivery Order Number Series",
+    starting_no: 1,
+    ending_no: 999999,
+    last_no_used: 0,
+    increment_by_no: 1,
+  },
+  {
     code: "PORTAL",
     description: "Partner Portal Item Request Number Series",
     starting_no: 1,

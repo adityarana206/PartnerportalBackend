@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Read(//Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices/**)"
+      "Read(//Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices/**)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"tech@startupnews.fyi\",\"password\":\"admin123\"}')",
+      "Bash(node scripts/seedUnitOfMeasures.js)",
+      "Bash(node scripts/seedNoSeries.js)"
     ],
     "additionalDirectories": [
       "/Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices"

@@ -11,6 +11,16 @@ const getItemCategories = async (req, res) => {
   }
 };
 
+// GET /api/item-categories/bc — fetch live from Business Central
+const getItemCategoriesFromBC = async (req, res) => {
+  try {
+    const categories = await bcService.getItemCategories();
+    res.status(200).json({ success: true, count: categories.length, data: categories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // POST /api/item-categories/sync — fetch from BC and upsert into local DB
 const syncItemCategories = async (req, res) => {
   try {
@@ -38,4 +48,4 @@ const syncItemCategories = async (req, res) => {
   }
 };
 
-module.exports = { getItemCategories, syncItemCategories };
+module.exports = { getItemCategories, getItemCategoriesFromBC, syncItemCategories };

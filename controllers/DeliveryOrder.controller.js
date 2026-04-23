@@ -2,7 +2,7 @@ const DeliveryOrder = require("../models/DeliveryOrder.model");
 const PurchaseOrder = require("../models/PurchaseOrder.model");
 const bcService = require("../services/businessCentral.service");
 
-const VALID_STATUSES = ["Draft", "Submitted", "In Transit", "Delivered"];
+const VALID_STATUSES = ["Created", "Submitted", "In Transit", "Delivered"];
 
 // ─── Create ────────────────────────────────────────────────
 const createDeliveryOrder = async (req, res) => {

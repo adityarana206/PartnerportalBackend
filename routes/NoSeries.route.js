@@ -8,6 +8,7 @@ const router = Router();
 router.get("/code/:code", protect, NoSeriesController.getByCode);
 
 // ─── Collection routes ─────────────────────────────────────────────────────────
+router.get("/", protect, NoSeriesController.getAll);
 router.get("/getall", protect, NoSeriesController.getAll);
 router.post("/", protect, NoSeriesController.create);
 
