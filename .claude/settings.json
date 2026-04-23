@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices/**)"
+    ],
+    "additionalDirectories": [
+      "/Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices"
+    ]
+  }
+}
