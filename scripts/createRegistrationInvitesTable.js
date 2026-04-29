@@ -34,6 +34,20 @@ async function createRegistrationInvitesTable() {
         console.log("✅ Added missing email column to registration_invites");
       }
 
+      // Add payload column if missing
+      const payloadColCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_schema = 'public'
+          AND table_name = 'registration_invites'
+          AND column_name = 'payload'
+        )
+      `);
+      if (!payloadColCheck.rows[0].exists) {
+        await client.query(`ALTER TABLE registration_invites ADD COLUMN payload JSONB`);
+        console.log("✅ Added missing payload column to registration_invites");
+      }
+
       await client.query("COMMIT");
       return;
     }
@@ -46,6 +60,7 @@ async function createRegistrationInvitesTable() {
         role VARCHAR(50) NOT NULL,
         partner_no VARCHAR(50),
         email VARCHAR(255),
+        payload JSONB,
         expires_at TIMESTAMP NOT NULL,
         used BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW(),

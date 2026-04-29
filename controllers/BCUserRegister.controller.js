@@ -24,7 +24,7 @@ const VALID_INVITE_ROLES = ["vendor", "customer"];
 // ─── Generate Invite Link ─────────────────────────────────
 const generateInvite = async (req, res) => {
   try {
-    const { role, partnerNo, email, expiresInHours = 48 } = req.body;
+    const { role, partnerNo, email, expiresInHours = 48, payload } = req.body;
 
     if (!role || !VALID_INVITE_ROLES.includes(role)) {
       return res.status(400).json({
@@ -33,13 +33,17 @@ const generateInvite = async (req, res) => {
       });
     }
 
+    // Derive email from payload.header if not provided at top level
+    const resolvedEmail = email || payload?.header?.partnerEmail || null;
+    const resolvedPartnerNo = partnerNo || null;
+
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
 
     await pool.query(
-      `INSERT INTO registration_invites (token, role, partner_no, email, expires_at)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [token, role, partnerNo || null, email || null, expiresAt]
+      `INSERT INTO registration_invites (token, role, partner_no, email, expires_at, payload)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [token, role, resolvedPartnerNo, resolvedEmail, expiresAt, payload ? JSON.stringify(payload) : null]
     );
 
     const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -52,10 +56,11 @@ const generateInvite = async (req, res) => {
       data: {
         token,
         role,
-        partnerNo: partnerNo || null,
-        email: email || null,
+        partnerNo: resolvedPartnerNo,
+        email: resolvedEmail,
         expiresAt,
         registrationUrl,
+        payload: payload || null,
       },
     });
   } catch (error) {
@@ -119,24 +124,19 @@ const createBCUserRegister = async (req, res) => {
     let bcPatchErr = null;
     let bcUpdateResult = null;
     let bcUpdateErr = null;
+    let bcCreateResult = null;
+    let bcCreateErr = null;
 
     if (partnerNo) {
-      await BCUserRegister.updateStatus(local.id, "Draft");
-
-      // ─── PATCH: set status on existing BC registration ────────
+      // ─── Existing BC registration: PATCH status then updateRegistration ───
       try {
-        bcPatchResult = await bcService.patchPartnerRegistration(
-          partnerNo,
-          "*",
-          { status: "Draft" }
-        );
+        bcPatchResult = await bcService.patchPartnerRegistration(partnerNo, "*", { status: "Draft" });
         console.log("✅ BC PATCH succeeded for:", partnerNo);
       } catch (patchErr) {
         bcPatchErr = patchErr.response?.data || patchErr.message;
         console.error("⚠️  BC PATCH failed:", bcPatchErr);
       }
 
-      // ─── updateRegistration action: send full form payload ─────
       try {
         bcUpdateResult = await bcService.updateRegistration(partnerNo, registrationData);
         console.log("✅ updateRegistration action called for:", partnerNo);
@@ -145,7 +145,23 @@ const createBCUserRegister = async (req, res) => {
         console.error("⚠️  BC updateRegistration failed:", bcUpdateErr);
       }
     } else {
-      console.warn("⚠️  No partnerNo — skipping BC PATCH and updateRegistration");
+      // ─── No partnerNo: create a new registration in BC ────────
+      try {
+        bcCreateResult = await bcService.createPartnerRegistration(registrationData);
+        console.log("✅ BC createPartnerRegistration succeeded:", bcCreateResult?.regNo);
+
+        // Persist the BC-assigned registration number back to local DB
+        if (bcCreateResult?.regNo) {
+          await pool.query(
+            `UPDATE bc_user_registrations SET partner_no = $1, updated_at = NOW() WHERE id = $2`,
+            [bcCreateResult.regNo, local.id]
+          );
+          local.partner_no = bcCreateResult.regNo;
+        }
+      } catch (createErr) {
+        bcCreateErr = createErr.response?.data || createErr.message;
+        console.error("⚠️  BC createPartnerRegistration failed:", bcCreateErr);
+      }
     }
 
     // Mark token as used
@@ -153,12 +169,21 @@ const createBCUserRegister = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: partnerNo ? "Registration submitted successfully" : "Registration saved locally (no BC reg number)",
+      message: (partnerNo || bcCreateResult?.regNo)
+        ? "Registration submitted successfully"
+        : "Registration saved locally (BC sync failed or pending)",
       data: local,
       businessCentral: {
-        synced: !!(bcPatchResult || bcUpdateResult),
-        patch: { success: !!bcPatchResult, response: bcPatchResult, error: bcPatchErr },
-        update: { success: !!bcUpdateResult, response: bcUpdateResult, error: bcUpdateErr },
+        synced: !!(bcPatchResult || bcUpdateResult || bcCreateResult),
+        ...(partnerNo
+          ? {
+              patch:  { success: !!bcPatchResult,  response: bcPatchResult,  error: bcPatchErr },
+              update: { success: !!bcUpdateResult, response: bcUpdateResult, error: bcUpdateErr },
+            }
+          : {
+              create: { success: !!bcCreateResult, response: bcCreateResult, error: bcCreateErr },
+            }
+        ),
       },
     });
   } catch (error) {
@@ -312,6 +337,7 @@ const verifyInvite = async (req, res) => {
         partnerNo: invite.partner_no,
         email: invite.email || null,
         expiresAt: invite.expires_at,
+        payload: invite.payload || null,
       },
     });
   } catch (error) {
