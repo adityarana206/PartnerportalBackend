@@ -297,10 +297,15 @@ const PurchaseOrder = {
   },
 
   // ─── Update Status Only ────────────────────────────────
-  async updateStatus(id, status) {
+  async updateStatus(id, status, portalStatus, portalDocumentNo) {
     const result = await pool.query(
-      `UPDATE purchase_orders SET status=$1, updated_at=NOW() WHERE id=$2 RETURNING *`,
-      [status, id]
+      `UPDATE purchase_orders
+       SET status=$1,
+           portal_status=$2,
+           portal_document_no=COALESCE($3, portal_document_no),
+           updated_at=NOW()
+       WHERE id=$4 RETURNING *`,
+      [status, portalStatus || null, portalDocumentNo || null, id]
     );
     return result.rows[0] || null;
   },

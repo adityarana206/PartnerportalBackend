@@ -231,7 +231,8 @@ const updateOrderStatus = async (req, res) => {
   try {
     if (!isValidId(req.params.id))
       return res.status(400).json({ success: false, message: "Invalid ID" });
-    const { status } = req.body;
+
+    const { status, portalStatus, portalDocumentNo } = req.body;
 
     const validStatuses = ["Released", "Accepted", "Rejected", "Processed for DO"];
     if (!status || !validStatuses.includes(status)) {
@@ -246,14 +247,13 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Purchase order not found" });
 
     const documentNo = order.no || order.external_document_no;
-    console.log(`[PO Status Update] Order ${req.params.id} → status: ${status}, documentNo: ${documentNo}`);
+    console.log(`[PO Status Update] Order ${req.params.id} → status: ${status}, portalStatus: ${portalStatus}, portalDocumentNo: ${portalDocumentNo}, documentNo: ${documentNo}`);
 
     let bcResponse = null;
     let bcSyncError = null;
 
     if (documentNo) {
       try {
-        // Step 1: GET the BC GUID using documentNo filter
         const confirmResponse = await bcService.getPurchaseOrderConfirmByDocumentNo(documentNo);
         const bcConfirm = Array.isArray(confirmResponse.value) ? confirmResponse.value[0] : null;
 
@@ -264,7 +264,11 @@ const updateOrderStatus = async (req, res) => {
           console.warn(`[PO Status Update] No BC confirm record found for documentNo: ${documentNo}`);
           bcSyncError = `No BC confirm record found for documentNo: ${documentNo}`;
         } else {
-          const bcPayload = { vendorConfirmed: status === "Accepted" ? "true" : "false" };
+          const bcPayload = {
+            vendorConfirmed: status === "Accepted" ? "true" : "false",
+            ...(portalStatus      && { portalStatus }),
+            ...(portalDocumentNo  && { portalDocumentNo }),
+          };
           console.log(`[PO Status Update] Patching BC GUID ${bcGuid} with:`, bcPayload);
           bcResponse = await bcService.patchPurchaseOrderConfirmByGuid(bcGuid, bcPayload);
           console.log(`[PO Status Update] BC patch successful`);
@@ -279,7 +283,7 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
-    const updated = await PurchaseOrder.updateStatus(req.params.id, status);
+    const updated = await PurchaseOrder.updateStatus(req.params.id, status, portalStatus, portalDocumentNo);
     res.status(200).json({
       success: true,
       message: `Order status updated to ${status}`,
