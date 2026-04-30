@@ -58,7 +58,15 @@ const PurchaseOrder = {
               vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
               lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
             }
+          } else {
+            vatPercent = parseFloat(line.vatPercent) || 0;
+            vatAmount = parseFloat(line.vatAmount) || 0;
+            lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
           }
+        } else {
+          vatPercent = parseFloat(line.vatPercent) || 0;
+          vatAmount = parseFloat(line.vatAmount) || 0;
+          lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
         }
 
         const lineResult = await client.query(
@@ -235,7 +243,15 @@ const PurchaseOrder = {
               vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
               lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
             }
+          } else {
+            vatPercent = parseFloat(line.vatPercent) || 0;
+            vatAmount = parseFloat(line.vatAmount) || 0;
+            lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
           }
+        } else {
+          vatPercent = parseFloat(line.vatPercent) || 0;
+          vatAmount = parseFloat(line.vatAmount) || 0;
+          lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
         }
 
         const lineResult = await client.query(

@@ -71,10 +71,13 @@ const createPurchaseOrderbc = async (req, res) => {
         lineDiscountPercent:  l.lineDiscountPercent || 0,
         lineDiscountAmount:   l.lineDiscountAmount || 0,
         lineAmount:           l.lineAmount || 0,
+        lineAmountInclVat:    l.lineAmountInclVat || l.lineAmountIncludingVat || 0,
+        vatCode:              l.vatCode || null,
+        vatPercent:           l.vatPercent || 0,
+        vatAmount:            l.vatAmount || 0,
         locationCode:         l.locationCode || null,
         deliveryDate:         l.deliveryDate || null,
         variantCode:          l.variantCode || null,
-        vatCode:              l.vatCode || null,
       })),
     };
 
