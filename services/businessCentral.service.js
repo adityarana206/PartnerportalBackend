@@ -234,7 +234,17 @@ class BusinessCentralService {
     if (!bcGuid) {
       throw new Error("BC confirm GUID is required to patch purchase order confirmation");
     }
-    return await this.callAPI(`purchaseOrderConfirms(${bcGuid})`, "PATCH", data, null, etag);
+    // Fetch fresh ETag if not provided
+    let resolvedEtag = etag;
+    if (etag === "*") {
+      try {
+        const record = await this.callAPI(`purchaseOrderConfirms(${bcGuid})`);
+        resolvedEtag = record["@odata.etag"] || "*";
+      } catch {
+        resolvedEtag = "*";
+      }
+    }
+    return await this.callAPI(`purchaseOrderConfirms(${bcGuid})`, "PATCH", data, null, resolvedEtag);
   }
 
   // ─── Delivery Staging ──────────────────────────────────

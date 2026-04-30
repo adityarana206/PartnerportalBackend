@@ -264,10 +264,10 @@ const updateOrderStatus = async (req, res) => {
           console.warn(`[PO Status Update] No BC confirm record found for documentNo: ${documentNo}`);
           bcSyncError = `No BC confirm record found for documentNo: ${documentNo}`;
         } else {
+          // Only send fields BC accepts — vendorConfirmed as boolean
           const bcPayload = {
-            vendorConfirmed: status === "Accepted" ? "true" : "false",
-            ...(portalStatus      && { portalStatus }),
-            ...(portalDocumentNo  && { portalDocumentNo }),
+            vendorConfirmed: status === "Accepted",
+            ...(portalDocumentNo && { portalDocumentNo }),
           };
           console.log(`[PO Status Update] Patching BC GUID ${bcGuid} with:`, bcPayload);
           bcResponse = await bcService.patchPurchaseOrderConfirmByGuid(bcGuid, bcPayload);
@@ -284,7 +284,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const updated = await PurchaseOrder.updateStatus(req.params.id, status, portalStatus, portalDocumentNo);
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: `Order status updated to ${status}`,
       data: updated,
