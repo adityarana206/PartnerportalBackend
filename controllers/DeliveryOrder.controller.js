@@ -85,10 +85,13 @@ const createDeliveryOrder = async (req, res) => {
       console.error("⚠️  BC deliveryStaging failed:", bcError);
     }
 
+    // ─── Persist BC sync result ────────────────────────────
+    await DeliveryOrder.updateBcSync(order.id, !!bcResult, bcError ? JSON.stringify(bcError) : null);
+
     res.status(201).json({
       success: true,
       message: "Delivery order created successfully",
-      data: order,
+      data: { ...order, bc_synced: !!bcResult, bc_error: bcError || null },
       businessCentral: { synced: !!bcResult, response: bcResult, error: bcError },
     });
   } catch (err) {
@@ -161,6 +164,86 @@ const updateDeliveryOrderStatus = async (req, res) => {
   }
 };
 
+// ─── Reprocess (retry BC push) ─────────────────────────────
+const reprocessDeliveryOrder = async (req, res) => {
+  try {
+    const order = await DeliveryOrder.findById(req.params.id);
+    if (!order)
+      return res.status(404).json({ success: false, message: "Delivery order not found" });
+
+    if (order.bc_synced)
+      return res.status(400).json({ success: false, message: "Delivery order is already synced to Business Central" });
+
+    const lines = order.lines || [];
+    const bcPayload = {
+      deliveryOrderNo:      order.delivery_order_no,
+      deliveryDateTime:     order.delivery_date_time  || new Date().toISOString(),
+      deliveryType:         order.delivery_type        || "ASN",
+      partnerNo:            order.partner_no,
+      partnerType:          order.partner_type         || "Vendor",
+      direction:            "Portal-to-BC",
+      shipmentDate:         order.shipment_date,
+      expectedDeliveryDate: order.expected_delivery_date || null,
+      status:               "Inserted",
+      locationCode:         order.location_code         || "",
+      warehouseLocation:    order.warehouse_location    || "",
+      totalAmount:          order.total_amount          || 0,
+      currencyCode:         order.currency_code         || "",
+      shipAddress:          order.ship_address          || "",
+      shipCity:             order.ship_city             || "",
+      shipState:            order.ship_state            || "",
+      shipPostCode:         order.ship_post_code        || "",
+      shipCountryCode:      order.ship_country_code     || "",
+      deliveryStagingsLine: lines.map((l, i) => ({
+        lineNo:            (i + 1) * 10000,
+        poNo:              l.po_no              || "",
+        poLineNo:          l.po_line_no         || 0,
+        poDateTime:        l.po_date_time       || null,
+        poTotalAmount:     l.po_total_amount    || 0,
+        itemNo:            l.item_no            || "",
+        description:       l.description        || "",
+        orderedQuantity:   parseFloat(l.ordered_quantity || l.order_qty    || 0),
+        shippedQuantity:   parseFloat(l.to_be_shipped    || l.shipped_quantity || 0),
+        remainingQuantity: parseFloat(l.remaining        || l.remaining_quantity || 0),
+        serialNo:          l.serial_no          || "",
+        lotNo:             l.lot_no             || "",
+        unitOfMeasureCode: l.unit_of_measure    || "",
+        unitPrice:         parseFloat(l.unit_price || 0),
+        variantCode:       l.variant_code       || "",
+        expirationDate:    l.expiration_date    || "0001-01-01",
+      })),
+    };
+
+    let bcResult = null;
+    let bcError = null;
+    try {
+      bcResult = await bcService.createDeliveryStaging(bcPayload);
+      console.log(`✅ [Reprocess] BC deliveryStaging created: ${order.delivery_order_no}`);
+    } catch (err) {
+      bcError = err.response?.data || err.message;
+      console.error(`⚠️  [Reprocess] BC push failed for ${order.delivery_order_no}:`, bcError);
+    }
+
+    const updated = await DeliveryOrder.updateBcSync(
+      order.id,
+      !!bcResult,
+      bcError ? JSON.stringify(bcError) : null
+    );
+
+    res.status(200).json({
+      success: true,
+      message: bcResult
+        ? "Delivery order successfully reprocessed to Business Central"
+        : "Reprocess attempted but Business Central sync failed",
+      data: updated,
+      businessCentral: { synced: !!bcResult, response: bcResult, error: bcError },
+    });
+  } catch (err) {
+    console.error("[DO Reprocess] ERROR:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ─── Delete ────────────────────────────────────────────────
 const deleteDeliveryOrder = async (req, res) => {
   try {
@@ -180,5 +263,6 @@ module.exports = {
   getDeliveryOrdersByPartner,
   updateDeliveryOrder,
   updateDeliveryOrderStatus,
+  reprocessDeliveryOrder,
   deleteDeliveryOrder,
 };

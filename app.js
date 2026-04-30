@@ -31,9 +31,12 @@ const DataManagementRoutes = require("./routes/dataManagement.routes");
 const CountryRoutes = require("./routes/country.routes");
 const VendorPaymentHistoryRoutes = require("./routes/vendorPaymentHistory.routes");
 const CustomerPaymentHistoryRoutes = require("./routes/customerPaymentHistory.routes");
+const CustomerLedgerEntryRoutes = require("./routes/customerLedgerEntry.routes");
+const VendorLedgerEntryRoutes = require("./routes/vendorLedgerEntry.routes");
 const LocationRoutes = require("./routes/location.routes");
 const PaymentMethodRoutes = require("./routes/paymentMethod.routes");
 const PaymentTermsRoutes = require("./routes/paymentTerms.routes");
+const PostCodeRoutes = require("./routes/postCode.routes");
 const app = express();
 
 /* =======================
@@ -101,9 +104,12 @@ app.use("/api/data-management", DataManagementRoutes);
 app.use("/api/countries", CountryRoutes);
 app.use("/api/vendor-payment-history", VendorPaymentHistoryRoutes);
 app.use("/api/customer-payment-history", CustomerPaymentHistoryRoutes);
+app.use("/api/customer-ledger-entries", CustomerLedgerEntryRoutes);
+app.use("/api/vendor-ledger-entries", VendorLedgerEntryRoutes);
 app.use("/api/locations", LocationRoutes);
 app.use("/api/payment-methods", PaymentMethodRoutes);
 app.use("/api/payment-terms", PaymentTermsRoutes);
+app.use("/api/post-codes", PostCodeRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

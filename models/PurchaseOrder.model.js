@@ -1,4 +1,5 @@
 const { pool } = require("../config/db");
+const NoSeries = require("./NoSeris.model");
 
 const PurchaseOrder = {
   // ─── Create Order with Lines ───────────────────────────
@@ -7,13 +8,15 @@ const PurchaseOrder = {
     try {
       await client.query("BEGIN");
 
+      const portalDocumentNo = await NoSeries.getNextNumberByCode("PO");
+
       const orderResult = await client.query(
         `INSERT INTO purchase_orders (
           order_type, no, partner_no, partner_type, ship_to_code,
           location_code, order_date, requested_delivery_date,
           currency_code, external_document_no, status,
-          direction, submitted_date, created_by
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+          direction, submitted_date, created_by, portal_document_no
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
         [
           data.orderType || null,
           data.No || null,
@@ -29,6 +32,7 @@ const PurchaseOrder = {
           data.direction || null,
           data.submittedDate || null,
           userId || null,
+          portalDocumentNo,
         ]
       );
       const order = orderResult.rows[0];

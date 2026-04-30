@@ -259,6 +259,16 @@ const DeliveryOrder = {
     return rows[0] || null;
   },
 
+  async updateBcSync(id, synced, errorMsg = null) {
+    const { rows } = await pool.query(
+      `UPDATE delivery_orders
+         SET bc_synced=$1, bc_error=$2, updated_at=NOW()
+       WHERE id=$3 RETURNING *`,
+      [synced, synced ? null : errorMsg, id]
+    );
+    return rows[0] || null;
+  },
+
   async delete(id) {
     const { rows } = await pool.query(
       "DELETE FROM delivery_orders WHERE id = $1 RETURNING *",

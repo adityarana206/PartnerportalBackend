@@ -604,6 +604,14 @@ class BusinessCentralService {
     );
   }
 
+  // ─── Post Codes ─────────────────────────────────────────
+  async getPostCodes(filter = null) {
+    const endpoint = filter
+      ? `postCodes?$filter=${encodeURIComponent(filter)}`
+      : `postCodes`;
+    return await this.callAPI(endpoint);
+  }
+
   // ─── Customer Payment History ───────────────────────────
   async getCustomerPaymentHistory(customerNo) {
     if (!customerNo) throw new Error("customerNo is required");
