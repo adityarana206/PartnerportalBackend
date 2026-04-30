@@ -232,7 +232,8 @@ const updateOrderStatus = async (req, res) => {
     if (!isValidId(req.params.id))
       return res.status(400).json({ success: false, message: "Invalid ID" });
 
-    const { status, portalStatus, portalDocumentNo } = req.body;
+    const { portalStatus, portalDocumentNo } = req.body;
+    const status = req.body.status || portalStatus;
 
     const validStatuses = ["Released", "Accepted", "Rejected", "Processed for DO"];
     if (!status || !validStatuses.includes(status)) {
@@ -264,9 +265,8 @@ const updateOrderStatus = async (req, res) => {
           console.warn(`[PO Status Update] No BC confirm record found for documentNo: ${documentNo}`);
           bcSyncError = `No BC confirm record found for documentNo: ${documentNo}`;
         } else {
-          // Only send fields BC accepts — vendorConfirmed as boolean
           const bcPayload = {
-            vendorConfirmed: status === "Accepted",
+            portalStatus: portalStatus || status,
             ...(portalDocumentNo && { portalDocumentNo }),
           };
           console.log(`[PO Status Update] Patching BC GUID ${bcGuid} with:`, bcPayload);

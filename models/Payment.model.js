@@ -32,21 +32,32 @@ const Payment = {
       `INSERT INTO payments (
         payment_number, invoice_id, invoice_no, order_no, partner_no,
         amount, payment_date, due_date, currency_code, method,
-        reference_no, status, created_by
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+        reference_no, status,
+        description, transaction_type, vendor_name, customer_name,
+        applies_to_doc_no, applies_to_doc_type, open, closed,
+        created_by
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING *`,
       [
         data.paymentNumber,
-        data.invoiceId || null,
-        data.invoiceNo || null,
-        data.orderNo || null,
-        data.partnerNo || null,
+        data.invoiceId      || null,
+        data.invoiceNo      || null,
+        data.orderNo        || null,
+        data.partnerNo      || null,
         data.amount,
-        data.paymentDate || null,
-        data.dueDate || null,
-        data.currencyCode || null,
+        data.paymentDate    || null,
+        data.dueDate        || null,
+        data.currencyCode   || null,
         data.method || data.paymentMethod || null,
-        data.referenceNo || null,
-        data.status || "Pending",
+        data.referenceNo    || null,
+        data.status         || "Pending",
+        data.description    || null,
+        data.transactionType || null,
+        data.vendorName     || null,
+        data.customerName   || null,
+        data.appliesToDocNo  || null,
+        data.appliesToDocType || null,
+        data.open  != null ? data.open  : null,
+        data.closed != null ? data.closed : null,
         userId || null,
       ]
     );
@@ -58,22 +69,32 @@ const Payment = {
       `UPDATE payments SET
         payment_number=$1, invoice_id=$2, invoice_no=$3, order_no=$4,
         partner_no=$5, amount=$6, payment_date=$7, due_date=$8,
-        currency_code=$9, method=$10, reference_no=$11,
-        status=$12, updated_at=NOW()
-       WHERE id=$13 RETURNING *`,
+        currency_code=$9, method=$10, reference_no=$11, status=$12,
+        description=$13, transaction_type=$14, vendor_name=$15, customer_name=$16,
+        applies_to_doc_no=$17, applies_to_doc_type=$18, open=$19, closed=$20,
+        updated_at=NOW()
+       WHERE id=$21 RETURNING *`,
       [
         data.paymentNumber,
-        data.invoiceId || null,
-        data.invoiceNo || null,
-        data.orderNo || null,
-        data.partnerNo || null,
+        data.invoiceId      || null,
+        data.invoiceNo      || null,
+        data.orderNo        || null,
+        data.partnerNo      || null,
         data.amount,
-        data.paymentDate || null,
-        data.dueDate || null,
-        data.currencyCode || null,
+        data.paymentDate    || null,
+        data.dueDate        || null,
+        data.currencyCode   || null,
         data.method || data.paymentMethod || null,
-        data.referenceNo || null,
-        data.status || "Pending",
+        data.referenceNo    || null,
+        data.status         || "Pending",
+        data.description    || null,
+        data.transactionType || null,
+        data.vendorName     || null,
+        data.customerName   || null,
+        data.appliesToDocNo  || null,
+        data.appliesToDocType || null,
+        data.open  != null ? data.open  : null,
+        data.closed != null ? data.closed : null,
         id,
       ]
     );
@@ -94,6 +115,14 @@ const Payment = {
       [id]
     );
     return result.rows[0] || null;
+  },
+
+  async deleteByPartnerNo(partnerNo) {
+    const result = await pool.query(
+      "DELETE FROM payments WHERE partner_no = $1",
+      [partnerNo]
+    );
+    return result.rowCount;
   },
 };
 
