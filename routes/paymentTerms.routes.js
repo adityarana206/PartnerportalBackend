@@ -4,7 +4,7 @@ const { createPaymentTerm, getAllPaymentTerms, getPaymentTermById } = require(".
 const { protect } = require("../middleware/auth.middleware");
 
 router.post("/", protect, createPaymentTerm);
-router.get("/", protect, getAllPaymentTerms);
-router.get("/:id", protect, getPaymentTermById);
+router.get("/", getAllPaymentTerms);
+router.get("/:id", getPaymentTermById);
 
 module.exports = router;

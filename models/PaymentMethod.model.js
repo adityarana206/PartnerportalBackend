@@ -20,7 +20,7 @@ const PaymentMethod = {
     const result = await pool.query(
       `INSERT INTO payment_methods (name, code, description, is_active)
        VALUES ($1, $2, $3, $4) RETURNING *`,
-      [data.name, data.code, data.description || null, data.isActive ?? true]
+      [data.name || data.code, data.code, data.description || null, data.isActive ?? true]
     );
     return result.rows[0];
   },

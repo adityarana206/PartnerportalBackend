@@ -15,7 +15,7 @@ router.put("/:id", protect, isSuperAdmin, updatePostCode);
 router.delete("/:id", protect, isSuperAdmin, deletePostCode);
 
 // All authenticated users — read
-router.get("/", protect, getAllPostCodes);
-router.get("/:id", protect, getPostCodeById);
+router.get("/", getAllPostCodes);
+router.get("/:id", getPostCodeById);
 
 module.exports = router;

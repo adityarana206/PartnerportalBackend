@@ -2,8 +2,7 @@ const PaymentMethod = require("../models/PaymentMethod.model");
 
 const createPaymentMethod = async (req, res) => {
   try {
-    const { name, code } = req.body;
-    if (!name) return res.status(400).json({ success: false, message: "name is required" });
+    const { code, description } = req.body;
     if (!code) return res.status(400).json({ success: false, message: "code is required" });
 
     const method = await PaymentMethod.create(req.body);
@@ -12,7 +11,7 @@ const createPaymentMethod = async (req, res) => {
     const isDuplicate = err.code === "23505";
     res.status(isDuplicate ? 409 : 500).json({
       success: false,
-      message: isDuplicate ? "name or code already exists" : err.message,
+      message: isDuplicate ? "code already exists" : err.message,
     });
   }
 };

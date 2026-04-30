@@ -4,7 +4,7 @@ const { createPaymentMethod, getAllPaymentMethods, getPaymentMethodById } = requ
 const { protect } = require("../middleware/auth.middleware");
 
 router.post("/", protect, createPaymentMethod);
-router.get("/", protect, getAllPaymentMethods);
-router.get("/:id", protect, getPaymentMethodById);
+router.get("/", getAllPaymentMethods);
+router.get("/:id", getPaymentMethodById);
 
 module.exports = router;
