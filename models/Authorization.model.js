@@ -7,9 +7,9 @@ const User = {
         ref_no, name, name2,
         address, address2, city, post_code, country_region_code,
         phone_no, email, vat_registration_no, currency_code,
-        payment_terms_code, password, role, vendor_name
+        payment_terms_code, password, role, vendor_name, location_code
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
       )
       ON CONFLICT (email) DO UPDATE SET
         name = EXCLUDED.name,
@@ -25,6 +25,7 @@ const User = {
         currency_code = EXCLUDED.currency_code,
         payment_terms_code = EXCLUDED.payment_terms_code,
         vendor_name = EXCLUDED.vendor_name,
+        location_code = EXCLUDED.location_code,
         updated_at = NOW()
       RETURNING *;
     `;
@@ -45,6 +46,7 @@ const User = {
       data.password || null,
       role,
       data.vendorName || null,
+      data.locationCode || null,
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
@@ -54,13 +56,13 @@ const User = {
     const query = role
       ? `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
                u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-               u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
+               u.payment_terms_code, u.role, u.vendor_name, u.location_code, u.created_at, u.updated_at
          FROM users u
          WHERE u.role = $1
          ORDER BY u.created_at DESC`
       : `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
                u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-               u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
+               u.payment_terms_code, u.role, u.vendor_name, u.location_code, u.created_at, u.updated_at
          FROM users u
          ORDER BY u.created_at DESC`;
     const values = role ? [role] : [];
@@ -72,7 +74,7 @@ const User = {
     const result = await pool.query(
       `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-              u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
+              u.payment_terms_code, u.role, u.vendor_name, u.location_code, u.created_at, u.updated_at
        FROM users u
        WHERE u.id = $1`,
       [id],
@@ -84,7 +86,7 @@ const User = {
     const result = await pool.query(
       `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-              u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
+              u.payment_terms_code, u.role, u.vendor_name, u.location_code, u.created_at, u.updated_at
        FROM users u
        WHERE u.role = ANY($1::text[])
        ORDER BY u.created_at DESC`,
@@ -97,7 +99,7 @@ const User = {
     const result = await pool.query(
       `SELECT u.id, u.ref_no, u.name, u.name2, u.address, u.address2, u.city, u.post_code,
               u.country_region_code, u.phone_no, u.email, u.vat_registration_no, u.currency_code,
-              u.payment_terms_code, u.role, u.vendor_name, u.created_at, u.updated_at
+              u.payment_terms_code, u.role, u.vendor_name, u.location_code, u.created_at, u.updated_at
        FROM users u
        WHERE u.id = $1 AND u.role = $2`,
       [id, role],
@@ -133,8 +135,8 @@ const User = {
         name=$1, name2=$2, address=$3, address2=$4, city=$5,
         post_code=$6, country_region_code=$7, phone_no=$8,
         email=$9, vat_registration_no=$10, currency_code=$11,
-        payment_terms_code=$12, vendor_name=$13, updated_at=NOW()
-      WHERE id=$14 RETURNING *;
+        payment_terms_code=$12, vendor_name=$13, location_code=$14, updated_at=NOW()
+      WHERE id=$15 RETURNING *;
     `;
     const values = [
       data.name,
@@ -150,6 +152,7 @@ const User = {
       data.currencyCode || null,
       data.paymentTermsCode || null,
       data.vendorName || null,
+      data.locationCode || null,
       id,
     ];
     const result = await pool.query(query, values);

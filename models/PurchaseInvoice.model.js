@@ -24,26 +24,27 @@ const PurchaseInvoice = {
           invoice_type, invoice_no, invoice_date, due_date,
           partner_no, partner_type, total_amount, currency_code,
           outstanding_amount, status, bc_invoice_no,
-          linked_order_no, vendor_invoice_no, created_by
+          linked_order_no, vendor_invoice_no, location_code, created_by
         ) VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
         ) RETURNING *;
       `;
       const invoiceValues = [
-        data.invoiceType || null, // $1
-        data.invoiceNo || null, // $2
-        data.invoiceDate || null, // $3
-        data.dueDate || null, // $4
-        data.partnerNo || null, // $5
-        data.partnerType || null, // $6
-        data.totalAmount || 0, // $7
-        data.currencyCode || null, // $8
-        data.outstandingAmount || 0, // $9
-        data.status || null, // $10
-        data.bcInvoiceNo || null, // $11
-        data.linkedOrderNo || null, // $12
-        data.vendorInvoiceNo || null, // $13
-        userId || null, // $14
+        data.invoiceType || null,
+        data.invoiceNo || null,
+        data.invoiceDate || null,
+        data.dueDate || null,
+        data.partnerNo || null,
+        data.partnerType || null,
+        data.totalAmount || 0,
+        data.currencyCode || null,
+        data.outstandingAmount || 0,
+        data.status || null,
+        data.bcInvoiceNo || null,
+        data.linkedOrderNo || null,
+        data.vendorInvoiceNo || null,
+        data.locationCode || null,
+        userId || null,
       ];
 
       const invoiceResult = await client.query(invoiceQuery, invoiceValues);
@@ -185,8 +186,8 @@ const PurchaseInvoice = {
           due_date=$4, partner_no=$5, partner_type=$6,
           total_amount=$7, currency_code=$8, outstanding_amount=$9,
           status=$10, bc_invoice_no=$11, linked_order_no=$12,
-          vendor_invoice_no=$13, updated_at=NOW()
-        WHERE id=$14 RETURNING *;
+          vendor_invoice_no=$13, location_code=$14, updated_at=NOW()
+        WHERE id=$15 RETURNING *;
       `;
       const invoiceValues = [
         data.invoiceType || null,
@@ -202,6 +203,7 @@ const PurchaseInvoice = {
         data.bcInvoiceNo || null,
         data.linkedOrderNo || null,
         data.vendorInvoiceNo || null,
+        data.locationCode || null,
         id,
       ];
       const invoiceResult = await client.query(invoiceQuery, invoiceValues);

@@ -3,6 +3,9 @@ const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
 const crypto = require("crypto");
 const { pool } = require("../config/db");
+const PostCode = require("../models/PostCode.model");
+const PaymentMethod = require("../models/PaymentMethod.model");
+const PaymentTerms = require("../models/PaymentTerms.model");
 
 const VALID_ENTITY_TYPES = [
   "", "LLC", "FZE", "FZCO", "Sole Establishment", "Partnership",
@@ -10,13 +13,26 @@ const VALID_ENTITY_TYPES = [
 ];
 
 // ─── Get Registration Options (for frontend dropdowns) ────
-const getRegistrationOptions = (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      entityTypes: VALID_ENTITY_TYPES.filter(Boolean),
-    },
-  });
+const getRegistrationOptions = async (req, res) => {
+  try {
+    const [postCodes, paymentMethods, paymentTerms] = await Promise.all([
+      PostCode.findAll({}),
+      PaymentMethod.findAll(),
+      PaymentTerms.findAll(),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        entityTypes: VALID_ENTITY_TYPES.filter(Boolean),
+        postCodes:      postCodes.map(p => ({ code: p.code, city: p.city, countryCode: p.country_code ?? '' })),
+        paymentMethods: paymentMethods.map(m => ({ code: m.code, description: m.description ?? '' })),
+        paymentTerms:   paymentTerms.map(t => ({ code: t.code, description: t.description ?? '' })),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 const VALID_INVITE_ROLES = ["vendor", "customer"];
@@ -46,8 +62,8 @@ const generateInvite = async (req, res) => {
       [token, role, resolvedPartnerNo, resolvedEmail, expiresAt, payload ? JSON.stringify(payload) : null]
     );
 
-    const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    // const baseUrl =  "http://localhost:5173";
+    // const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const baseUrl =  "http://localhost:5173";
     const registrationUrl = `${baseUrl}/register?token=${token}`;
 
     return res.status(201).json({
@@ -84,7 +100,7 @@ const validateInviteToken = async (token) => {
 
 const createBCUserRegister = async (req, res) => {
   try {
-    const { name, requesterUserId, token } = req.body;
+    const { token } = req.body;
 
     if (!token) {
       return res.status(400).json({ success: false, message: "Invite token is required" });
@@ -93,13 +109,6 @@ const createBCUserRegister = async (req, res) => {
     const { valid, message: tokenMsg, invite } = await validateInviteToken(token);
     if (!valid) {
       return res.status(400).json({ success: false, message: tokenMsg });
-    }
-
-    if (!name || !requesterUserId) {
-      return res.status(400).json({
-        success: false,
-        message: "name and requesterUserId are required",
-      });
     }
 
     const partnerNo = invite.partner_no || req.body.partnerNo || "";
