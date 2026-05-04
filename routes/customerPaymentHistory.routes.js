@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { getCustomerPaymentHistory } = require("../controllers/CustomerPaymentHistory.controller");
-const { protect } = require("../middleware/auth.middleware");
+const { getCustomerPaymentHistory, receiveCustomerPaymentHistory } = require("../controllers/CustomerPaymentHistory.controller");
+const { protect, protectRegister } = require("../middleware/auth.middleware");
 
-router.post("/", protect, getCustomerPaymentHistory);
+router.post("/sync", receiveCustomerPaymentHistory); // BC pushes here
+router.post("/", protectRegister, getCustomerPaymentHistory); // portal pulls from BC
 
 module.exports = router;

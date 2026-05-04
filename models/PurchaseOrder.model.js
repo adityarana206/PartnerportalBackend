@@ -39,10 +39,16 @@ const PurchaseOrder = {
 
       const lines = [];
       for (const line of data.orderStagingLines || []) {
+        const qty         = parseFloat(line.quantity)  || 0;
+        const unitPrice   = parseFloat(line.unitPrice) || 0;
+        const discPct     = parseFloat(line.lineDiscountPercent) || 0;
+        const subtotal    = qty * unitPrice;
+        const discountAmt = parseFloat(line.lineDiscountAmount) || parseFloat((subtotal * discPct / 100).toFixed(4));
+        const lineAmount  = parseFloat((subtotal - discountAmt).toFixed(4));
+
         let vatPercent = 0;
         let vatAmount = 0;
-        let lineAmountInclVat = 0;
-        const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
+        let lineAmountInclVat = lineAmount;
 
         if (line.vatCode) {
           const vat = await client.query(
@@ -52,20 +58,20 @@ const PurchaseOrder = {
           if (vat.rows[0]) {
             vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
             if (vat.rows[0].is_inclusive) {
-              vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
+              vatAmount         = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
               lineAmountInclVat = lineAmount;
             } else {
-              vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
+              vatAmount         = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
               lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
             }
           } else {
-            vatPercent = parseFloat(line.vatPercent) || 0;
-            vatAmount = parseFloat(line.vatAmount) || 0;
+            vatPercent        = parseFloat(line.vatPercent) || 0;
+            vatAmount         = parseFloat(line.vatAmount)  || 0;
             lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
           }
         } else {
-          vatPercent = parseFloat(line.vatPercent) || 0;
-          vatAmount = parseFloat(line.vatAmount) || 0;
+          vatPercent        = parseFloat(line.vatPercent) || 0;
+          vatAmount         = parseFloat(line.vatAmount)  || 0;
           lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
         }
 
@@ -83,11 +89,11 @@ const PurchaseOrder = {
             line.lineNo || null,
             line.itemNo || null,
             line.description || null,
-            line.quantity || 0,
+            qty,
             line.unitOfMeasureCode || null,
-            line.unitPrice || 0,
-            line.lineDiscountPercent || 0,
-            line.lineDiscountAmount || 0,
+            unitPrice,
+            discPct,
+            discountAmt,
             lineAmount,
             line.locationCode || null,
             line.deliveryDate || null,
@@ -224,10 +230,16 @@ const PurchaseOrder = {
 
       const lines = [];
       for (const line of data.orderStagingLines || []) {
+        const qty         = parseFloat(line.quantity)  || 0;
+        const unitPrice   = parseFloat(line.unitPrice) || 0;
+        const discPct     = parseFloat(line.lineDiscountPercent) || 0;
+        const subtotal    = qty * unitPrice;
+        const discountAmt = parseFloat(line.lineDiscountAmount) || parseFloat((subtotal * discPct / 100).toFixed(4));
+        const lineAmount  = parseFloat((subtotal - discountAmt).toFixed(4));
+
         let vatPercent = 0;
         let vatAmount = 0;
-        let lineAmountInclVat = 0;
-        const lineAmount = line.lineAmount || (line.quantity * line.unitPrice) || 0;
+        let lineAmountInclVat = lineAmount;
 
         if (line.vatCode) {
           const vat = await client.query(
@@ -237,20 +249,20 @@ const PurchaseOrder = {
           if (vat.rows[0]) {
             vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
             if (vat.rows[0].is_inclusive) {
-              vatAmount = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
+              vatAmount         = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
               lineAmountInclVat = lineAmount;
             } else {
-              vatAmount = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
+              vatAmount         = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
               lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
             }
           } else {
-            vatPercent = parseFloat(line.vatPercent) || 0;
-            vatAmount = parseFloat(line.vatAmount) || 0;
+            vatPercent        = parseFloat(line.vatPercent) || 0;
+            vatAmount         = parseFloat(line.vatAmount)  || 0;
             lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
           }
         } else {
-          vatPercent = parseFloat(line.vatPercent) || 0;
-          vatAmount = parseFloat(line.vatAmount) || 0;
+          vatPercent        = parseFloat(line.vatPercent) || 0;
+          vatAmount         = parseFloat(line.vatAmount)  || 0;
           lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
         }
 
@@ -268,11 +280,11 @@ const PurchaseOrder = {
             line.lineNo || null,
             line.itemNo || null,
             line.description || null,
-            line.quantity || 0,
+            qty,
             line.unitOfMeasureCode || null,
-            line.unitPrice || 0,
-            line.lineDiscountPercent || 0,
-            line.lineDiscountAmount || 0,
+            unitPrice,
+            discPct,
+            discountAmt,
             lineAmount,
             line.locationCode || null,
             line.deliveryDate || null,

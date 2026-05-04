@@ -1,5 +1,6 @@
 const SalesOrder = require("../models/SalesOrder.model");
 const PartnerLocationLink = require("../models/PartnerLocationLink.model");
+const MessageStaging = require("../models/MessageStaging.model");
 const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
@@ -53,6 +54,25 @@ const createSalesOrder = async (req, res) => {
 
     // Save to local DB
     const order = await SalesOrder.create(req.body, userId);
+
+    // ─── Create notification message ───────────────────────
+    try {
+      await MessageStaging.create({
+        threadId: `SO-${order.partner_order_no}`,
+        documentType: "Message",
+        category: "General",
+        linkedDocType: "Sales Order",
+        linkedDocNo: order.partner_order_no,
+        senderType: "Company",
+        senderId: order.partner_no,
+        senderName: req.body.partnerName || order.partner_no,
+        messageText: `Sales Order ${order.partner_order_no} has been created successfully.`,
+        direction: "BC-to-Portal",
+        status: "Sent",
+      });
+    } catch (msgErr) {
+      console.error(`⚠️  Failed to create notification for SO ${order.partner_order_no}:`, msgErr.message);
+    }
 
     // Sync to Business Central
     let bcResponse = null;

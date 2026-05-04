@@ -1159,7 +1159,7 @@
             "url": "{{base_url}}/api/payments",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentNumber\": \"PAY-20260419-001\",\n  \"invoiceId\": 1,\n  \"invoiceNo\": \"INV-20260419-001\",\n  \"orderNo\": \"SO-20260419-001\",\n  \"partnerNo\": \"{{partner_no}}\",\n  \"amount\": 14375.00,\n  \"paymentDate\": \"2026-04-19\",\n  \"dueDate\": \"2026-05-19\",\n  \"currencyCode\": \"USD\",\n  \"method\": \"Bank Transfer\",\n  \"referenceNo\": \"REF-WIRE-20260419-001\",\n  \"status\": \"Pending\"\n}"
+              "raw": "{\n  \"paymentNumber\": \"PAY-20260419-001\",\n  \"referenceNo\": \"REF-WIRE-20260419-001\",\n  \"invoiceId\": \"INV-20260419-001\",\n  \"invoiceNo\": \"INV-20260419-001\",\n  \"orderNo\": \"SO-20260419-001\",\n  \"documentNo\": \"INV-20260419-001\",\n  \"documentType\": \"Invoice\",\n  \"partnerNo\": \"{{partner_no}}\",\n  \"customerName\": \"Customer Name\",\n  \"vendorName\": null,\n  \"amount\": 1500.00,\n  \"amountLCY\": 1500.00,\n  \"remainingAmount\": 0.00,\n  \"paymentDate\": \"2026-04-19\",\n  \"postingDate\": \"2026-04-19\",\n  \"documentDate\": \"2026-04-15\",\n  \"dueDate\": \"2026-05-19\",\n  \"currencyCode\": \"AED\",\n  \"method\": \"BANK\",\n  \"description\": \"Payment for invoice INV-20260419-001\",\n  \"appliesToDocNo\": \"INV-20260419-001\",\n  \"appliesToDocType\": \"Invoice\",\n  \"open\": false,\n  \"closed\": true,\n  \"closedByEntryNo\": 102,\n  \"closedAtDate\": \"2026-04-20\",\n  \"balAccountNo\": \"1234\",\n  \"status\": \"Completed\"\n}"
             }
           }
         },
@@ -1174,7 +1174,7 @@
             "url": "{{base_url}}/api/payments/1",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": 5100.00,\n  \"paymentDate\": \"2026-04-20\"\n}"
+              "raw": "{\n  \"paymentNumber\": \"PAY-20260419-001\",\n  \"referenceNo\": \"REF-WIRE-20260419-001\",\n  \"invoiceId\": \"INV-20260419-001\",\n  \"invoiceNo\": \"INV-20260419-001\",\n  \"orderNo\": \"SO-20260419-001\",\n  \"documentNo\": \"INV-20260419-001\",\n  \"documentType\": \"Invoice\",\n  \"partnerNo\": \"{{partner_no}}\",\n  \"customerName\": \"Customer Name\",\n  \"vendorName\": null,\n  \"amount\": 2000.00,\n  \"amountLCY\": 2000.00,\n  \"remainingAmount\": 0.00,\n  \"paymentDate\": \"2026-04-20\",\n  \"postingDate\": \"2026-04-20\",\n  \"documentDate\": \"2026-04-15\",\n  \"dueDate\": \"2026-05-20\",\n  \"currencyCode\": \"AED\",\n  \"method\": \"BANK\",\n  \"description\": \"Updated payment\",\n  \"appliesToDocNo\": \"INV-20260419-001\",\n  \"appliesToDocType\": \"Invoice\",\n  \"open\": false,\n  \"closed\": true,\n  \"closedByEntryNo\": 102,\n  \"closedAtDate\": \"2026-04-20\",\n  \"balAccountNo\": \"1234\",\n  \"status\": \"Completed\"\n}"
             }
           }
         },
@@ -1199,6 +1199,74 @@
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{base_url}}/api/payments/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Payment History",
+      "item": [
+        {
+          "name": "Pull from BC (portal-initiated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/customer-payment-history",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerNo\": \"CUST-001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "BC Push Sync",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/customer-payment-history/sync",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerNo\": \"CUST-001\",\n  \"records\": [\n    {\n      \"entryNo\": 101,\n      \"documentType\": \"Invoice\",\n      \"documentNo\": \"INV-2024-001\",\n      \"customerInvoiceNo\": \"EXT-REF-001\",\n      \"externalDocumentNo\": \"EXT-REF-001\",\n      \"customerNo\": \"CUST-001\",\n      \"customerName\": \"Customer Name\",\n      \"postingDate\": \"2024-01-15\",\n      \"documentDate\": \"2024-01-10\",\n      \"dueDate\": \"2024-01-30\",\n      \"amount\": 1500.00,\n      \"amountLCY\": 1500.00,\n      \"remainingAmount\": 0.00,\n      \"currencyCode\": \"AED\",\n      \"description\": \"Payment for invoice INV-2024-001\",\n      \"appliesToDocNo\": \"INV-2024-001\",\n      \"appliesToDocType\": \"Invoice\",\n      \"open\": false,\n      \"closedByEntryNo\": 102,\n      \"closedAtDate\": \"2024-01-20\",\n      \"paymentMethodCode\": \"BANK\",\n      \"balAccountNo\": \"1234\"\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor Payment History",
+      "item": [
+        {
+          "name": "Pull from BC (portal-initiated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/vendor-payment-history",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorNo\": \"VEN-001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "BC Push Sync",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/vendor-payment-history/sync",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorNo\": \"VEN-001\",\n  \"records\": [\n    {\n      \"entryNo\": 201,\n      \"documentType\": \"Invoice\",\n      \"documentNo\": \"VINV-2024-001\",\n      \"vendorInvoiceNo\": \"VEXT-REF-001\",\n      \"vendorNo\": \"VEN-001\",\n      \"vendorName\": \"Vendor Name\",\n      \"postingDate\": \"2024-01-15\",\n      \"documentDate\": \"2024-01-10\",\n      \"dueDate\": \"2024-01-30\",\n      \"amount\": 2500.00,\n      \"amountLCY\": 2500.00,\n      \"remainingAmount\": 0.00,\n      \"currencyCode\": \"AED\",\n      \"description\": \"Payment for vendor invoice VINV-2024-001\",\n      \"appliesToDocNo\": \"VINV-2024-001\",\n      \"appliesToDocType\": \"Invoice\",\n      \"open\": false,\n      \"closedByEntryNo\": 202,\n      \"closedAtDate\": \"2024-01-20\",\n      \"paymentMethodCode\": \"BANK\",\n      \"balAccountNo\": \"5678\"\n    }\n  ]\n}"
+            }
           }
         }
       ]

@@ -37,6 +37,7 @@ const LocationRoutes = require("./routes/location.routes");
 const PaymentMethodRoutes = require("./routes/paymentMethod.routes");
 const PaymentTermsRoutes = require("./routes/paymentTerms.routes");
 const PostCodeRoutes = require("./routes/postCode.routes");
+const MessageStagingRoutes = require("./routes/messageStaging.routes");
 const app = express();
 
 /* =======================
@@ -110,6 +111,7 @@ app.use("/api/locations", LocationRoutes);
 app.use("/api/payment-methods", PaymentMethodRoutes);
 app.use("/api/payment-terms", PaymentTermsRoutes);
 app.use("/api/post-codes", PostCodeRoutes);
+app.use("/api/messages", MessageStagingRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */

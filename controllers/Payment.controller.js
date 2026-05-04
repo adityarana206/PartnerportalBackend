@@ -56,11 +56,20 @@ const createPayment = async (req, res) => {
     const data = {
       ...req.body,
       partnerNo,
-      paymentNumber: req.body.paymentNumber || req.body.referenceNo,
-      invoiceNo: req.body.invoiceNo || req.body.invoiceNo,
-      orderNo: req.body.OrderNo || req.body.orderNo,
-      dueDate: req.body.DueDate || req.body.dueDate,
-      paymentMethod: req.body.paymentMethod || req.body.method,
+      paymentNumber:   req.body.paymentNumber  || req.body.referenceNo,
+      invoiceNo:       req.body.invoiceNo       || null,
+      orderNo:         req.body.OrderNo         || req.body.orderNo        || null,
+      dueDate:         req.body.DueDate         || req.body.dueDate        || null,
+      method:          req.body.method          || req.body.paymentMethod  || null,
+      amountLCY:       req.body.amountLCY       || null,
+      remainingAmount: req.body.remainingAmount || null,
+      postingDate:     req.body.postingDate     || null,
+      documentDate:    req.body.documentDate    || null,
+      documentType:    req.body.documentType    || null,
+      documentNo:      req.body.documentNo      || null,
+      closedByEntryNo: req.body.closedByEntryNo || null,
+      closedAtDate:    req.body.closedAtDate    || null,
+      balAccountNo:    req.body.balAccountNo    || null,
     };
     const payment = await Payment.create(data, userId);
     res.status(201).json({ success: true, message: "Payment created successfully", data: payment });

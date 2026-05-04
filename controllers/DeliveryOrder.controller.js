@@ -1,5 +1,6 @@
 const DeliveryOrder = require("../models/DeliveryOrder.model");
 const PurchaseOrder = require("../models/PurchaseOrder.model");
+const MessageStaging = require("../models/MessageStaging.model");
 const bcService = require("../services/businessCentral.service");
 
 const VALID_STATUSES = ["Created", "Submitted", "In Transit", "Delivered"];
@@ -20,6 +21,25 @@ const createDeliveryOrder = async (req, res) => {
     // ─── Save to local DB ──────────────────────────────────
     const order = await DeliveryOrder.create({ ...req.body, lines }, req.user?.id);
     console.log("[DO Create] Saved to DB:", order.delivery_order_no);
+
+    // ─── Create notification message ───────────────────────
+    try {
+      await MessageStaging.create({
+        threadId: `DO-${order.delivery_order_no}`,
+        documentType: "Message",
+        category: "General",
+        linkedDocType: "Delivery Order",
+        linkedDocNo: order.delivery_order_no,
+        senderType: "Company",
+        senderId: order.partner_no,
+        senderName: req.body.partnerName || order.partner_no,
+        messageText: `Delivery Order ${order.delivery_order_no} has been created successfully.`,
+        direction: "BC-to-Portal",
+        status: "Sent",
+      });
+    } catch (msgErr) {
+      console.error(`⚠️  Failed to create notification for DO ${order.delivery_order_no}:`, msgErr.message);
+    }
 
     // ─── Update PO shipped quantities ──────────────────────
     const poIds = [...new Set(lines.map(l => l.poId).filter(Boolean))];
