@@ -2215,6 +2215,117 @@
       ]
     },
     {
+      "name": "Messages (Notifications)",
+      "description": "Message staging — single source of truth for all notifications. Auto-created on Sales Order and Delivery Order creation, and synced to Business Central.",
+      "item": [
+        {
+          "name": "Get All Messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/messages",
+            "description": "Get all messages. Optional query params: ?partnerNo=CUST001 or ?threadId=TH-001"
+          }
+        },
+        {
+          "name": "Get All Messages by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/messages?partnerNo={{partner_no}}"
+          }
+        },
+        {
+          "name": "Get All Messages by Thread ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/messages?threadId=TH-001"
+          }
+        },
+        {
+          "name": "Get Messages by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/messages/partner/{{partner_no}}"
+          }
+        },
+        {
+          "name": "Get Messages by Thread",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/messages/thread/TH-001"
+          }
+        },
+        {
+          "name": "Get Message by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/messages/1"
+          }
+        },
+        {
+          "name": "Create Message (Portal → BC)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threadId\": \"TH-001\",\n  \"documentType\": \"Message\",\n  \"category\": \"General\",\n  \"linkedDocType\": \"Sales Order\",\n  \"linkedDocNo\": \"SO000123\",\n  \"senderType\": \"Partner\",\n  \"senderId\": \"{{partner_no}}\",\n  \"senderName\": \"ACME Trading LLC\",\n  \"messageText\": \"Please confirm shipment date.\",\n  \"changeDetails\": \"\",\n  \"messageTimestamp\": \"2026-05-03T18:33:23.437Z\",\n  \"direction\": \"Portal-to-BC\",\n  \"status\": \"Sent\"\n}"
+            },
+            "description": "Creates message in local DB and syncs to BC POST .../messages. documentType: Message | Return Request | Amendment Request | Concern. category: General | Pricing Dispute | Quality Issue | Delivery Concern | Invoice Dispute | Return Request | Amendment Request | Credit Request. direction: Portal-to-BC | BC-to-Portal. status: Sent | Delivered | Read | Open | In Progress | Resolved | Closed | Escalated"
+          }
+        },
+        {
+          "name": "Create Message (BC → Portal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-register-token", "value": "{{register_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/messages/businesscentral",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threadId\": \"TH-001\",\n  \"documentType\": \"Message\",\n  \"category\": \"General\",\n  \"linkedDocType\": \"Sales Order\",\n  \"linkedDocNo\": \"SO000123\",\n  \"senderType\": \"Company\",\n  \"senderId\": \"{{partner_no}}\",\n  \"senderName\": \"Novasoft\",\n  \"messageText\": \"Your shipment is confirmed for 2026-05-10.\",\n  \"changeDetails\": \"\",\n  \"messageTimestamp\": \"2026-05-03T18:33:23.437Z\",\n  \"direction\": \"BC-to-Portal\",\n  \"status\": \"Sent\"\n}"
+            },
+            "description": "Inbound from Business Central. Uses x-register-token header instead of Bearer token."
+          }
+        },
+        {
+          "name": "Update Message Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/messages/1/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Read\"\n}"
+            },
+            "description": "Allowed: Sent | Delivered | Read | Open | In Progress | Resolved | Closed | Escalated"
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/messages/1"
+          }
+        }
+      ]
+    },
+    {
       "name": "Data Management",
       "item": [
         {

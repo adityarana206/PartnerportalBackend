@@ -62,8 +62,8 @@ const generateInvite = async (req, res) => {
       [token, role, resolvedPartnerNo, resolvedEmail, expiresAt, payload ? JSON.stringify(payload) : null]
     );
 
-    // const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    const baseUrl =  "http://localhost:5173";
+    const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    // const baseUrl =  "http://localhost:5173";
     const registrationUrl = `${baseUrl}/register?token=${token}`;
 
     return res.status(201).json({
