@@ -40,7 +40,7 @@ const VALID_INVITE_ROLES = ["vendor", "customer"];
 // ─── Generate Invite Link ─────────────────────────────────
 const generateInvite = async (req, res) => {
   try {
-    const { role, partnerNo, email, expiresInHours = 48, payload } = req.body;
+    const { role, partnerNo, email, expiresInHours = 48, payload, regType } = req.body;
 
     if (!role || !VALID_INVITE_ROLES.includes(role)) {
       return res.status(400).json({
@@ -57,9 +57,9 @@ const generateInvite = async (req, res) => {
     const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
 
     await pool.query(
-      `INSERT INTO registration_invites (token, role, partner_no, email, expires_at, payload)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [token, role, resolvedPartnerNo, resolvedEmail, expiresAt, payload ? JSON.stringify(payload) : null]
+      `INSERT INTO registration_invites (token, role, partner_no, email, expires_at, payload, reg_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [token, role, resolvedPartnerNo, resolvedEmail, expiresAt, payload ? JSON.stringify(payload) : null, regType || null]
     );
 
     const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -72,6 +72,7 @@ const generateInvite = async (req, res) => {
       data: {
         token,
         role,
+        regType: regType || null,
         partnerNo: resolvedPartnerNo,
         email: resolvedEmail,
         expiresAt,
@@ -176,11 +177,15 @@ const createBCUserRegister = async (req, res) => {
     // Mark token as used
     await pool.query(`UPDATE registration_invites SET used = TRUE WHERE token = $1`, [token]);
 
+    const isUpdate = invite.reg_type === "update";
+
     res.status(201).json({
       success: true,
-      message: (partnerNo || bcCreateResult?.regNo)
-        ? "Registration submitted successfully"
-        : "Registration saved locally (BC sync failed or pending)",
+      message: isUpdate
+        ? "Details updated successfully"
+        : (partnerNo || bcCreateResult?.regNo)
+          ? "Registration submitted successfully"
+          : "Registration saved locally (BC sync failed or pending)",
       data: local,
       businessCentral: {
         synced: !!(bcPatchResult || bcUpdateResult || bcCreateResult),
