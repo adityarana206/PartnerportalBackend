@@ -2326,6 +2326,128 @@
       ]
     },
     {
+      "name": "Purchase Item Requests",
+      "item": [
+        {
+          "name": "Get All Purchase Item Requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/purchase-item-requests"
+          }
+        },
+        {
+          "name": "Get Purchase Item Requests by Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/purchase-item-requests?status=Submitted"
+          }
+        },
+        {
+          "name": "Get Purchase Item Requests by Partner",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/purchase-item-requests?partnerNo={{partner_no}}"
+          }
+        },
+        {
+          "name": "Get Purchase Item Requests by Partner (route)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/purchase-item-requests/partner/{{partner_no}}"
+          }
+        },
+        {
+          "name": "Get Purchase Item Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/purchase-item-requests/1"
+          }
+        },
+        {
+          "name": "Create Purchase Item Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/purchase-item-requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Organic Oat Flour\",\n  \"description\": \"Finely milled organic oat flour, gluten-free certified\",\n  \"itemCategoryCode\": \"FLOUR\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"purchUnitOfMeasure\": \"BAG\",\n  \"netWeight\": 25.0,\n  \"grossWeight\": 25.5,\n  \"specifications\": \"Moisture < 14%, Protein > 12%, Ash < 2%\",\n  \"ingredients\": \"100% Organic Oats\",\n  \"allergenDeclaration\": \"Contains Oats. May contain traces of wheat.\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"5901234567890\",\n  \"eanCode\": \"5901234567890\",\n  \"UPCCode\": \"012345678905\",\n  \"purchaseUnitPrice\": 45.00,\n  \"priceCurrencyCode\": \"AED\",\n  \"partnerNo\": \"{{partner_no}}\",\n  \"PriceEffectiveDate\": \"2026-05-01\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "batchNo is auto-generated from the BATCH number series. Do not send batchNo in the request body."
+          }
+        },
+        {
+          "name": "Update Purchase Item Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/purchase-item-requests/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Organic Oat Flour - Updated\",\n  \"description\": \"Updated description\",\n  \"itemCategoryCode\": \"FLOUR\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"purchUnitOfMeasure\": \"BAG\",\n  \"netWeight\": 26.0,\n  \"grossWeight\": 26.5,\n  \"specifications\": \"Moisture < 13%, Protein > 13%\",\n  \"ingredients\": \"100% Organic Oats\",\n  \"allergenDeclaration\": \"Contains Oats.\",\n  \"shelfLifeDays\": 400,\n  \"gtin\": \"5901234567890\",\n  \"eanCode\": \"5901234567890\",\n  \"UPCCode\": \"012345678905\",\n  \"purchaseUnitPrice\": 48.00,\n  \"priceCurrencyCode\": \"AED\",\n  \"partnerNo\": \"{{partner_no}}\",\n  \"PriceEffectiveDate\": \"2026-06-01\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Only allowed when status is 'Submitted'."
+          }
+        },
+        {
+          "name": "Update Purchase Item Request Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/purchase-item-requests/1/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Allowed statuses: Submitted, Approved, Rejected, Pending. When rejecting, rejectionReason is required."
+          }
+        },
+        {
+          "name": "Reject Purchase Item Request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/purchase-item-requests/1/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Rejected\",\n  \"rejectionReason\": \"Item does not meet quality specifications\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "rejectionReason is required when status is Rejected."
+          }
+        },
+        {
+          "name": "Delete Purchase Item Request",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/purchase-item-requests/1",
+            "description": "Only allowed when status is 'Submitted'."
+          }
+        }
+      ]
+    },
+    {
       "name": "Data Management",
       "item": [
         {

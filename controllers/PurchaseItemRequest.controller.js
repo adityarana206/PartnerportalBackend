@@ -28,7 +28,7 @@ const createPurchaseItemRequest = async (req, res) => {
     let bcResponse = null;
     let bcError = null;
     try {
-      bcResponse = await bcService.createPurchaseItemRequest(req.body);
+      bcResponse = await bcService.createItemRequest(req.body);
       console.log("✅ Purchase item request synced to Business Central:", bcResponse);
     } catch (bcErr) {
       bcError = bcErr.response?.data || bcErr.message;
