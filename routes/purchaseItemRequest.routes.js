@@ -21,7 +21,7 @@ router.post("/", protect, createPurchaseItemRequest);
 
 // ─── MODIFY ────────────────────────────────────────────────
 router.put("/:id", protect, updatePurchaseItemRequest);
-router.patch("/:id/status", protect, updatePurchaseItemStatus);
+router.patch("/batch/:batchNo/status", protect, updatePurchaseItemStatus);
 
 // ─── DELETE ────────────────────────────────────────────────
 router.delete("/:id", protect, deletePurchaseItemRequest);

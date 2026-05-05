@@ -124,11 +124,12 @@ const updatePurchaseItemRequest = async (req, res) => {
   }
 };
 
-// PATCH /api/purchase-item-requests/:id/status
+// PATCH /api/purchase-item-requests/batch/:batchNo/status
 const updatePurchaseItemStatus = async (req, res) => {
   try {
-    if (!isValidId(req.params.id))
-      return res.status(400).json({ success: false, message: "Invalid ID" });
+    const { batchNo } = req.params;
+    if (!batchNo)
+      return res.status(400).json({ success: false, message: "batchNo is required" });
 
     const { status, rejectionReason } = req.body;
     const validStatuses = ["Submitted", "Approved", "Rejected", "Pending"];
@@ -140,12 +141,12 @@ const updatePurchaseItemStatus = async (req, res) => {
     if (status === "Rejected" && !rejectionReason)
       return res.status(400).json({ success: false, message: "Rejection reason is required when rejecting" });
 
-    const item = await PurchaseItemRequest.findById(req.params.id);
+    const item = await PurchaseItemRequest.findByBatchNo(batchNo);
     if (!item)
       return res.status(404).json({ success: false, message: "Purchase item request not found" });
 
-    const updated = await PurchaseItemRequest.updateStatus(req.params.id, status, rejectionReason || null);
-    await notify(req.params.id, item.partner_no, `Purchase Item Request ${req.params.id} status updated to ${status}.`);
+    const updated = await PurchaseItemRequest.updateStatus(item.id, status, rejectionReason || null);
+    await notify(batchNo, item.partner_no, `Purchase Item Request ${batchNo} status updated to ${status}.`);
     res.status(200).json({ success: true, message: `Status updated to ${status}`, data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

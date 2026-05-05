@@ -2410,7 +2410,7 @@
               { "key": "Authorization", "value": "Bearer {{token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "{{base_url}}/api/purchase-item-requests/1/status",
+            "url": "{{base_url}}/api/purchase-item-requests/batch/BATCH000003/status",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"Approved\"\n}",
@@ -2427,7 +2427,7 @@
               { "key": "Authorization", "value": "Bearer {{token}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "{{base_url}}/api/purchase-item-requests/1/status",
+            "url": "{{base_url}}/api/purchase-item-requests/batch/BATCH000003/status",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"Rejected\",\n  \"rejectionReason\": \"Item does not meet quality specifications\"\n}",
