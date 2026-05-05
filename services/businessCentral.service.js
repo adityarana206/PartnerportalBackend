@@ -340,10 +340,6 @@ class BusinessCentralService {
       messageTimestamp: messageData.messageTimestamp || new Date().toISOString(),
       direction: messageData.direction || "Portal-to-BC",
       status: messageData.status || "Created",
-      returnItemNo: messageData.returnItemNo || "",
-      returnQuantity: messageData.returnQuantity || 0,
-      returnReasonCode: messageData.returnReasonCode || "",
-      hasAttachments: messageData.hasAttachments || false,
     };
 
     return await this.callAPI("messages", "POST", bcData);
@@ -370,27 +366,17 @@ class BusinessCentralService {
   // ─── Purchase Item Request ──────────────────────────────
   async createPurchaseItemRequest(data) {
     const bcData = {
-      batchNo: data.batchNo || "",
-      itemName: data.itemName || "",
-      description: data.description || "",
-      itemCategoryCode: data.itemCategoryCode || "",
-      baseUnitOfMeasure: data.baseUnitOfMeasure || "",
-      purchUnitOfMeasure: data.purchUnitOfMeasure || "",
-      netWeight: parseFloat(data.netWeight) || 0,
-      grossWeight: parseFloat(data.grossWeight) || 0,
-      specifications: data.specifications || "",
-      ingredients: data.ingredients || "",
-      allergenDeclaration: data.allergenDeclaration || "",
-      shelfLifeDays: parseInt(data.shelfLifeDays) || 0,
-      gtin: data.gtin || "",
-      eanCode: data.eanCode || "",
-      UPCCode: data.UPCCode || "",
-      purchaseUnitPrice: parseFloat(data.purchaseUnitPrice) || 0,
-      priceCurrencyCode: data.priceCurrencyCode || "AED",
-      partnerNo: data.partnerNo || "",
-      status: data.status || "Submitted",
-      rejectionReason: data.rejectionReason || "",
-      PriceEffectiveDate: data.PriceEffectiveDate || "0001-01-01",
+      changeDescription: data.changeDescription || data.description || "",
+      changeType:        data.changeType        || "",
+      itemNo:            data.itemNo            || "",
+      newValue:          data.newValue          || "",
+      oldValue:          data.oldValue          || "",
+      partnerNo:         data.partnerNo         || "",
+      partnerType:       data.partnerType       || "Vendor",
+      rejectionReason:   data.rejectionReason   || "",
+      status:            data.status            || "_x0020_",
+      submittedDate:     data.submittedDate      || new Date().toISOString(),
+      approvedDate:      data.approvedDate       || "0001-01-01T00:00:00Z",
     };
 
     return await this.callAPI("ItemChangeRequest", "POST", bcData);

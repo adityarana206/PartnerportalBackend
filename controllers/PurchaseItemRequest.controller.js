@@ -1,6 +1,18 @@
 const PurchaseItemRequest = require("../models/PurchaseItemRequest.model");
+const MessageStaging = require("../models/MessageStaging.model");
 const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
+
+const notify = async (docNo, partnerNo, text) => {
+  try {
+    await MessageStaging.create({
+      threadId: `PIR-${docNo}`, documentType: "Message", category: "General",
+      linkedDocType: "Purchase Item Request", linkedDocNo: String(docNo),
+      senderType: "Company", senderId: partnerNo,
+      messageText: text, direction: "BC-to-Portal", status: "Sent",
+    });
+  } catch (e) { console.error(`⚠️  Notification failed for PIR ${docNo}:`, e.message); }
+};
 
 // POST /api/purchase-item-requests
 const createPurchaseItemRequest = async (req, res) => {
@@ -9,8 +21,6 @@ const createPurchaseItemRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: "itemName is required" });
     if (!req.body.partnerNo)
       return res.status(400).json({ success: false, message: "partnerNo is required" });
-    if (!req.body.batchNo)
-      return res.status(400).json({ success: false, message: "batchNo is required" });
 
     const userId = req.user ? req.user.id : null;
     const item = await PurchaseItemRequest.create(req.body, userId);
@@ -31,6 +41,7 @@ const createPurchaseItemRequest = async (req, res) => {
       data: item,
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
+    await notify(item.id, item.partner_no, `Purchase Item Request ${item.id} has been created successfully.`);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -106,6 +117,7 @@ const updatePurchaseItemRequest = async (req, res) => {
       });
 
     const updated = await PurchaseItemRequest.update(req.params.id, req.body);
+    await notify(req.params.id, item.partner_no, `Purchase Item Request ${req.params.id} has been updated.`);
     res.status(200).json({ success: true, message: "Purchase item request updated successfully", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -133,6 +145,7 @@ const updatePurchaseItemStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Purchase item request not found" });
 
     const updated = await PurchaseItemRequest.updateStatus(req.params.id, status, rejectionReason || null);
+    await notify(req.params.id, item.partner_no, `Purchase Item Request ${req.params.id} status updated to ${status}.`);
     res.status(200).json({ success: true, message: `Status updated to ${status}`, data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -156,6 +169,7 @@ const deletePurchaseItemRequest = async (req, res) => {
       });
 
     const deleted = await PurchaseItemRequest.delete(req.params.id);
+    await notify(req.params.id, item.partner_no, `Purchase Item Request ${req.params.id} has been deleted.`);
     res.status(200).json({ success: true, message: "Purchase item request deleted successfully", data: deleted });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

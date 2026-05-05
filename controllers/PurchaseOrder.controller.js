@@ -1,7 +1,27 @@
 const PurchaseOrder = require("../models/PurchaseOrder.model");
 const PartnerLocationLink = require("../models/PartnerLocationLink.model");
+const MessageStaging = require("../models/MessageStaging.model");
 const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
+
+const notify = async (docNo, partnerNo, text) => {
+  try {
+    await MessageStaging.create({
+      threadId: `PO-${docNo}`,
+      documentType: "Message",
+      category: "General",
+      linkedDocType: "Purchase Order",
+      linkedDocNo: docNo,
+      senderType: "Company",
+      senderId: partnerNo,
+      messageText: text,
+      direction: "BC-to-Portal",
+      status: "Sent",
+    });
+  } catch (e) {
+    console.error(`⚠️  Notification failed for PO ${docNo}:`, e.message);
+  }
+};
 
 // ─── Create Purchase Order ─────────────────────────────────
 const createPurchaseOrder = async (req, res) => {
@@ -83,6 +103,7 @@ const createPurchaseOrderbc = async (req, res) => {
 
     const userId = req.user ? req.user.id : null;
     const order = await PurchaseOrder.create(normalized, userId);
+    await notify(order.no || order.portal_document_no || order.id, order.partner_no, `Purchase Order ${order.no || order.id} has been created successfully.`);
     res.status(201).json({ success: true, message: "Purchase order created successfully", data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -220,6 +241,7 @@ const updatePurchaseOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "At least one order line is required" });
 
     const updated = await PurchaseOrder.update(req.params.id, req.body);
+    await notify(order.no || req.params.id, order.partner_no, `Purchase Order ${order.no || req.params.id} has been updated.`);
     res.status(200).json({ success: true, message: "Purchase order updated successfully", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -284,6 +306,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const updated = await PurchaseOrder.updateStatus(req.params.id, status, portalStatus, portalDocumentNo);
+    await notify(order.no || req.params.id, order.partner_no, `Purchase Order ${order.no || req.params.id} status updated to ${status}.`);
     return res.status(200).json({
       success: true,
       message: `Order status updated to ${status}`,
@@ -309,6 +332,7 @@ const deletePurchaseOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: "Purchase order not found" });
 
     const deleted = await PurchaseOrder.delete(req.params.id);
+    await notify(order.no || req.params.id, order.partner_no, `Purchase Order ${order.no || req.params.id} has been deleted.`);
     res.status(200).json({ success: true, message: "Purchase order deleted successfully", data: deleted });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

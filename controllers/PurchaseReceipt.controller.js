@@ -1,4 +1,16 @@
 const PurchaseReceipt = require("../models/PurchaseReceipt.model");
+const MessageStaging = require("../models/MessageStaging.model");
+
+const notify = async (docNo, partnerNo, text) => {
+  try {
+    await MessageStaging.create({
+      threadId: `PR-${docNo}`, documentType: "Message", category: "General",
+      linkedDocType: "Purchase Receipt", linkedDocNo: docNo,
+      senderType: "Company", senderId: partnerNo,
+      messageText: text, direction: "BC-to-Portal", status: "Sent",
+    });
+  } catch (e) { console.error(`⚠️  Notification failed for Purchase Receipt ${docNo}:`, e.message); }
+};
 
 // ─── Create ────────────────────────────────────────────────
 const createPurchaseReceipt = async (req, res) => {
@@ -22,6 +34,7 @@ const createPurchaseReceipt = async (req, res) => {
     const userId = req.user ? req.user.id : null;
 
     const receipt = await PurchaseReceipt.create(req.body, userId);
+    await notify(receipt.shipment_no || receipt.id, receipt.partner_no, `Purchase Receipt ${receipt.shipment_no || receipt.id} has been created successfully.`);
     res.status(201).json({
       success: true,
       message: "Purchase receipt created successfully",
@@ -128,6 +141,7 @@ const updatePurchaseReceipt = async (req, res) => {
     }
 
     const updated = await PurchaseReceipt.update(req.params.id, req.body);
+    await notify(receipt.shipment_no || req.params.id, receipt.partner_no, `Purchase Receipt ${receipt.shipment_no || req.params.id} has been updated.`);
     res.status(200).json({
       success: true,
       message: "Purchase receipt updated successfully",
@@ -166,6 +180,7 @@ const updatePurchaseReceiptStatus = async (req, res) => {
     }
 
     const updated = await PurchaseReceipt.updateStatus(req.params.id, status);
+    await notify(receipt.shipment_no || req.params.id, receipt.partner_no, `Purchase Receipt ${receipt.shipment_no || req.params.id} status updated to ${status}.`);
     res.status(200).json({
       success: true,
       message: `Purchase receipt status updated to ${status}`,
@@ -188,6 +203,7 @@ const deletePurchaseReceipt = async (req, res) => {
     }
 
     const deleted = await PurchaseReceipt.delete(req.params.id);
+    await notify(receipt.shipment_no || req.params.id, receipt.partner_no, `Purchase Receipt ${receipt.shipment_no || req.params.id} has been deleted.`);
     res.status(200).json({
       success: true,
       message: "Purchase receipt deleted successfully",

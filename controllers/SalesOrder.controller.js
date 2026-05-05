@@ -180,6 +180,16 @@ const updateSalesOrder = async (req, res) => {
     }
 
     const updated = await SalesOrder.update(req.params.id, req.body);
+    try {
+      await MessageStaging.create({
+        threadId: `SO-${order.partner_order_no}`,
+        documentType: "Message", category: "General",
+        linkedDocType: "Sales Order", linkedDocNo: order.partner_order_no,
+        senderType: "Company", senderId: order.partner_no,
+        messageText: `Sales Order ${order.partner_order_no} has been updated.`,
+        direction: "BC-to-Portal", status: "Sent",
+      });
+    } catch (e) { console.error(`⚠️  Notification failed for SO ${order.partner_order_no}:`, e.message); }
     res.status(200).json({
       success: true,
       message: "Sales order updated successfully",
@@ -211,6 +221,16 @@ const updateSalesOrderStatus = async (req, res) => {
     }
 
     const updated = await SalesOrder.updateStatus(req.params.id, status);
+    try {
+      await MessageStaging.create({
+        threadId: `SO-${order.partner_order_no}`,
+        documentType: "Message", category: "General",
+        linkedDocType: "Sales Order", linkedDocNo: order.partner_order_no,
+        senderType: "Company", senderId: order.partner_no,
+        messageText: `Sales Order ${order.partner_order_no} status updated to ${status}.`,
+        direction: "BC-to-Portal", status: "Sent",
+      });
+    } catch (e) { console.error(`⚠️  Notification failed for SO ${order.partner_order_no}:`, e.message); }
     res.status(200).json({
       success: true,
       message: `Sales order status updated to ${status}`,
@@ -235,6 +255,16 @@ const deleteSalesOrder = async (req, res) => {
     }
 
     const deleted = await SalesOrder.delete(req.params.id);
+    try {
+      await MessageStaging.create({
+        threadId: `SO-${order.partner_order_no}`,
+        documentType: "Message", category: "General",
+        linkedDocType: "Sales Order", linkedDocNo: order.partner_order_no,
+        senderType: "Company", senderId: order.partner_no,
+        messageText: `Sales Order ${order.partner_order_no} has been deleted.`,
+        direction: "BC-to-Portal", status: "Sent",
+      });
+    } catch (e) { console.error(`⚠️  Notification failed for SO ${order.partner_order_no}:`, e.message); }
     res.status(200).json({
       success: true,
       message: "Sales order deleted successfully",

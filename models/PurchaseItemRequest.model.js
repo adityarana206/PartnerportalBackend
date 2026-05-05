@@ -1,7 +1,9 @@
 const { pool } = require("../config/db");
+const NoSeries = require("./NoSeris.model");
 
 const PurchaseItemRequest = {
   async create(data, userId) {
+    const batchNo = await NoSeries.getNextNumberByCode("BATCH");
     const query = `
       INSERT INTO purchase_item_requests (
         batch_no, item_name, description, item_category_code,
@@ -14,7 +16,7 @@ const PurchaseItemRequest = {
       ) RETURNING *;
     `;
     const values = [
-      data.batchNo,
+      batchNo,
       data.itemName,
       data.description || null,
       data.itemCategoryCode || null,

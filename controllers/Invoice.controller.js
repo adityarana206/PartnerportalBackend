@@ -1,5 +1,17 @@
 const Invoice = require("../models/Invoice.model");
+const MessageStaging = require("../models/MessageStaging.model");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
+
+const notify = async (docNo, partnerNo, text) => {
+  try {
+    await MessageStaging.create({
+      threadId: `INV-${docNo}`, documentType: "Message", category: "General",
+      linkedDocType: "Invoice", linkedDocNo: docNo,
+      senderType: "Company", senderId: partnerNo,
+      messageText: text, direction: "BC-to-Portal", status: "Sent",
+    });
+  } catch (e) { console.error(`⚠️  Notification failed for Invoice ${docNo}:`, e.message); }
+};
 
 // ─── Create Invoice ────────────────────────────────────────
 const createInvoice = async (req, res) => {
@@ -22,6 +34,7 @@ const createInvoice = async (req, res) => {
     }
     const userId = req.user ? req.user.id : null;
     const invoice = await Invoice.create(req.body, userId);
+    await notify(invoice.invoice_no || invoice.id, invoice.partner_no, `Invoice ${invoice.invoice_no || invoice.id} has been created successfully.`);
     res.status(201).json({
       success: true,
       message: "Invoice created successfully",
@@ -135,9 +148,8 @@ const updateInvoice = async (req, res) => {
     }
 
     const updated = await Invoice.update(req.params.id, req.body);
+    await notify(invoice.invoice_no || req.params.id, invoice.partner_no, `Invoice ${invoice.invoice_no || req.params.id} has been updated.`);
     res.status(200).json({
-      success: true,
-      message: "Invoice updated successfully",
       data: updated,
     });
   } catch (error) {
@@ -175,9 +187,8 @@ const updateInvoiceStatus = async (req, res) => {
     }
 
     const updated = await Invoice.updateStatus(req.params.id, status);
+    await notify(invoice.invoice_no || req.params.id, invoice.partner_no, `Invoice ${invoice.invoice_no || req.params.id} status updated to ${status}.`);
     res.status(200).json({
-      success: true,
-      message: `Invoice status updated to ${status}`,
       data: updated,
     });
   } catch (error) {
@@ -199,6 +210,7 @@ const deleteInvoice = async (req, res) => {
     }
 
     const deleted = await Invoice.delete(req.params.id);
+    await notify(invoice.invoice_no || req.params.id, invoice.partner_no, `Invoice ${invoice.invoice_no || req.params.id} has been deleted.`);
     res.status(200).json({
       success: true,
       message: "Invoice deleted successfully",
