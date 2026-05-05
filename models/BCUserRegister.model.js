@@ -112,6 +112,17 @@ const BCUserRegister = {
         }
       }
 
+      // Insert documents (SharePoint URLs)
+      if (data.documents && data.documents.length > 0) {
+        for (const doc of data.documents) {
+          await client.query(
+            `INSERT INTO bc_user_registration_documents (registration_id, name, url, size)
+             VALUES ($1, $2, $3, $4)`,
+            [registration.id, doc.name || "", doc.url || "", doc.size || 0]
+          );
+        }
+      }
+
       await client.query("COMMIT");
       return await this.findById(registration.id);
     } catch (error) {
@@ -156,11 +167,16 @@ const BCUserRegister = {
       "SELECT * FROM bc_user_registration_banks WHERE registration_id = $1 ORDER BY line_no",
       [id]
     );
+    const documentsResult = await pool.query(
+      "SELECT * FROM bc_user_registration_documents WHERE registration_id = $1 ORDER BY uploaded_at",
+      [id]
+    );
 
     return {
       ...registration,
       partnerRegContactLines: contactsResult.rows,
       partnerRegBankLines: banksResult.rows,
+      documents: documentsResult.rows,
     };
   },
 
@@ -199,6 +215,10 @@ const BCUserRegister = {
       );
       await client.query(
         "DELETE FROM bc_user_registration_banks WHERE registration_id = $1",
+        [id]
+      );
+      await client.query(
+        "DELETE FROM bc_user_registration_documents WHERE registration_id = $1",
         [id]
       );
       const result = await client.query(

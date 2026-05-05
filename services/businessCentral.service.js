@@ -367,6 +367,35 @@ class BusinessCentralService {
     return await this.callAPI("notifications", "POST", bcData);
   }
 
+  // ─── Purchase Item Request ──────────────────────────────
+  async createPurchaseItemRequest(data) {
+    const bcData = {
+      batchNo: data.batchNo || "",
+      itemName: data.itemName || "",
+      description: data.description || "",
+      itemCategoryCode: data.itemCategoryCode || "",
+      baseUnitOfMeasure: data.baseUnitOfMeasure || "",
+      purchUnitOfMeasure: data.purchUnitOfMeasure || "",
+      netWeight: parseFloat(data.netWeight) || 0,
+      grossWeight: parseFloat(data.grossWeight) || 0,
+      specifications: data.specifications || "",
+      ingredients: data.ingredients || "",
+      allergenDeclaration: data.allergenDeclaration || "",
+      shelfLifeDays: parseInt(data.shelfLifeDays) || 0,
+      gtin: data.gtin || "",
+      eanCode: data.eanCode || "",
+      UPCCode: data.UPCCode || "",
+      purchaseUnitPrice: parseFloat(data.purchaseUnitPrice) || 0,
+      priceCurrencyCode: data.priceCurrencyCode || "AED",
+      partnerNo: data.partnerNo || "",
+      status: data.status || "Submitted",
+      rejectionReason: data.rejectionReason || "",
+      PriceEffectiveDate: data.PriceEffectiveDate || "0001-01-01",
+    };
+
+    return await this.callAPI("ItemChangeRequest", "POST", bcData);
+  }
+
   // ─── Item Change Request ───────────────────────────────
   async createItemChangeRequest(changeData) {
     const bcData = {

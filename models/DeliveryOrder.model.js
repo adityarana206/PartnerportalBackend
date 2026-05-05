@@ -113,8 +113,18 @@ const DeliveryOrder = {
       const order = r.rows[0];
       const lines = await insertLines(client, order.id, data.lines || data.deliveryStagingsLine || []);
 
+      // Insert documents (SharePoint URLs)
+      if (data.documents && data.documents.length > 0) {
+        for (const doc of data.documents) {
+          await client.query(
+            `INSERT INTO delivery_order_documents (delivery_order_id, name, url, size) VALUES ($1,$2,$3,$4)`,
+            [order.id, doc.name || "", doc.url || "", doc.size || 0]
+          );
+        }
+      }
+
       await client.query("COMMIT");
-      return { ...order, ...computeTotals(lines), lines };
+      return { ...order, ...computeTotals(lines), lines, documents: data.documents || [] };
     } catch (err) {
       await client.query("ROLLBACK");
       throw err;
@@ -149,7 +159,11 @@ const DeliveryOrder = {
     const client = await pool.connect();
     try {
       const lines = await fetchLines(client, id);
-      return { ...rows[0], ...computeTotals(lines), lines };
+      const { rows: docs } = await client.query(
+        "SELECT * FROM delivery_order_documents WHERE delivery_order_id = $1 ORDER BY uploaded_at",
+        [id]
+      );
+      return { ...rows[0], ...computeTotals(lines), lines, documents: docs };
     } finally {
       client.release();
     }
