@@ -1,11 +1,10 @@
 const MessageStaging = require("../models/MessageStaging.model");
 const { sanitizeString } = require("../utils/validation.utils");
 
-const validate = (body) => {
+const validate = (body, strict = true) => {
   const errors = [];
-  if (!body.threadId)    errors.push("threadId is required");
-  if (!body.senderId)    errors.push("senderId is required");
-  if (!body.messageText) errors.push("messageText is required");
+  if (strict && !body.senderId)    errors.push("senderId is required");
+  if (strict && !body.messageText) errors.push("messageText is required");
   if (body.documentType && !MessageStaging.VALID_DOCUMENT_TYPES.includes(body.documentType))
     errors.push(`Invalid documentType. Allowed: ${MessageStaging.VALID_DOCUMENT_TYPES.filter(v => v.trim()).join(", ")}`);
   if (body.category && !MessageStaging.VALID_CATEGORIES.includes(body.category))
@@ -24,12 +23,19 @@ const createMessage = async (req, res) => {
     const errors = validate(req.body);
     if (errors.length) return res.status(400).json({ success: false, message: errors[0], errors });
     const message = await MessageStaging.create(req.body);
-    res.status(201).json({
-      success: true,
-      message: "Message created successfully",
-      data: message,
-      businessCentral: { synced: message.bc_synced, error: message.bc_error || null },
-    });
+    res.status(201).json({ success: true, message: "Message created successfully", data: message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const createMessageFromBC = async (req, res) => {
+  try {
+    const errors = validate(req.body, false);
+    if (errors.length) return res.status(400).json({ success: false, message: errors[0], errors });
+    const data = { ...req.body, threadId: req.body.threadId || `BC-${Date.now()}` };
+    const message = await MessageStaging.create(data);
+    res.status(201).json({ success: true, message: "Message received from BC", data: message });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -94,6 +100,18 @@ const updateMessageStatus = async (req, res) => {
   }
 };
 
+const syncMessageToBC = async (req, res) => {
+  try {
+    const result = await MessageStaging.syncToBC(req.params.id);
+    if (!result) return res.status(404).json({ success: false, message: "Message not found" });
+    if (!result.bcSynced)
+      return res.status(502).json({ success: false, message: "BC sync failed", error: result.bcError, data: result.row });
+    res.status(200).json({ success: true, message: "Message synced to Business Central", data: result.row });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const deleteMessage = async (req, res) => {
   try {
     const deleted = await MessageStaging.delete(req.params.id);
@@ -106,10 +124,12 @@ const deleteMessage = async (req, res) => {
 
 module.exports = {
   createMessage,
+  createMessageFromBC,
   getAllMessages,
   getMessageById,
   getMessagesByPartner,
   getMessagesByThread,
   updateMessageStatus,
+  syncMessageToBC,
   deleteMessage,
 };

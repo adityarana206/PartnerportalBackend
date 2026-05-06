@@ -3,17 +3,6 @@ const MessageStaging = require("../models/MessageStaging.model");
 const bcService = require("../services/businessCentral.service");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
 
-const notify = async (docNo, partnerNo, text) => {
-  try {
-    await MessageStaging.create({
-      threadId: `PIR-${docNo}`, documentType: "Message", category: "General",
-      linkedDocType: "Purchase Item Request", linkedDocNo: String(docNo),
-      senderType: "Company", senderId: partnerNo,
-      messageText: text, direction: "BC-to-Portal", status: "Sent",
-    });
-  } catch (e) { console.error(`⚠️  Notification failed for PIR ${docNo}:`, e.message); }
-};
-
 // POST /api/purchase-item-requests
 const createPurchaseItemRequest = async (req, res) => {
   try {
@@ -24,6 +13,20 @@ const createPurchaseItemRequest = async (req, res) => {
 
     const userId = req.user ? req.user.id : null;
     const item = await PurchaseItemRequest.create(req.body, userId);
+
+    // ─── Notification → sync to BC ─────────────────────────
+    try {
+      const msg = await MessageStaging.create({
+        threadId: `PIR-${item.id}`, documentType: "Message", category: "General",
+        linkedDocType: "Purchase Item Request", linkedDocNo: String(item.id),
+        senderType: "Company", senderId: item.partner_no,
+        messageText: `Purchase Item Request ${item.id} has been created successfully.`,
+        direction: "BC-to-Portal", status: "Sent",
+      });
+      await MessageStaging.syncToBC(msg.id);
+    } catch (msgErr) {
+      console.error(`⚠️  Notification failed for PIR ${item.id}:`, msgErr.message);
+    }
 
     let bcResponse = null;
     let bcError = null;
@@ -41,7 +44,6 @@ const createPurchaseItemRequest = async (req, res) => {
       data: item,
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
-    await notify(item.id, item.partner_no, `Purchase Item Request ${item.id} has been created successfully.`);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -117,7 +119,6 @@ const updatePurchaseItemRequest = async (req, res) => {
       });
 
     const updated = await PurchaseItemRequest.update(req.params.id, req.body);
-    await notify(req.params.id, item.partner_no, `Purchase Item Request ${req.params.id} has been updated.`);
     res.status(200).json({ success: true, message: "Purchase item request updated successfully", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -146,7 +147,16 @@ const updatePurchaseItemStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Purchase item request not found" });
 
     const updated = await PurchaseItemRequest.updateStatus(item.id, status, rejectionReason || null);
-    await notify(batchNo, item.partner_no, `Purchase Item Request ${batchNo} status updated to ${status}.`);
+    try {
+      const msg = await MessageStaging.create({
+        threadId: `PIR-${batchNo}`, documentType: "Message", category: "General",
+        linkedDocType: "Purchase Item Request", linkedDocNo: String(batchNo),
+        senderType: "Company", senderId: item.partner_no,
+        messageText: `Purchase Item Request ${batchNo} status updated to ${status}.`,
+        direction: "BC-to-Portal", status: "Sent",
+      });
+      await MessageStaging.syncToBC(msg.id);
+    } catch (e) { console.error(`⚠️  Notification failed for PIR ${batchNo}:`, e.message); }
     res.status(200).json({ success: true, message: `Status updated to ${status}`, data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -170,7 +180,6 @@ const deletePurchaseItemRequest = async (req, res) => {
       });
 
     const deleted = await PurchaseItemRequest.delete(req.params.id);
-    await notify(req.params.id, item.partner_no, `Purchase Item Request ${req.params.id} has been deleted.`);
     res.status(200).json({ success: true, message: "Purchase item request deleted successfully", data: deleted });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

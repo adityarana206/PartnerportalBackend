@@ -22,23 +22,19 @@ const createDeliveryOrder = async (req, res) => {
     const order = await DeliveryOrder.create({ ...req.body, lines }, req.user?.id);
     console.log("[DO Create] Saved to DB:", order.delivery_order_no);
 
-    // ─── Create notification message ───────────────────────
+    // ─── Notification → sync to BC ─────────────────────────
     try {
-      await MessageStaging.create({
+      const msg = await MessageStaging.create({
         threadId: `DO-${order.delivery_order_no}`,
-        documentType: "Message",
-        category: "General",
-        linkedDocType: "Delivery Order",
-        linkedDocNo: order.delivery_order_no,
-        senderType: "Company",
-        senderId: order.partner_no,
-        senderName: req.body.partnerName || order.partner_no,
+        documentType: "Message", category: "General",
+        linkedDocType: "Delivery Order", linkedDocNo: order.delivery_order_no,
+        senderType: "Company", senderId: order.partner_no,
         messageText: `Delivery Order ${order.delivery_order_no} has been created successfully.`,
-        direction: "BC-to-Portal",
-        status: "Sent",
+        direction: "BC-to-Portal", status: "Sent",
       });
+      await MessageStaging.syncToBC(msg.id);
     } catch (msgErr) {
-      console.error(`⚠️  Failed to create notification for DO ${order.delivery_order_no}:`, msgErr.message);
+      console.error(`⚠️  Notification failed for DO ${order.delivery_order_no}:`, msgErr.message);
     }
 
     // ─── Update PO shipped quantities ──────────────────────
@@ -163,15 +159,6 @@ const updateDeliveryOrder = async (req, res) => {
     if (!req.body.lines || req.body.lines.length === 0)
       return res.status(400).json({ success: false, message: "At least one line is required" });
     const updated = await DeliveryOrder.update(req.params.id, req.body);
-    try {
-      await MessageStaging.create({
-        threadId: `DO-${existing.delivery_order_no}`, documentType: "Message", category: "General",
-        linkedDocType: "Delivery Order", linkedDocNo: existing.delivery_order_no,
-        senderType: "Company", senderId: existing.partner_no,
-        messageText: `Delivery Order ${existing.delivery_order_no} has been updated.`,
-        direction: "BC-to-Portal", status: "Sent",
-      });
-    } catch (e) { console.error(`⚠️  Notification failed for DO ${existing.delivery_order_no}:`, e.message); }
     res.status(200).json({ success: true, message: "Delivery order updated successfully", data: updated });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -187,15 +174,6 @@ const updateDeliveryOrderStatus = async (req, res) => {
     const existing = await DeliveryOrder.findById(req.params.id);
     if (!existing) return res.status(404).json({ success: false, message: "Delivery order not found" });
     const updated = await DeliveryOrder.updateStatus(req.params.id, status);
-    try {
-      await MessageStaging.create({
-        threadId: `DO-${existing.delivery_order_no}`, documentType: "Message", category: "General",
-        linkedDocType: "Delivery Order", linkedDocNo: existing.delivery_order_no,
-        senderType: "Company", senderId: existing.partner_no,
-        messageText: `Delivery Order ${existing.delivery_order_no} status updated to ${status}.`,
-        direction: "BC-to-Portal", status: "Sent",
-      });
-    } catch (e) { console.error(`⚠️  Notification failed for DO ${existing.delivery_order_no}:`, e.message); }
     res.status(200).json({ success: true, message: `Status updated to ${status}`, data: updated });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -288,15 +266,6 @@ const deleteDeliveryOrder = async (req, res) => {
     const existing = await DeliveryOrder.findById(req.params.id);
     if (!existing) return res.status(404).json({ success: false, message: "Delivery order not found" });
     const deleted = await DeliveryOrder.delete(req.params.id);
-    try {
-      await MessageStaging.create({
-        threadId: `DO-${existing.delivery_order_no}`, documentType: "Message", category: "General",
-        linkedDocType: "Delivery Order", linkedDocNo: existing.delivery_order_no,
-        senderType: "Company", senderId: existing.partner_no,
-        messageText: `Delivery Order ${existing.delivery_order_no} has been deleted.`,
-        direction: "BC-to-Portal", status: "Sent",
-      });
-    } catch (e) { console.error(`⚠️  Notification failed for DO ${existing.delivery_order_no}:`, e.message); }
     res.status(200).json({ success: true, message: "Delivery order deleted successfully", data: deleted });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

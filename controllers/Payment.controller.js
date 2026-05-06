@@ -100,7 +100,6 @@ const updatePayment = async (req, res) => {
       return res.status(404).json({ success: false, message: "Payment not found" });
 
     const updated = await Payment.update(req.params.id, req.body);
-    await notify(existing.payment_number || req.params.id, existing.partner_no, `Payment ${existing.payment_number || req.params.id} has been updated.`);
     res.status(200).json({ success: true, message: "Payment updated successfully", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -134,7 +133,6 @@ const deletePayment = async (req, res) => {
     const deleted = await Payment.delete(req.params.id);
     if (!deleted)
       return res.status(404).json({ success: false, message: "Payment not found" });
-    await notify(deleted.payment_number || req.params.id, deleted.partner_no, `Payment ${deleted.payment_number || req.params.id} has been deleted.`);
     res.status(200).json({ success: true, message: "Payment deleted successfully", data: deleted });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

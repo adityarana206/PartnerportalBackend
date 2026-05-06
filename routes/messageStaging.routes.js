@@ -2,11 +2,13 @@ const express = require("express");
 const router = express.Router();
 const {
   createMessage,
+  createMessageFromBC,
   getAllMessages,
   getMessageById,
   getMessagesByPartner,
   getMessagesByThread,
   updateMessageStatus,
+  syncMessageToBC,
   deleteMessage,
 } = require("../controllers/MessageStaging.controller");
 const { protect, protectRegister } = require("../middleware/auth.middleware");
@@ -19,10 +21,11 @@ router.get("/:id", protect, getMessageById);
 
 // ─── WRITE ─────────────────────────────────────────────────
 router.post("/", protect, createMessage);
-router.post("/businesscentral", protectRegister, createMessage);
+router.post("/businesscentral", protectRegister, createMessageFromBC);
 
 // ─── MODIFY ────────────────────────────────────────────────
 router.patch("/:id/status", protect, updateMessageStatus);
+router.post("/:id/sync-bc", protect, syncMessageToBC);
 
 // ─── DELETE ────────────────────────────────────────────────
 router.delete("/:id", protect, deleteMessage);

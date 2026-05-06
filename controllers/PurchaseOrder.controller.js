@@ -241,7 +241,6 @@ const updatePurchaseOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "At least one order line is required" });
 
     const updated = await PurchaseOrder.update(req.params.id, req.body);
-    await notify(order.no || req.params.id, order.partner_no, `Purchase Order ${order.no || req.params.id} has been updated.`);
     res.status(200).json({ success: true, message: "Purchase order updated successfully", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -306,7 +305,6 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const updated = await PurchaseOrder.updateStatus(req.params.id, status, portalStatus, portalDocumentNo);
-    await notify(order.no || req.params.id, order.partner_no, `Purchase Order ${order.no || req.params.id} status updated to ${status}.`);
     return res.status(200).json({
       success: true,
       message: `Order status updated to ${status}`,
@@ -332,7 +330,6 @@ const deletePurchaseOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: "Purchase order not found" });
 
     const deleted = await PurchaseOrder.delete(req.params.id);
-    await notify(order.no || req.params.id, order.partner_no, `Purchase Order ${order.no || req.params.id} has been deleted.`);
     res.status(200).json({ success: true, message: "Purchase order deleted successfully", data: deleted });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

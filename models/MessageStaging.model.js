@@ -1,5 +1,4 @@
 const { pool } = require("../config/db");
-const bcService = require("../services/businessCentral.service");
 
 const VALID_DOCUMENT_TYPES = [" ", "Message", "Return Request", "Amendment Request", "Concern"];
 const VALID_CATEGORIES = [" ", "General", "Pricing Dispute", "Quality Issue", "Delivery Concern", "Invoice Dispute", "Return Request", "Amendment Request", "Credit Request"];
@@ -37,40 +36,7 @@ const MessageStaging = {
         data.status || " ",
       ]
     );
-    const msg = result.rows[0];
-
-    // ─── Push to Business Central ──────────────────────────
-    let bcSynced = false;
-    let bcError  = null;
-    try {
-      await bcService.createMessage({
-        threadId:         msg.thread_id,
-        documentType:     msg.document_type,
-        category:         msg.category,
-        linkedDocType:    msg.linked_doc_type  || "",
-        linkedDocNo:      msg.linked_doc_no    || "",
-        senderType:       msg.sender_type,
-        senderId:         msg.sender_id,
-        senderName:       msg.sender_name      || "",
-        messageText:      msg.message_text     || "",
-        changeDetails:    msg.change_details   || "",
-        messageTimestamp: msg.message_timestamp,
-        direction:        msg.direction,
-        status:           msg.status,
-      });
-      bcSynced = true;
-      console.log(`✅ Message ${msg.id} synced to BC`);
-    } catch (err) {
-      bcError = err.response?.data || err.message;
-      console.error(`⚠️  Message ${msg.id} BC sync failed:`, bcError);
-    }
-
-    // ─── Persist BC sync result ────────────────────────────
-    const updated = await pool.query(
-      `UPDATE message_staging SET bc_synced=$1, bc_error=$2 WHERE id=$3 RETURNING *`,
-      [bcSynced, bcSynced ? null : JSON.stringify(bcError), msg.id]
-    );
-    return updated.rows[0];
+    return result.rows[0];
   },
 
   async findAll() {
@@ -110,6 +76,43 @@ const MessageStaging = {
   async delete(id) {
     const result = await pool.query("DELETE FROM message_staging WHERE id=$1 RETURNING *", [id]);
     return result.rows[0] || null;
+  },
+
+  async syncToBC(id) {
+    const bcService = require("../services/businessCentral.service");
+    const msg = await this.findById(id);
+    if (!msg) return null;
+
+    let bcSynced = false;
+    let bcError  = null;
+    try {
+      await bcService.createMessage({
+        threadId:         msg.thread_id,
+        documentType:     msg.document_type,
+        category:         msg.category,
+        linkedDocType:    msg.linked_doc_type  || "",
+        linkedDocNo:      msg.linked_doc_no    || "",
+        senderType:       msg.sender_type,
+        senderId:         msg.sender_id,
+        senderName:       msg.sender_name      || "",
+        messageText:      msg.message_text     || "",
+        changeDetails:    msg.change_details   || "",
+        messageTimestamp: msg.message_timestamp,
+        direction:        msg.direction,
+        status:           msg.status,
+      });
+      bcSynced = true;
+      console.log(`✅ Message ${id} synced to BC`);
+    } catch (err) {
+      bcError = err.response?.data || err.message;
+      console.error(`⚠️  Message ${id} BC sync failed:`, bcError);
+    }
+
+    const result = await pool.query(
+      `UPDATE message_staging SET bc_synced=$1, bc_error=$2 WHERE id=$3 RETURNING *`,
+      [bcSynced, bcSynced ? null : JSON.stringify(bcError), id]
+    );
+    return { row: result.rows[0], bcSynced, bcError };
   },
 };
 

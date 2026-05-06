@@ -139,7 +139,6 @@ const updatePurchaseInvoice = async (req, res) => {
     }
 
     const updated = await PurchaseInvoice.update(req.params.id, req.body);
-    await notify(invoice.invoice_no || req.params.id, invoice.partner_no, `Purchase Invoice ${invoice.invoice_no || req.params.id} has been updated.`);
     res.status(200).json({
       success: true,
       message: "Purchase invoice updated successfully",
@@ -178,7 +177,6 @@ const updatePurchaseInvoiceStatus = async (req, res) => {
     }
 
     const updated = await PurchaseInvoice.updateStatus(req.params.id, status);
-    await notify(invoice.invoice_no || req.params.id, invoice.partner_no, `Purchase Invoice ${invoice.invoice_no || req.params.id} status updated to ${status}.`);
     res.status(200).json({
       success: true,
       message: `Purchase invoice status updated to ${status}`,
@@ -201,7 +199,6 @@ const deletePurchaseInvoice = async (req, res) => {
     }
 
     const deleted = await PurchaseInvoice.delete(req.params.id);
-    await notify(invoice.invoice_no || req.params.id, invoice.partner_no, `Purchase Invoice ${invoice.invoice_no || req.params.id} has been deleted.`);
     res.status(200).json({
       success: true,
       message: "Purchase invoice deleted successfully",
