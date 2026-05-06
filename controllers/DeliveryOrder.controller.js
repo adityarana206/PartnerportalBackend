@@ -64,6 +64,8 @@ const createDeliveryOrder = async (req, res) => {
         direction:            "Portal-to-BC",
         shipmentDate:         req.body.shipmentDate,
         expectedDeliveryDate: req.body.expectedDeliveryDate  || null,
+        actualDeliveryDate:   req.body.actualDeliveryDate    || null,
+        deliveryDate:         req.body.actualDeliveryDate    || null,
         status:               "Inserted",
         locationCode:         req.body.locationCode          || "",
         warehouseLocation:    req.body.warehouseLocation     || "",

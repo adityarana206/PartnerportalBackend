@@ -254,12 +254,15 @@ class BusinessCentralService {
   async createDeliveryStaging(deliveryData) {
     const bcData = {
       deliveryOrderNo:      deliveryData.deliveryOrderNo      || "",
+      deliveryDateTime:     deliveryData.deliveryDateTime     || new Date().toISOString(),
       deliveryType:         deliveryData.deliveryType         || "ASN",
       partnerNo:            deliveryData.partnerNo            || "",
       partnerType:          deliveryData.partnerType          || "",
       direction:            deliveryData.direction            || "Portal_x002D_to_x002D_BC",
       shipmentDate:         deliveryData.shipmentDate         || new Date().toISOString().split('T')[0],
       expectedDeliveryDate: deliveryData.expectedDeliveryDate || null,
+      actualDeliveryDate:   deliveryData.actualDeliveryDate   || null,
+      deliveryDate:         deliveryData.actualDeliveryDate   || null,
       locationCode:         deliveryData.locationCode         || "",
       warehouseLocation:    deliveryData.warehouseLocation    || "",
       totalAmount:          deliveryData.totalAmount          || 0,
