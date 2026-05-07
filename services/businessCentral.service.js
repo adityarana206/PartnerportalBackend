@@ -252,7 +252,7 @@ class BusinessCentralService {
 
   // ─── Delivery Staging ──────────────────────────────────
   async createDeliveryStaging(deliveryData) {
-    const toDate = (val) => val ? String(val).split('T')[0] : null;
+    const toDate = (val) => (val && val !== '' && val !== '0001-01-01') ? String(val).split('T')[0] : null;
 
     const bcData = {
       deliveryOrderNo:      deliveryData.deliveryOrderNo      || "",
@@ -279,7 +279,7 @@ class BusinessCentralService {
         lineNo:            line.lineNo            || 0,
         poNo:              line.poNo              || "",
         poLineNo:          line.poLineNo          || 0,
-        poDateTime:        line.poDateTime        ? String(line.poDateTime).split('T')[0] : null,
+        poDateTime:        toDate(line.poDateTime),
         poTotalAmount:     line.poTotalAmount     || 0,
         itemNo:            line.itemNo            || "",
         description:       line.description       || "",
@@ -291,7 +291,7 @@ class BusinessCentralService {
         unitOfMeasureCode: line.unitOfMeasureCode || "",
         unitPrice:         line.unitPrice         || 0,
         variantCode:       line.variantCode       || "",
-        expirationDate:    line.expirationDate    ? String(line.expirationDate).split('T')[0] : "0001-01-01",
+        expirationDate:    toDate(line.expirationDate) || null,
       })),
       documents: (deliveryData.documents || []).map(d => ({
         name:    d.name    || "",
