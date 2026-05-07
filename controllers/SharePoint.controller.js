@@ -1,11 +1,5 @@
-const { uploadToSharePoint } = require("../config/sharepoint");
+const { uploadToSharePoint, getSharePointToken } = require("../config/sharepoint");
 
-/**
- * POST /api/sharepoint/upload
- * Body: multipart/form-data
- *   - file: the file to upload
- *   - folder (optional): subfolder path inside SharePoint root
- */
 const uploadDocument = async (req, res) => {
   try {
     if (!req.file) {
@@ -33,4 +27,34 @@ const uploadDocument = async (req, res) => {
   }
 };
 
-module.exports = { uploadDocument };
+// GET /api/sharepoint/token?folder=DeliveryOrders&fileName=packing_list.pdf
+const getUploadToken = async (req, res) => {
+  try {
+    const { folder = "", fileName } = req.query;
+    if (!fileName) {
+      return res.status(400).json({ success: false, message: "fileName is required" });
+    }
+
+    const token = await getSharePointToken();
+    const rootUrl = process.env.SP_ROOT_URL;
+    const filePath = folder ? `${folder}/${fileName}` : fileName;
+    const uploadUrl = `${rootUrl}${filePath}:/content`;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        token,
+        uploadUrl,
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/octet-stream",
+        },
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { uploadDocument, getUploadToken };
