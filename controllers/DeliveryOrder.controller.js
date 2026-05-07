@@ -64,8 +64,6 @@ const createDeliveryOrder = async (req, res) => {
         direction:            "Portal-to-BC",
         shipmentDate:         req.body.shipmentDate          ? req.body.shipmentDate.split('T')[0] : new Date().toISOString().split('T')[0],
         expectedDeliveryDate: req.body.expectedDeliveryDate && req.body.expectedDeliveryDate !== '' ? req.body.expectedDeliveryDate.split('T')[0] : null,
-        actualDeliveryDate:   req.body.actualDeliveryDate   && req.body.actualDeliveryDate   !== '' ? req.body.actualDeliveryDate.split('T')[0]   : null,
-        deliveryDate:         req.body.actualDeliveryDate   && req.body.actualDeliveryDate   !== '' ? req.body.actualDeliveryDate.split('T')[0]   : null,
         status:               "Inserted",
         locationCode:         req.body.locationCode          || "",
         warehouseLocation:    req.body.warehouseLocation     || "",
@@ -80,7 +78,7 @@ const createDeliveryOrder = async (req, res) => {
           lineNo:            (i + 1) * 10000,
           poNo:              l.poNo              || "",
           poLineNo:          l.poLineNo          || 0,
-          poDateTime:        l.poDateTime        || null,
+          poDateTime:        (l.poDateTime && l.poDateTime !== '') ? String(l.poDateTime).split('T')[0] : null,
           poTotalAmount:     l.poTotalAmount     || 0,
           itemNo:            l.itemNo            || "",
           description:       l.description       || "",
@@ -92,13 +90,12 @@ const createDeliveryOrder = async (req, res) => {
           unitOfMeasureCode: l.unitOfMeasureCode || l.unitOfMeasure || "",
           unitPrice:         parseFloat(l.unitPrice || 0),
           variantCode:       l.variantCode       || "",
-          expirationDate:    l.expirationDate    || "0001-01-01",
+          expirationDate:    (l.expirationDate && l.expirationDate !== '' && l.expirationDate !== '0001-01-01') ? String(l.expirationDate).split('T')[0] : null,
         })),
         documents: (req.body.documents || []).map(d => ({
-          name:    d.name    || "",
-          url:     d.url     || "",
-          size:    d.size    || 0,
-          docType: d.docType || "",
+          name: d.name || "",
+          url:  d.url  || "",
+          size: d.size || 0,
         })),
       };
 
@@ -222,7 +219,7 @@ const reprocessDeliveryOrder = async (req, res) => {
         lineNo:            (i + 1) * 10000,
         poNo:              l.po_no              || "",
         poLineNo:          l.po_line_no         || 0,
-        poDateTime:        l.po_date_time       || null,
+        poDateTime:        (l.po_date_time && l.po_date_time !== '') ? String(l.po_date_time).split('T')[0] : null,
         poTotalAmount:     l.po_total_amount    || 0,
         itemNo:            l.item_no            || "",
         description:       l.description        || "",
@@ -234,7 +231,12 @@ const reprocessDeliveryOrder = async (req, res) => {
         unitOfMeasureCode: l.unit_of_measure    || "",
         unitPrice:         parseFloat(l.unit_price || 0),
         variantCode:       l.variant_code       || "",
-        expirationDate:    l.expiration_date    || "0001-01-01",
+        expirationDate:    (l.expiration_date && l.expiration_date !== '' && l.expiration_date !== '0001-01-01') ? String(l.expiration_date).split('T')[0] : null,
+      })),
+      documents: (order.documents || []).map(d => ({
+        name: d.name || "",
+        url:  d.url  || "",
+        size: d.size || 0,
       })),
     };
 

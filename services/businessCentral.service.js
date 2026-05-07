@@ -256,16 +256,19 @@ class BusinessCentralService {
 
     const bcData = {
       deliveryOrderNo:      deliveryData.deliveryOrderNo      || "",
-      deliveryDateTime:     deliveryData.deliveryDateTime     || new Date().toISOString(),
       deliveryType:         deliveryData.deliveryType         || "ASN",
       partnerNo:            deliveryData.partnerNo            || "",
       partnerType:          deliveryData.partnerType          || "",
-      direction:            deliveryData.direction            || "Portal_x002D_to_x002D_BC",
-      shipmentDate:         toDate(deliveryData.shipmentDate)         || toDate(new Date()),
-      expectedDeliveryDate: toDate(deliveryData.expectedDeliveryDate) || null,
-      actualDeliveryDate:   toDate(deliveryData.actualDeliveryDate)   || null,
-      deliveryDate:         toDate(deliveryData.actualDeliveryDate)   || null,
+      direction:            "Portal_x002D_to_x002D_BC",
+      shipmentDate:         toDate(deliveryData.shipmentDate) || new Date().toISOString().split('T')[0],
+      expectedDeliveryDate: toDate(deliveryData.expectedDeliveryDate) || "0001-01-01",
+      deliveryDateTime:     deliveryData.deliveryDateTime     || "0001-01-01T00:00:00Z",
+      linkedOrderNo:        deliveryData.linkedOrderNo        || "",
+      shipmentNo:           deliveryData.shipmentNo           || "",
+      trackingNo:           deliveryData.trackingNo           || "",
+      carrierCode:          deliveryData.carrierCode          || "",
       locationCode:         deliveryData.locationCode         || "",
+      shipToCode:           deliveryData.shipToCode           || "",
       warehouseLocation:    deliveryData.warehouseLocation    || "",
       totalAmount:          deliveryData.totalAmount          || 0,
       currencyCode:         deliveryData.currencyCode         || "",
@@ -274,12 +277,11 @@ class BusinessCentralService {
       shipState:            deliveryData.shipState            || "",
       shipPostCode:         deliveryData.shipPostCode         || "",
       shipCountryCode:      deliveryData.shipCountryCode      || "",
-      status:               deliveryData.status               || "Created",
       deliveryStagingsLine: (deliveryData.deliveryStagingsLine || []).map(line => ({
         lineNo:            line.lineNo            || 0,
         poNo:              line.poNo              || "",
         poLineNo:          line.poLineNo          || 0,
-        poDateTime:        toDate(line.poDateTime),
+        poDateTime:        "0001-01-01T00:00:00Z",
         poTotalAmount:     line.poTotalAmount     || 0,
         itemNo:            line.itemNo            || "",
         description:       line.description       || "",
@@ -290,18 +292,20 @@ class BusinessCentralService {
         lotNo:             line.lotNo             || "",
         unitOfMeasureCode: line.unitOfMeasureCode || "",
         unitPrice:         line.unitPrice         || 0,
+        lineAmount:        line.lineAmount        || 0,
         variantCode:       line.variantCode       || "",
-        expirationDate:    toDate(line.expirationDate) || null,
+        expirationDate:    toDate(line.expirationDate) || "0001-01-01",
       })),
-      documents: (deliveryData.documents || []).map(d => ({
-        name:    d.name    || "",
-        url:     d.url     || "",
-        size:    d.size    || 0,
-        docType: d.docType || "",
+      documents: (deliveryData.documents || []).map((d, i) => ({
+        regNo:   deliveryData.deliveryOrderNo || "",
+        lineNo:  (i + 1) * 10000,
+        name:    d.name || "",
+        url:     d.url  || "",
+        size:    d.size || 0,
       })),
     };
 
-    return await this.callAPI("deliveryStagings?$expand=deliveryStagingsLine", "POST", bcData);
+    return await this.callAPI("deliveryStagings?$expand=deliveryStagingsLine,documents", "POST", bcData);
   }
 
   // ─── Invoice Staging ───────────────────────────────────
