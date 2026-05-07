@@ -117,8 +117,8 @@ const DeliveryOrder = {
       if (data.documents && data.documents.length > 0) {
         for (const doc of data.documents) {
           await client.query(
-            `INSERT INTO delivery_order_documents (delivery_order_id, name, url, size) VALUES ($1,$2,$3,$4)`,
-            [order.id, doc.name || "", doc.url || "", doc.size || 0]
+            `INSERT INTO delivery_order_documents (delivery_order_id, name, url, size, doc_type) VALUES ($1,$2,$3,$4,$5)`,
+            [order.id, doc.name || "", doc.url || "", doc.size || 0, doc.docType || null]
           );
         }
       }

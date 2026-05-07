@@ -116,9 +116,9 @@ const BCUserRegister = {
       if (data.documents && data.documents.length > 0) {
         for (const doc of data.documents) {
           await client.query(
-            `INSERT INTO bc_user_registration_documents (registration_id, name, url, size)
-             VALUES ($1, $2, $3, $4)`,
-            [registration.id, doc.name || "", doc.url || "", doc.size || 0]
+            `INSERT INTO bc_user_registration_documents (registration_id, name, url, size, doc_type)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [registration.id, doc.name || "", doc.url || "", doc.size || 0, doc.docType || null]
           );
         }
       }
