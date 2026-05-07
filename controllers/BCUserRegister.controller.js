@@ -346,6 +346,7 @@ const verifyInvite = async (req, res) => {
       success: true,
       data: {
         role: invite.role,
+        regType: invite.reg_type || null,
         partnerNo: invite.partner_no,
         email: invite.email || null,
         expiresAt: invite.expires_at,

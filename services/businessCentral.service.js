@@ -588,7 +588,14 @@ class BusinessCentralService {
       isPrimary:      b.isPrimary      || false,
     }));
 
-    const payload = JSON.stringify({ header, contactLines, bankLines });
+    const documents = (data.documents || []).map(d => ({
+      name:    d.name    || "",
+      url:     d.url     || "",
+      size:    d.size    || 0,
+      docType: d.docType || "",
+    }));
+
+    const payload = JSON.stringify({ header, contactLines, bankLines, documents });
     const token = await this.getAccessToken();
     const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${registrationNo}')/Microsoft.NAV.updateRegistration`;
     const response = await axios.post(url, { payload }, {
@@ -657,7 +664,7 @@ class BusinessCentralService {
     };
 
     const token = await this.getAccessToken();
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines`;
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines,documents`;
     
     const response = await axios.post(url, bcData, {
       headers: {
