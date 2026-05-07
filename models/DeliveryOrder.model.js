@@ -69,7 +69,7 @@ const DeliveryOrder = {
     try {
       await client.query("BEGIN");
 
-      // Get next DO number inside transaction so rollback doesn't waste numbers
+      // Get next DO number inside transaction
       const doNo = await NoSeries.getNextNumberByCode("DO");
 
       const r = await client.query(
@@ -83,7 +83,7 @@ const DeliveryOrder = {
            status, remarks, created_by
          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25) RETURNING *`,
         [
-          data.deliveryOrderNo       || doNo,
+          doNo,  // Always use generated number
           data.partnerNo,
           data.partnerName           || null,
           data.partnerType           || null,

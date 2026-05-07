@@ -291,6 +291,12 @@ class BusinessCentralService {
         variantCode:       line.variantCode       || "",
         expirationDate:    line.expirationDate    || "0001-01-01",
       })),
+      documents: (deliveryData.documents || []).map(d => ({
+        name:    d.name    || "",
+        url:     d.url     || "",
+        size:    d.size    || 0,
+        docType: d.docType || "",
+      })),
     };
 
     return await this.callAPI("deliveryStagings?$expand=deliveryStagingsLine", "POST", bcData);
@@ -498,20 +504,29 @@ class BusinessCentralService {
 
   // ─── Get Partner Registration by No ───────────────────────
   async getPartnerRegistration(registrationNo) {
-    return await this.callAPI(
-      `partnerRegistrations('${registrationNo}')?$expand=partnerRegContactLines,partnerRegBankLines`
-    );
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${registrationNo}')?$expand=partnerRegContactLines,partnerRegBankLines`;
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
   }
 
   // ─── Patch Partner Registration by No ──────────────────
   async patchPartnerRegistration(registrationNo, etag, data) {
-    return await this.callAPI(
-      `partnerRegistrations('${registrationNo}')`,
-      "PATCH",
-      data,
-      null,
-      etag || "*"
-    );
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${registrationNo}')`;
+    const response = await axios.patch(url, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "If-Match": etag || "*",
+      },
+    });
+    return response.data;
   }
 
   // ─── Update Registration Action ────────────────────────
@@ -568,20 +583,22 @@ class BusinessCentralService {
     }));
 
     const payload = JSON.stringify({ header, contactLines, bankLines });
-    return await this.callAPI(
-      `partnerRegistrations('${registrationNo}')/Microsoft.NAV.updateRegistration`,
-      "POST",
-      { payload }
-    );
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${registrationNo}')/Microsoft.NAV.updateRegistration`;
+    const response = await axios.post(url, { payload }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
   }
 
   // ─── Partner Registration ──────────────────────────────
   async createPartnerRegistration(data) {
-    // Only send a 2-letter ISO code; reject full names like "UAE"
     const safeCountryCode = (val) =>
       val && /^[A-Z]{2}$/i.test(val.trim()) ? val.trim().toUpperCase() : "";
 
-    // BC validates postCode against its own table — send empty if dummy/unknown
     const safePostCode = (val) =>
       val && val !== "000000" && val !== "00000" && val !== "0" ? val : "";
 
@@ -625,13 +642,25 @@ class BusinessCentralService {
         currencyCode:  b.currencyCode  || "",
         isPrimary:     b.isPrimary     || false,
       })),
+      documents: (data.documents || []).map(d => ({
+        name:    d.name    || "",
+        url:     d.url     || "",
+        size:    d.size    || 0,
+        docType: d.docType || "",
+      })),
     };
 
-    return await this.callAPI(
-      "partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines",
-      "POST",
-      bcData
-    );
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines`;
+    
+    const response = await axios.post(url, bcData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
   }
 
   // ─── Post Codes ─────────────────────────────────────────

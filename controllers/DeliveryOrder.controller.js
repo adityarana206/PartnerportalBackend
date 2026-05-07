@@ -56,7 +56,7 @@ const createDeliveryOrder = async (req, res) => {
     let bcError = null;
     try {
       const bcPayload = {
-        deliveryOrderNo:      order.delivery_order_no,
+        deliveryOrderNo:      order.delivery_order_no,  // Always use DB-generated number
         deliveryDateTime:     req.body.deliveryDateTime      || new Date().toISOString(),
         deliveryType:         req.body.deliveryType          || "ASN",
         partnerNo:            req.body.partnerNo,
@@ -93,6 +93,12 @@ const createDeliveryOrder = async (req, res) => {
           unitPrice:         parseFloat(l.unitPrice || 0),
           variantCode:       l.variantCode       || "",
           expirationDate:    l.expirationDate    || "0001-01-01",
+        })),
+        documents: (req.body.documents || []).map(d => ({
+          name:    d.name    || "",
+          url:     d.url     || "",
+          size:    d.size    || 0,
+          docType: d.docType || "",
         })),
       };
 

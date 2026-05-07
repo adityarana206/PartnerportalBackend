@@ -63,7 +63,6 @@ const generateInvite = async (req, res) => {
     );
 
     const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    // const baseUrl =  "http://localhost:5173";
     const registrationUrl = `${baseUrl}/register?token=${token}`;
 
     return res.status(201).json({
@@ -158,15 +157,14 @@ const createBCUserRegister = async (req, res) => {
       // ─── No partnerNo: create a new registration in BC ────────
       try {
         bcCreateResult = await bcService.createPartnerRegistration(registrationData);
-        console.log("✅ BC createPartnerRegistration succeeded:", bcCreateResult?.regNo);
+        console.log("✅ BC createPartnerRegistration succeeded:", bcCreateResult?.no);
 
-        // Persist the BC-assigned registration number back to local DB
-        if (bcCreateResult?.regNo) {
+        if (bcCreateResult?.no) {
           await pool.query(
             `UPDATE bc_user_registrations SET partner_no = $1, updated_at = NOW() WHERE id = $2`,
-            [bcCreateResult.regNo, local.id]
+            [bcCreateResult.no, local.id]
           );
-          local.partner_no = bcCreateResult.regNo;
+          local.partner_no = bcCreateResult.no;
         }
       } catch (createErr) {
         bcCreateErr = createErr.response?.data || createErr.message;
