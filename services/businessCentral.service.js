@@ -252,6 +252,8 @@ class BusinessCentralService {
 
   // ─── Delivery Staging ──────────────────────────────────
   async createDeliveryStaging(deliveryData) {
+    const toDate = (val) => val ? String(val).split('T')[0] : null;
+
     const bcData = {
       deliveryOrderNo:      deliveryData.deliveryOrderNo      || "",
       deliveryDateTime:     deliveryData.deliveryDateTime     || new Date().toISOString(),
@@ -259,10 +261,10 @@ class BusinessCentralService {
       partnerNo:            deliveryData.partnerNo            || "",
       partnerType:          deliveryData.partnerType          || "",
       direction:            deliveryData.direction            || "Portal_x002D_to_x002D_BC",
-      shipmentDate:         deliveryData.shipmentDate         || new Date().toISOString().split('T')[0],
-      expectedDeliveryDate: deliveryData.expectedDeliveryDate || null,
-      actualDeliveryDate:   deliveryData.actualDeliveryDate   || null,
-      deliveryDate:         deliveryData.actualDeliveryDate   || null,
+      shipmentDate:         toDate(deliveryData.shipmentDate)         || toDate(new Date()),
+      expectedDeliveryDate: toDate(deliveryData.expectedDeliveryDate) || null,
+      actualDeliveryDate:   toDate(deliveryData.actualDeliveryDate)   || null,
+      deliveryDate:         toDate(deliveryData.actualDeliveryDate)   || null,
       locationCode:         deliveryData.locationCode         || "",
       warehouseLocation:    deliveryData.warehouseLocation    || "",
       totalAmount:          deliveryData.totalAmount          || 0,
@@ -277,7 +279,7 @@ class BusinessCentralService {
         lineNo:            line.lineNo            || 0,
         poNo:              line.poNo              || "",
         poLineNo:          line.poLineNo          || 0,
-        poDateTime:        line.poDateTime        || null,
+        poDateTime:        line.poDateTime        ? String(line.poDateTime).split('T')[0] : null,
         poTotalAmount:     line.poTotalAmount     || 0,
         itemNo:            line.itemNo            || "",
         description:       line.description       || "",
@@ -289,7 +291,7 @@ class BusinessCentralService {
         unitOfMeasureCode: line.unitOfMeasureCode || "",
         unitPrice:         line.unitPrice         || 0,
         variantCode:       line.variantCode       || "",
-        expirationDate:    line.expirationDate    || "0001-01-01",
+        expirationDate:    line.expirationDate    ? String(line.expirationDate).split('T')[0] : "0001-01-01",
       })),
       documents: (deliveryData.documents || []).map(d => ({
         name:    d.name    || "",
