@@ -588,22 +588,23 @@ class BusinessCentralService {
       isPrimary:      b.isPrimary      || false,
     }));
 
-    const documents = (data.documents || []).map(d => ({
+    const documents = (data.documents || []).map((d, i) => ({
+      lineNo:  (i + 1) * 10000,
       name:    d.name    || "",
       url:     d.url     || "",
       size:    d.size    || 0,
       docType: d.docType || "",
     }));
 
-    const payload = JSON.stringify({ header, contactLines, bankLines, documents });
+    const payload = JSON.stringify({ header, contactLines, bankLines, partnerRegDocuments: documents });
     const token = await this.getAccessToken();
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${registrationNo}')/Microsoft.NAV.updateRegistration`;
-    const response = await axios.post(url, { payload }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+    const baseRegUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations`;
+    const actionUrl = `${baseRegUrl}('${registrationNo}')/Microsoft.NAV.updateRegistration`;
+
+    const response = await axios.post(actionUrl, { payload }, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
+
     return response.data;
   }
 
@@ -614,6 +615,14 @@ class BusinessCentralService {
 
     const safePostCode = (val) =>
       val && val !== "000000" && val !== "00000" && val !== "0" ? val : "";
+
+    const documents = (data.documents || []).map((d, i) => ({
+      lineNo:  (i + 1) * 10000,
+      name:    d.name    || "",
+      url:     d.url     || "",
+      size:    d.size    || 0,
+      docType: d.docType || "",
+    }));
 
     const bcData = {
       partnerType:            data.partnerType            || "Customer",
@@ -655,24 +664,18 @@ class BusinessCentralService {
         currencyCode:  b.currencyCode  || "",
         isPrimary:     b.isPrimary     || false,
       })),
-      documents: (data.documents || []).map(d => ({
-        name:    d.name    || "",
-        url:     d.url     || "",
-        size:    d.size    || 0,
-        docType: d.docType || "",
-      })),
+      ...(documents.length > 0 ? { partnerRegDocuments: documents } : {}),
     };
 
     const token = await this.getAccessToken();
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines,documents`;
-    
-    const response = await axios.post(url, bcData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const expand = documents.length > 0
+      ? "partnerRegContactLines,partnerRegBankLines,partnerRegDocuments"
+      : "partnerRegContactLines,partnerRegBankLines";
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=${expand}`;
 
+    const response = await axios.post(url, bcData, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
     return response.data;
   }
 
