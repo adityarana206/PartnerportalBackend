@@ -508,23 +508,21 @@ class BusinessCentralService {
     return response.data;
   }
 
-  // ─── Get Partner Registration by No ───────────────────────
-  async getPartnerRegistration(registrationNo) {
+  // ─── Get Partner Registration by no (e.g. VRG-000118) ────────
+  async getPartnerRegistration(no) {
     const token = await this.getAccessToken();
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${registrationNo}')?$expand=partnerRegContactLines,partnerRegBankLines`;
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${no}')?$expand=partnerRegContactLines,partnerRegBankLines`;
     const response = await axios.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
     return response.data;
   }
 
-  // ─── Patch Partner Registration by No ──────────────────
-  async patchPartnerRegistration(registrationNo, etag, data) {
+  // ─── Patch Partner Registration by no ─────────────────────────
+  async patchPartnerRegistration(no, etag, data) {
     const token = await this.getAccessToken();
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${registrationNo}')`;
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${no}')`;
+    console.log("🔍 PATCH URL:", url);
     const response = await axios.patch(url, data, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -535,81 +533,155 @@ class BusinessCentralService {
     return response.data;
   }
 
-  // ─── Update Registration Action ────────────────────────
-  async updateRegistration(registrationNo, data) {
-    const header = {
+  // ─── Update Registration: PATCH directly using registration no ─
+  async updateRegistration(no, data) {
+    const safeCountryCode = (val) =>
+      val && /^[A-Z]{2}$/i.test(val.trim()) ? val.trim().toUpperCase() : "";
+    const safePostCode = (val) =>
+      val && val !== "000000" && val !== "00000" && val !== "0" ? val : "";
+
+    const updateData = {
       partnerType:            data.partnerType            || "",
-      businessJustification:  data.businessJustification  || "",
-      name:                   data.name                   || "",
-      name2:                  data.name2                  || "",
-      address:                data.address                || "",
-      address2:               data.address2               || "",
-      city:                   data.city                   || "",
-      postCode:               data.postCode               || "",
-      countryRegionCode:      data.countryRegionCode      || "",
-      phoneNo:                data.phoneNo                || "",
-      email:                  data.email                  || "",
-      vatRegistrationNo:      data.vatRegistrationNo      || "",
-      currencyCode:           data.currencyCode           || "",
-      paymentTermsCode:       data.paymentTermsCode       || "",
-      paymentMethodCode:      data.paymentMethodCode      || "",
-      partnerPostingGroup:    data.partnerPostingGroup     || "",
-      genBusPostingGroup:     data.genBusPostingGroup      || "",
-      vatBusPostingGroup:     data.vatBusPostingGroup      || "",
-      partnerEmail:           data.partnerEmail           || "",
       tradeName:              data.tradeName              || "",
+      partnerEmail:           data.partnerEmail           || "",
       tradeLicenseNumber:     data.tradeLicenseNumber     || "",
       tradeLicenseExpiryDate: data.tradeLicenseExpiryDate || "0001-01-01",
       companyRegNumber:       data.companyRegNumber       || "",
       entityType:             sanitizeEntityType(data.entityType),
-      countryOfIncorporation: data.countryOfIncorporation || "",
+      countryOfIncorporation: safeCountryCode(data.countryOfIncorporation),
       placeOfRegistration:    data.placeOfRegistration    || "",
       website:                data.website                || "",
+      phoneNo:                data.phoneNo                || "",
+      address:                data.address                || "",
+      address2:               data.address2               || "",
+      city:                   data.city                   || "",
+      postCode:               safePostCode(data.postCode),
+      countryRegionCode:      safeCountryCode(data.countryRegionCode),
+      vatRegistrationNo:      data.vatRegistrationNo      || "",
+      currencyCode:           data.currencyCode           || "",
+      paymentMethodCode:      data.paymentMethodCode      || "",
+      paymentTermsCode:       data.paymentTermsCode       || "",
       partnerCategory:        data.partnerCategory        || "",
     };
 
-    const contactLines = (data.partnerRegContactLines || []).map((c, i) => ({
-      lineNo:       c.lineNo       || (i + 1) * 10000,
-      fullName:     c.fullName     || "",
-      designation:  c.designation  || "",
-      mobileNumber: c.mobileNumber || "",
-      emailAddress: c.emailAddress || "",
-    }));
+    return await this.patchPartnerRegistration(no, "*", updateData);
+  }
 
-    const bankLines = (data.partnerRegBankLines || []).map((b, i) => ({
-      lineNo:         b.lineNo         || (i + 1) * 10000,
-      bankCode:       b.bankCode       || "",
-      name:           b.name           || "",
-      bankBranchNo:   b.bankBranchNo   || "",
-      bankAccountNo:  b.bankAccountNo  || "",
-      iban:           b.iban           || "",
-      swiftCode:      b.swiftCode      || "",
-      currencyCode:   b.currencyCode   || "",
-      isPrimary:      b.isPrimary      || false,
-    }));
-
-    const documents = (data.documents || []).map((d, i) => ({
-      lineNo:  (i + 1) * 10000,
-      name:    d.name    || "",
-      url:     d.url     || "",
-      size:    d.size    || 0,
-      docType: d.docType || "",
-    }));
-
-    const payload = JSON.stringify({ header, contactLines, bankLines, partnerRegDocuments: documents });
+  // ─── Post Documents/Contacts/Banks for Registration ─────────────────────
+  async postDocumentsForRegistration(regNo, documents, contacts, banks) {
     const token = await this.getAccessToken();
-    const baseRegUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations`;
-    const actionUrl = `${baseRegUrl}('${registrationNo}')/Microsoft.NAV.updateRegistration`;
-
-    const response = await axios.post(actionUrl, { payload }, {
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    });
-
-    return response.data;
+    
+    console.log("📎 Attempting to PATCH for:", regNo);
+    console.log("   Documents:", documents?.length || 0);
+    console.log("   Contacts:", contacts?.length || 0);
+    console.log("   Banks:", banks?.length || 0);
+    
+    const results = { contacts: null, banks: null, documents: [] };
+    
+    // ─── PATCH contacts and banks together ───
+    const patchPayload = {};
+    
+    if (contacts && contacts.length > 0) {
+      patchPayload.partnerRegContactLines = contacts.map((c, i) => ({
+        lineNo: c.lineNo || (i + 1) * 10000,
+        fullName: c.fullName || "",
+        designation: c.designation || "",
+        mobileNumber: c.mobileNumber || "",
+        emailAddress: c.emailAddress || "",
+      }));
+    }
+    
+    if (banks && banks.length > 0) {
+      patchPayload.partnerRegBankLines = banks.map((b, i) => ({
+        lineNo: b.lineNo || (i + 1) * 10000,
+        bankCode: b.bankCode || "",
+        name: b.name || "",
+        bankBranchNo: b.bankBranchNo || "",
+        bankAccountNo: b.bankAccountNo || "",
+        iban: b.iban || "",
+        swiftCode: b.swiftCode || "",
+        currencyCode: b.currencyCode || "",
+        isPrimary: b.isPrimary || false,
+      }));
+    }
+    
+    if (Object.keys(patchPayload).length > 0) {
+      console.log("📋 PATCH payload (contacts/banks):", JSON.stringify(patchPayload, null, 2));
+      
+      try {
+        const expandParams = [];
+        if (patchPayload.partnerRegContactLines) expandParams.push('partnerRegContactLines');
+        if (patchPayload.partnerRegBankLines) expandParams.push('partnerRegBankLines');
+        
+        const patchUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${regNo}')?$expand=${expandParams.join(',')}`;
+        console.log("🔗 PATCH URL:", patchUrl);
+        
+        const response = await axios.patch(patchUrl, patchPayload, {
+          headers: { 
+            Authorization: `Bearer ${token}`, 
+            "Content-Type": "application/json",
+            "If-Match": "*"
+          },
+        });
+        
+        console.log("✅ Contacts/Banks PATCH successful:", response.status);
+        results.contacts = patchPayload.partnerRegContactLines ? 'success' : null;
+        results.banks = patchPayload.partnerRegBankLines ? 'success' : null;
+      } catch (patchErr) {
+        console.error("❌ Contacts/Banks PATCH failed:");
+        console.error("   Status:", patchErr.response?.status);
+        console.error("   Data:", JSON.stringify(patchErr.response?.data, null, 2));
+        results.contacts = patchPayload.partnerRegContactLines ? 'failed' : null;
+        results.banks = patchPayload.partnerRegBankLines ? 'failed' : null;
+      }
+    }
+    
+    // ─── POST documents individually ───
+    if (documents && documents.length > 0) {
+      console.log("📄 Posting", documents.length, "documents individually...");
+      
+      for (let i = 0; i < documents.length; i++) {
+        const doc = documents[i];
+        const timestamp = Date.now();
+        const uniqueName = `${regNo}_${i + 1}_${timestamp}_${doc.name}`;
+        
+        const docPayload = {
+          regNo: regNo,
+          name: uniqueName,
+          url: doc.url || "",
+          size: doc.size || 0,
+        };
+        
+        console.log(`📄 Posting document ${i + 1}/${documents.length}:`, uniqueName);
+        
+        try {
+          const docUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/documents`;
+          
+          const response = await axios.post(docUrl, docPayload, {
+            headers: { 
+              Authorization: `Bearer ${token}`, 
+              "Content-Type": "application/json"
+            },
+          });
+          
+          console.log(`✅ Document ${i + 1} posted successfully:`, response.status);
+          results.documents.push({ name: uniqueName, originalName: doc.name, status: 'success' });
+        } catch (docErr) {
+          console.error(`❌ Document ${i + 1} failed:`, uniqueName);
+          console.error("   Status:", docErr.response?.status);
+          console.error("   Error:", JSON.stringify(docErr.response?.data, null, 2));
+          results.documents.push({ name: uniqueName, originalName: doc.name, status: 'failed', error: docErr.response?.data });
+        }
+      }
+    }
+    
+    return { success: true, results };
   }
 
   // ─── Partner Registration ──────────────────────────────
   async createPartnerRegistration(data) {
+    console.log("🔍 createPartnerRegistration called with documents:", data.documents?.length || 0);
+    
     const safeCountryCode = (val) =>
       val && /^[A-Z]{2}$/i.test(val.trim()) ? val.trim().toUpperCase() : "";
 
@@ -621,11 +693,18 @@ class BusinessCentralService {
       name:    d.name    || "",
       url:     d.url     || "",
       size:    d.size    || 0,
-      docType: d.docType || "",
     }));
 
+    console.log("📋 Processed documents array:", JSON.stringify(documents, null, 2));
+
     const bcData = {
-      partnerType:            data.partnerType            || "Customer",
+      no:                     data.partnerNo             || "",
+      regType:                data.regType               || "Create",
+      scope:                  data.scope                 || "Current_x0020_Company",
+      status:                 data.status                || "Draft",
+      partnerType:            data.partnerType           || "Customer",
+      name:                   data.name                  || data.tradeName || "",
+      name2:                  data.name2                 || "",
       tradeName:              data.tradeName             || "",
       partnerEmail:           data.partnerEmail          || "",
       tradeLicenseNumber:     data.tradeLicenseNumber    || "",
@@ -664,19 +743,23 @@ class BusinessCentralService {
         currencyCode:  b.currencyCode  || "",
         isPrimary:     b.isPrimary     || false,
       })),
-      ...(documents.length > 0 ? { partnerRegDocuments: documents } : {}),
+      documents: documents,
     };
 
     const token = await this.getAccessToken();
-    const expand = documents.length > 0
-      ? "partnerRegContactLines,partnerRegBankLines,partnerRegDocuments"
-      : "partnerRegContactLines,partnerRegBankLines";
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/registration/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=${expand}`;
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines,documents`;
+    console.log("🔍 POST URL:", url);
+    console.log("🔍 Documents in bcData:", documents.length);
 
     const response = await axios.post(url, bcData, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
-    return response.data;
+    
+    const createdReg = response.data;
+    console.log("✅ Registration created:", createdReg.no);
+    console.log("✅ Registration response includes documents:", !!createdReg.documents);
+
+    return createdReg;
   }
 
   // ─── Post Codes ─────────────────────────────────────────
