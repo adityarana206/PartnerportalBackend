@@ -345,19 +345,20 @@ class BusinessCentralService {
   // ─── Partner Messages ──────────────────────────────────
   async createMessage(messageData) {
     const bcData = {
-      threadId: messageData.threadId || "",
-      documentType: messageData.documentType || "",
-      category: messageData.category || "General",
-      linkedDocType: messageData.linkedDocType || "",
-      linkedDocNo: messageData.linkedDocNo || "",
-      senderType: messageData.senderType || "",
-      senderId: messageData.senderId || "",
-      senderName: messageData.senderName || "",
-      messageText: messageData.messageText || "",
-      changeDetails: messageData.changeDetails || "",
+      threadId:         messageData.threadId        || "",
+      documentType:     messageData.documentType    || "",
+      category:         messageData.category        || "General",
+      linkedDocType:    messageData.linkedDocType   || "",
+      linkedDocNo:      messageData.linkedDocNo     || "",
+      senderType:       messageData.senderType      || "",
+      PartnerType:      messageData.PartnerType     || messageData.partnerType || "",
+      senderId:         messageData.senderId        || "",
+      senderName:       messageData.senderName      || "",
+      messageText:      messageData.messageText     || "",
+      changeDetails:    messageData.changeDetails   || "",
       messageTimestamp: messageData.messageTimestamp || new Date().toISOString(),
-      direction: messageData.direction || "Portal-to-BC",
-      status: messageData.status || "Created",
+      direction:        messageData.direction       || "Portal-to-BC",
+      status:           messageData.status          || "Created",
     };
 
     return await this.callAPI("messages", "POST", bcData);

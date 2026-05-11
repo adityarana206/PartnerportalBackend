@@ -40,6 +40,7 @@ const PostCodeRoutes = require("./routes/postCode.routes");
 const MessageStagingRoutes = require("./routes/messageStaging.routes");
 const SharePointRoutes = require("./routes/sharepoint.routes");
 const PurchaseItemRequestRoutes = require("./routes/purchaseItemRequest.routes");
+const ComplaintRoutes = require("./routes/complaint.routes");
 const app = express();
 
 /* =======================
@@ -116,6 +117,7 @@ app.use("/api/post-codes", PostCodeRoutes);
 app.use("/api/messages", MessageStagingRoutes);
 app.use("/api/sharepoint", SharePointRoutes);
 app.use("/api/purchase-item-requests", PurchaseItemRequestRoutes);
+app.use("/api/complaints", ComplaintRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */
