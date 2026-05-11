@@ -35,8 +35,8 @@ const createComplaint = async (req, res) => {
     const data = {
       ...req.body,
       threadId,
-      senderId:   user.organizationId || req.body.senderId || null,
-      senderName: user.contact_name || user.name || req.body.senderName || null,
+      senderId:   user.refNo || req.body.senderId || null,
+      senderName: user.name || req.body.senderName || null,
       partnerType,
     };
 
