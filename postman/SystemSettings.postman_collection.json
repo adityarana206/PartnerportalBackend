@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "System Settings API",
+    "description": "API endpoints for managing theme colors and company logo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get System Settings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/system-settings",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "system-settings"]
+        },
+        "description": "Get current theme colors and logo (public access)"
+      }
+    },
+    {
+      "name": "Update Theme Colors",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{superAdminToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"primary\": \"#2196f3\",\n  \"secondary\": \"#f50057\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/system-settings/theme",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "system-settings", "theme"]
+        },
+        "description": "Update primary and secondary theme colors (super admin only)"
+      }
+    },
+    {
+      "name": "Upload Company Logo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{superAdminToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "logo",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/system-settings/logo",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "system-settings", "logo"]
+        },
+        "description": "Upload or replace company logo (super admin only)"
+      }
+    },
+    {
+      "name": "Delete Company Logo",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{superAdminToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/system-settings/logo",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "system-settings", "logo"]
+        },
+        "description": "Remove company logo (super admin only)"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "superAdminToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -41,6 +41,7 @@ const MessageStagingRoutes = require("./routes/messageStaging.routes");
 const SharePointRoutes = require("./routes/sharepoint.routes");
 const PurchaseItemRequestRoutes = require("./routes/purchaseItemRequest.routes");
 const ComplaintRoutes = require("./routes/complaint.routes");
+const SystemSettingsRoutes = require("./routes/systemSettings.routes");
 const app = express();
 
 /* =======================
@@ -118,6 +119,7 @@ app.use("/api/messages", MessageStagingRoutes);
 app.use("/api/sharepoint", SharePointRoutes);
 app.use("/api/purchase-item-requests", PurchaseItemRequestRoutes);
 app.use("/api/complaints", ComplaintRoutes);
+app.use("/api/system-settings", SystemSettingsRoutes);
 /* =======================
    Route Listing API (DEV ONLY)
 ======================= */
