@@ -89,6 +89,12 @@ const Complaint = {
     let bcSynced = false;
     let bcError = null;
     try {
+      // Ensure partnerType is valid (Vendor or Customer), default to Vendor
+      let partnerType = complaint.partner_type?.trim();
+      if (!partnerType || !["Vendor", "Customer"].includes(partnerType)) {
+        partnerType = "Vendor";
+      }
+
       await bcService.createMessage({
         threadId:         complaint.thread_id,
         documentType:     complaint.document_type,
@@ -96,7 +102,7 @@ const Complaint = {
         linkedDocType:    complaint.linked_doc_type  || "",
         linkedDocNo:      complaint.linked_doc_no    || "",
         senderType:       complaint.sender_type,
-        PartnerType:      complaint.partner_type     || "",
+        PartnerType:      partnerType,
         senderId:         complaint.sender_id,
         senderName:       complaint.sender_name      || "",
         messageText:      complaint.message_text     || "",

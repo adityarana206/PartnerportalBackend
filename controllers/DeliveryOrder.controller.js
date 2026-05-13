@@ -28,7 +28,9 @@ const createDeliveryOrder = async (req, res) => {
         threadId: `DO-${order.delivery_order_no}`,
         documentType: "Message", category: "General",
         linkedDocType: "Delivery Order", linkedDocNo: order.delivery_order_no,
-        senderType: "Company", senderId: order.partner_no,
+        senderType: "Company", 
+        partnerType: order.partner_type || "Vendor",  // Add partnerType
+        senderId: order.partner_no,
         messageText: `Delivery Order ${order.delivery_order_no} has been created successfully.`,
         direction: "BC-to-Portal", status: "Sent",
       });
@@ -64,6 +66,7 @@ const createDeliveryOrder = async (req, res) => {
         direction:            "Portal-to-BC",
         shipmentDate:         req.body.shipmentDate          ? req.body.shipmentDate.split('T')[0] : new Date().toISOString().split('T')[0],
         expectedDeliveryDate: req.body.expectedDeliveryDate && req.body.expectedDeliveryDate !== '' ? req.body.expectedDeliveryDate.split('T')[0] : null,
+        actualDeliveryDate:   req.body.actualDeliveryDate && req.body.actualDeliveryDate !== '' ? req.body.actualDeliveryDate.split('T')[0] : null,
         status:               "Inserted",
         locationCode:         req.body.locationCode          || "",
         warehouseLocation:    req.body.warehouseLocation     || "",
@@ -205,6 +208,7 @@ const reprocessDeliveryOrder = async (req, res) => {
       direction:            "Portal-to-BC",
       shipmentDate:         order.shipment_date        ? String(order.shipment_date).split('T')[0] : new Date().toISOString().split('T')[0],
       expectedDeliveryDate: order.expected_delivery_date ? String(order.expected_delivery_date).split('T')[0] : null,
+      actualDeliveryDate:   order.actual_delivery_date ? String(order.actual_delivery_date).split('T')[0] : null,
       status:               "Inserted",
       locationCode:         order.location_code         || "",
       warehouseLocation:    order.warehouse_location    || "",

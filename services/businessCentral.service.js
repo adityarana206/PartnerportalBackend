@@ -262,6 +262,7 @@ class BusinessCentralService {
       direction:            "Portal_x002D_to_x002D_BC",
       shipmentDate:         toDate(deliveryData.shipmentDate) || new Date().toISOString().split('T')[0],
       expectedDeliveryDate: toDate(deliveryData.expectedDeliveryDate) || "0001-01-01",
+      actualDeliveryDate:   toDate(deliveryData.actualDeliveryDate)   || "0001-01-01",
       deliveryDateTime:     deliveryData.deliveryDateTime     || "0001-01-01T00:00:00Z",
       linkedOrderNo:        deliveryData.linkedOrderNo        || "",
       shipmentNo:           deliveryData.shipmentNo           || "",

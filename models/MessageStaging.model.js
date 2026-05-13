@@ -3,6 +3,7 @@ const { pool } = require("../config/db");
 const VALID_DOCUMENT_TYPES = [" ", "Message", "Return Request", "Amendment Request", "Concern"];
 const VALID_CATEGORIES = [" ", "General", "Pricing Dispute", "Quality Issue", "Delivery Concern", "Invoice Dispute", "Return Request", "Amendment Request", "Credit Request"];
 const VALID_SENDER_TYPES = [" ", "Partner", "Company"];
+const VALID_PARTNER_TYPES = [" ", "Vendor", "Customer"];
 const VALID_DIRECTIONS = [" ", "Portal-to-BC", "BC-to-Portal"];
 const VALID_STATUSES = [" ", "Sent", "Delivered", "Read", "Open", "In Progress", "Resolved", "Closed", "Escalated"];
 
@@ -10,6 +11,7 @@ const MessageStaging = {
   VALID_DOCUMENT_TYPES,
   VALID_CATEGORIES,
   VALID_SENDER_TYPES,
+  VALID_PARTNER_TYPES,
   VALID_DIRECTIONS,
   VALID_STATUSES,
 
@@ -17,9 +19,9 @@ const MessageStaging = {
     const result = await pool.query(
       `INSERT INTO message_staging (
         thread_id, document_type, category, linked_doc_type, linked_doc_no,
-        sender_type, sender_id, sender_name, message_text, change_details,
+        sender_type, partner_type, sender_id, sender_name, message_text, change_details,
         message_timestamp, direction, status
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
       [
         data.threadId || null,
         data.documentType || " ",
@@ -27,6 +29,7 @@ const MessageStaging = {
         data.linkedDocType || null,
         data.linkedDocNo || null,
         data.senderType || " ",
+        data.partnerType || "Vendor",
         data.senderId || null,
         data.senderName || null,
         data.messageText || null,
@@ -86,6 +89,12 @@ const MessageStaging = {
     let bcSynced = false;
     let bcError  = null;
     try {
+      // Ensure partnerType is valid (Vendor or Customer), default to Vendor
+      let partnerType = msg.partner_type?.trim();
+      if (!partnerType || !["Vendor", "Customer"].includes(partnerType)) {
+        partnerType = "Vendor";
+      }
+
       await bcService.createMessage({
         threadId:         msg.thread_id,
         documentType:     msg.document_type,
@@ -93,6 +102,7 @@ const MessageStaging = {
         linkedDocType:    msg.linked_doc_type  || "",
         linkedDocNo:      msg.linked_doc_no    || "",
         senderType:       msg.sender_type,
+        PartnerType:      partnerType,
         senderId:         msg.sender_id,
         senderName:       msg.sender_name      || "",
         messageText:      msg.message_text     || "",

@@ -28,9 +28,16 @@ const createComplaint = async (req, res) => {
     const threadId = await NoSeries.getNextNumberByCode("COMP");
     const user = req.user || {};
     const role = user.role || "";
-    const partnerType = role.toLowerCase().includes("vendor") ? "Vendor"
-                      : role.toLowerCase().includes("customer") ? "Customer"
-                      : req.body.partnerType || " ";
+    
+    // Determine partnerType from role or body, default to "Vendor" if not determinable
+    let partnerType = "Vendor"; // Default fallback
+    if (role.toLowerCase().includes("customer")) {
+      partnerType = "Customer";
+    } else if (role.toLowerCase().includes("vendor")) {
+      partnerType = "Vendor";
+    } else if (req.body.partnerType && ["Vendor", "Customer"].includes(req.body.partnerType)) {
+      partnerType = req.body.partnerType;
+    }
 
     const data = {
       ...req.body,
