@@ -716,22 +716,11 @@ class BusinessCentralService {
 
   // ─── Partner Registration ──────────────────────────────
   async createPartnerRegistration(data) {
-    console.log("🔍 createPartnerRegistration called with documents:", data.documents?.length || 0);
-    
     const safeCountryCode = (val) =>
       val && /^[A-Z]{2}$/i.test(val.trim()) ? val.trim().toUpperCase() : "";
 
     const safePostCode = (val) =>
       val && val !== "000000" && val !== "00000" && val !== "0" ? val : "";
-
-    const documents = (data.documents || []).map((d, i) => ({
-      lineNo:  (i + 1) * 10000,
-      name:    d.name    || "",
-      url:     d.url     || "",
-      size:    d.size    || 0,
-    }));
-
-    console.log("📋 Processed documents array:", JSON.stringify(documents, null, 2));
 
     const bcData = {
       no:                     data.partnerNo             || "",
@@ -779,21 +768,17 @@ class BusinessCentralService {
         currencyCode:  b.currencyCode  || "",
         isPrimary:     b.isPrimary     || false,
       })),
-      documents: documents,
     };
 
     const token = await this.getAccessToken();
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines,documents`;
-    console.log("🔍 POST URL:", url);
-    console.log("🔍 Documents in bcData:", documents.length);
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations?$expand=partnerRegContactLines,partnerRegBankLines`;
 
     const response = await axios.post(url, bcData, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
-    
+
     const createdReg = response.data;
     console.log("✅ Registration created:", createdReg.no);
-    console.log("✅ Registration response includes documents:", !!createdReg.documents);
 
     return createdReg;
   }

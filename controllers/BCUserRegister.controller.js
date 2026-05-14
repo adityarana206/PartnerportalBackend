@@ -147,109 +147,56 @@ const createBCUserRegister = async (req, res) => {
       throw new Error("Local DB save failed");
     }
 
-    let bcPatchResult = null;
-    let bcPatchErr = null;
-    let bcUpdateResult = null;
-    let bcUpdateErr = null;
-    let bcCreateResult = null;
-    let bcCreateErr = null;
+    let bcResult = null;
+    let bcErr = null;
 
     const isUpdate = invite.reg_type === "update";
 
     if (partnerNo) {
-      // ─── Check if registration exists in BC ───
-      let existsInBC = false;
+      // ─── PATCH existing registration: fields + contacts + banks in one call ───
       try {
-        await bcService.getPartnerRegistration(partnerNo);
-        existsInBC = true;
-        console.log("✅ Registration exists in BC:", partnerNo);
-      } catch (getErr) {
-        if (getErr.response?.status === 404) {
-          console.log("ℹ️  Registration not found in BC, will create:", partnerNo);
-        } else {
-          console.error("⚠️  Error checking BC registration:", getErr.response?.data || getErr.message);
-        }
+        bcResult = await bcService.updateRegistration(partnerNo, registrationData);
+        console.log("✅ BC updateRegistration succeeded for:", partnerNo);
+      } catch (updateErr) {
+        bcErr = updateErr.response?.data || updateErr.message;
+        console.error("⚠️  BC updateRegistration failed:", bcErr);
       }
 
-      if (existsInBC) {
-        // ─── PATCH existing registration ───
+      // ─── POST documents separately ───
+      if (registrationData.documents?.length > 0) {
         try {
-          bcPatchResult = await bcService.patchPartnerRegistration(partnerNo, "*", { status: "Draft" });
-          console.log("✅ BC PATCH status succeeded for:", partnerNo);
-        } catch (patchErr) {
-          bcPatchErr = patchErr.response?.data || patchErr.message;
-          console.error("⚠️  BC PATCH failed:", bcPatchErr);
-        }
-
-        try {
-          bcUpdateResult = await bcService.updateRegistration(partnerNo, registrationData);
-          console.log("✅ BC updateRegistration succeeded for:", partnerNo);
-        } catch (updateErr) {
-          bcUpdateErr = updateErr.response?.data || updateErr.message;
-          console.error("⚠️  BC updateRegistration failed:", bcUpdateErr);
-        }
-
-        // ─── POST documents/contacts/banks for existing registration ───
-        const hasDocuments = registrationData.documents && registrationData.documents.length > 0;
-        const hasContacts = registrationData.partnerRegContactLines && registrationData.partnerRegContactLines.length > 0;
-        const hasBanks = registrationData.partnerRegBankLines && registrationData.partnerRegBankLines.length > 0;
-        
-        if (hasDocuments || hasContacts || hasBanks) {
-          console.log("📎 Posting for existing registration:", partnerNo);
-          console.log("   Documents:", registrationData.documents?.length || 0);
-          console.log("   Contacts:", registrationData.partnerRegContactLines?.length || 0);
-          console.log("   Banks:", registrationData.partnerRegBankLines?.length || 0);
-          try {
-            await bcService.postDocumentsForRegistration(
-              partnerNo, 
-              registrationData.documents,
-              registrationData.partnerRegContactLines,
-              registrationData.partnerRegBankLines
-            );
-            console.log("✅ Documents/contacts/banks posted successfully for:", partnerNo);
-          } catch (docErr) {
-            console.error("⚠️  Failed to post documents/contacts/banks:", docErr.response?.data || docErr.message);
-          }
-        }
-      } else {
-        // ─── POST to create new registration ───
-        console.log("🆕 About to call createPartnerRegistration");
-        console.log("🆕 registrationData has documents:", !!registrationData.documents);
-        console.log("🆕 registrationData.documents length:", registrationData.documents?.length || 0);
-        
-        try {
-          bcCreateResult = await bcService.createPartnerRegistration(registrationData);
-          console.log("✅ BC createPartnerRegistration succeeded:", bcCreateResult?.no);
-
-          if (bcCreateResult?.no) {
-            await pool.query(
-              `UPDATE bc_user_registrations SET partner_no = $1, updated_at = NOW() WHERE id = $2`,
-              [bcCreateResult.no, local.id]
-            );
-            local.partner_no = bcCreateResult.no;
-          }
-        } catch (createErr) {
-          bcCreateErr = createErr.response?.data || createErr.message;
-          console.error("⚠️  BC createPartnerRegistration failed:", bcCreateErr);
+          await bcService.postDocumentsForRegistration(partnerNo, registrationData.documents, [], []);
+          console.log("✅ Documents posted for:", partnerNo);
+        } catch (docErr) {
+          console.error("⚠️  Failed to post documents:", docErr.response?.data || docErr.message);
         }
       }
     } else {
-      // ─── No partnerNo: create new registration without a pre-assigned no ───
-      console.log("🆕 No partnerNo on invite, creating new registration in BC");
+      // ─── No partnerNo: create new registration ───
       try {
-        bcCreateResult = await bcService.createPartnerRegistration(registrationData);
-        console.log("✅ BC createPartnerRegistration (no partnerNo) succeeded:", bcCreateResult?.no);
+        bcResult = await bcService.createPartnerRegistration(registrationData);
+        console.log("✅ BC createPartnerRegistration succeeded:", bcResult?.no);
 
-        if (bcCreateResult?.no) {
+        if (bcResult?.no) {
           await pool.query(
             `UPDATE bc_user_registrations SET partner_no = $1, updated_at = NOW() WHERE id = $2`,
-            [bcCreateResult.no, local.id]
+            [bcResult.no, local.id]
           );
-          local.partner_no = bcCreateResult.no;
+          local.partner_no = bcResult.no;
+
+          // ─── POST documents separately ───
+          if (registrationData.documents?.length > 0) {
+            try {
+              await bcService.postDocumentsForRegistration(bcResult.no, registrationData.documents, [], []);
+              console.log("✅ Documents posted for:", bcResult.no);
+            } catch (docErr) {
+              console.error("⚠️  Failed to post documents:", docErr.response?.data || docErr.message);
+            }
+          }
         }
       } catch (createErr) {
-        bcCreateErr = createErr.response?.data || createErr.message;
-        console.error("⚠️  BC createPartnerRegistration failed:", bcCreateErr);
+        bcErr = createErr.response?.data || createErr.message;
+        console.error("⚠️  BC createPartnerRegistration failed:", bcErr);
       }
     }
 
@@ -261,14 +208,8 @@ const createBCUserRegister = async (req, res) => {
       message: isUpdate ? "Details updated successfully" : "Registration submitted successfully",
       data: local,
       businessCentral: {
-        synced: !!(bcPatchResult || bcUpdateResult || bcCreateResult),
-        ...(bcCreateResult
-          ? { create: { success: true, response: bcCreateResult, error: null } }
-          : {
-              patch:  { success: !!bcPatchResult,  response: bcPatchResult,  error: bcPatchErr },
-              update: { success: !!bcUpdateResult, response: bcUpdateResult, error: bcUpdateErr },
-            }
-        ),
+        synced: !!bcResult,
+        result: { success: !!bcResult, response: bcResult, error: bcErr },
       },
     });
   } catch (error) {
