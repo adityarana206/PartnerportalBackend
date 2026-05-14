@@ -234,7 +234,23 @@ const createBCUserRegister = async (req, res) => {
         }
       }
     } else {
-      console.warn("⚠️  No partnerNo provided, skipping BC sync");
+      // ─── No partnerNo: create new registration without a pre-assigned no ───
+      console.log("🆕 No partnerNo on invite, creating new registration in BC");
+      try {
+        bcCreateResult = await bcService.createPartnerRegistration(registrationData);
+        console.log("✅ BC createPartnerRegistration (no partnerNo) succeeded:", bcCreateResult?.no);
+
+        if (bcCreateResult?.no) {
+          await pool.query(
+            `UPDATE bc_user_registrations SET partner_no = $1, updated_at = NOW() WHERE id = $2`,
+            [bcCreateResult.no, local.id]
+          );
+          local.partner_no = bcCreateResult.no;
+        }
+      } catch (createErr) {
+        bcCreateErr = createErr.response?.data || createErr.message;
+        console.error("⚠️  BC createPartnerRegistration failed:", bcCreateErr);
+      }
     }
 
     // Mark token as used

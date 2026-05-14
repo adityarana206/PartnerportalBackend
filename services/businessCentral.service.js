@@ -566,7 +566,41 @@ class BusinessCentralService {
       partnerCategory:        data.partnerCategory        || "",
     };
 
-    return await this.patchPartnerRegistration(no, "*", updateData);
+    updateData.partnerRegContactLines = (data.partnerRegContactLines || []).map((c, i) => ({
+      lineNo:       c.lineNo       || (i + 1) * 10000,
+      fullName:     c.fullName     || "",
+      designation:  c.designation  || "",
+      mobileNumber: c.mobileNumber || "",
+      emailAddress: c.emailAddress || "",
+    }));
+
+    if (data.partnerRegBankLines && data.partnerRegBankLines.length > 0) {
+      updateData.partnerRegBankLines = data.partnerRegBankLines.map((b, i) => ({
+        lineNo:        b.lineNo        || (i + 1) * 10000,
+        bankCode:      b.bankCode      || "",
+        name:          b.name          || "",
+        bankBranchNo:  b.bankBranchNo  || "",
+        bankAccountNo: b.bankAccountNo || "",
+        iban:          b.iban          || "",
+        swiftCode:     b.swiftCode     || "",
+        currencyCode:  b.currencyCode  || "",
+        isPrimary:     b.isPrimary     || false,
+      }));
+    }
+
+    const expandParams = ["partnerRegContactLines"];
+    if (updateData.partnerRegBankLines) expandParams.push("partnerRegBankLines");
+
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${no}')?$expand=${expandParams.join(",")}`;
+    const response = await axios.patch(url, updateData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "If-Match": "*",
+      },
+    });
+    return response.data;
   }
 
   // ─── Post Documents/Contacts/Banks for Registration ─────────────────────
