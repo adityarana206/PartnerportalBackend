@@ -1,0 +1,477 @@
+{
+  "info": {
+    "name": "Partner Portal — Items API",
+    "description": "All endpoints for /api/vendor/item. Set {{base_url}} = http://localhost:3000 and {{token}} = your JWT access token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.1",
+    "generated_date": "2026-05-18"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "token",    "value": "YOUR_JWT_TOKEN_HERE" },
+    { "key": "item_id",  "value": "1" },
+    { "key": "partner_no",        "value": "VEN000001" },
+    { "key": "partner_portal_no", "value": "PORTAL000001" },
+    { "key": "batch_no",          "value": "BATCH000001" }
+  ],
+  "item": [
+
+    {
+      "name": "READ",
+      "item": [
+
+        {
+          "name": "Get All Item Requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item"]
+            },
+            "description": "Returns all item requests. Optionally filter by ?status=Created|Pending|Approved|Rejected or ?partnerNo=VEN000001"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"count\": 1,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"partner_portal_no\": \"PORTAL000001\",\n      \"partner_no\": \"VEN000001\",\n      \"batch_no\": \"BATCH000001\",\n      \"variant_code\": null,\n      \"item_name\": \"Arabic Coffee\",\n      \"description\": \"Premium Arabic Coffee Blend\",\n      \"item_category_code\": \"COFFEE\",\n      \"base_unit_of_measure\": \"KG\",\n      \"net_weight\": \"1.5000\",\n      \"gross_weight\": \"1.6000\",\n      \"vendor_item_no\": \"V-ITEM-001\",\n      \"gen_prod_posting_group\": \"DOMESTIC\",\n      \"vat_prod_posting_group\": \"VAT5\",\n      \"unit_price\": \"25.5000\",\n      \"price_currency_code\": \"AED\",\n      \"block\": false,\n      \"status\": \"Created\",\n      \"rejection_reason\": null,\n      \"created_at\": \"2026-05-18T00:00:00.000Z\",\n      \"updated_at\": \"2026-05-18T00:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Get All Item Requests — Filter by Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item?status=Approved",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item"],
+              "query": [{ "key": "status", "value": "Approved" }]
+            }
+          }
+        },
+
+        {
+          "name": "Get All Item Requests — Filter by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item?partnerNo={{partner_no}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item"],
+              "query": [{ "key": "partnerNo", "value": "{{partner_no}}" }]
+            }
+          }
+        },
+
+        {
+          "name": "Get Item Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/{{item_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "{{item_id}}"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 1, \"item_name\": \"Arabic Coffee\", \"vendor_item_no\": \"V-ITEM-001\", \"gen_prod_posting_group\": \"DOMESTIC\", \"vat_prod_posting_group\": \"VAT5\", \"status\": \"Created\" }\n}"
+            },
+            {
+              "name": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Item request not found\"\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Get Items by Partner No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/partner/{{partner_no}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "partner", "{{partner_no}}"]
+            }
+          }
+        },
+
+        {
+          "name": "Get Items by Partner Portal No",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/portal/{{partner_portal_no}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "portal", "{{partner_portal_no}}"]
+            }
+          }
+        },
+
+        {
+          "name": "Get Item by Composite Key",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/key/{{partner_portal_no}}/{{partner_no}}/{{batch_no}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "key", "{{partner_portal_no}}", "{{partner_no}}", "{{batch_no}}"]
+            },
+            "description": "Look up a single item by its three-part key: partnerPortalNo + partnerNo + batchNo"
+          }
+        },
+
+        {
+          "name": "Get Unit of Measures",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/unit-of-measures",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "unit-of-measures"]
+            }
+          }
+        },
+
+        {
+          "name": "Download Import Template (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/import/template?format=csv",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "import", "template"],
+              "query": [{ "key": "format", "value": "csv" }]
+            }
+          }
+        },
+
+        {
+          "name": "Download Import Template (Excel)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/import/template?format=xlsx",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "import", "template"],
+              "query": [{ "key": "format", "value": "xlsx" }]
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "CREATE",
+      "item": [
+
+        {
+          "name": "Create Item Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Arabic Coffee\",\n  \"description\": \"Premium Arabic Coffee Blend\",\n  \"partnerNo\": \"VEN000001\",\n  \"variantCode\": \"\",\n  \"itemCategoryCode\": \"COFFEE\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 1.5,\n  \"grossWeight\": 1.6,\n  \"specifications\": \"Premium quality, single origin\",\n  \"ingredients\": \"Coffee beans\",\n  \"allergenDeclaration\": \"None\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"1234567890123\",\n  \"eanCode\": \"1234567890123\",\n  \"vendorItemNo\": \"V-ITEM-001\",\n  \"genProdPostingGroup\": \"DOMESTIC\",\n  \"vatProdPostingGroup\": \"VAT5\",\n  \"unitPrice\": 25.50,\n  \"priceCurrencyCode\": \"AED\",\n  \"block\": false,\n  \"status\": \"Created\"\n}"
+            },
+            "description": "Syncs item to Business Central. vendorItemNo, genProdPostingGroup, vatProdPostingGroup are the three new fields."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Item request created successfully\",\n  \"businessCentral\": { \"synced\": true, \"response\": {}, \"error\": null }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Create Item Request (from BC)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/businesscentral",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "businesscentral"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Arabic Coffee\",\n  \"description\": \"Premium Arabic Coffee Blend\",\n  \"partnerNo\": \"VEN000001\",\n  \"itemCategoryCode\": \"COFFEE\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 1.5,\n  \"grossWeight\": 1.6,\n  \"vendorItemNo\": \"V-ITEM-001\",\n  \"genProdPostingGroup\": \"DOMESTIC\",\n  \"vatProdPostingGroup\": \"VAT5\",\n  \"unitPrice\": 25.50,\n  \"priceCurrencyCode\": \"AED\",\n  \"block\": false,\n  \"status\": \"Created\"\n}"
+            },
+            "description": "Uses protectRegister middleware — supply a register token, not a regular JWT."
+          }
+        },
+
+        {
+          "name": "Submit Item Change Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/change-request",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "change-request"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemNo\": \"ITEM-001\",\n  \"changeType\": \"Price\",\n  \"changeDescription\": \"Updating unit price due to supplier change\",\n  \"oldValue\": \"25.50\",\n  \"newValue\": \"28.00\",\n  \"partnerNo\": \"VEN000001\",\n  \"partnerType\": \"vendor\",\n  \"rejectionReason\": \"\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Item change request submitted successfully\",\n  \"data\": { \"id\": 1, \"item_no\": \"ITEM-001\", \"status\": \"_x0020_\" },\n  \"businessCentral\": { \"synced\": true, \"error\": null }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Submit Price Change",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/price-change",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "price-change"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemNo\": \"ITEM-001\",\n  \"variantCode\": \"\",\n  \"newPrice\": 28.00,\n  \"oldPrice\": 25.50,\n  \"effectiveDate\": \"2026-06-01\",\n  \"endingDate\": \"2026-12-31\",\n  \"currencyCode\": \"AED\",\n  \"unitOfMeasureCode\": \"KG\",\n  \"minimumQuantity\": 0,\n  \"partnerNo\": \"VEN000001\",\n  \"rejectionReason\": \"\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Price change request submitted successfully\",\n  \"businessCentral\": { \"synced\": true, \"error\": null }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Import Items (CSV / Excel)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/import",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "import"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload a .csv or .xlsx file. Required columns: partner_portal_no, partner_no, batch_no, item_name. Optional: vendor_item_no, gen_prod_posting_group, vat_prod_posting_group."
+                }
+              ]
+            },
+            "description": "Accepts multipart/form-data. File must be CSV or Excel. Download the template first to see all column headers."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Import completed. 5 items imported successfully, 0 failed\",\n  \"data\": { \"total\": 5, \"success\": 5, \"failed\": 0, \"errors\": [] }\n}"
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "UPDATE",
+      "item": [
+
+        {
+          "name": "Update Item Request (full)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/{{item_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "{{item_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Arabic Coffee — Updated\",\n  \"description\": \"Updated description\",\n  \"variantCode\": \"\",\n  \"itemCategoryCode\": \"COFFEE\",\n  \"baseUnitOfMeasure\": \"KG\",\n  \"netWeight\": 1.5,\n  \"grossWeight\": 1.6,\n  \"specifications\": \"Premium quality\",\n  \"ingredients\": \"Coffee beans\",\n  \"allergenDeclaration\": \"None\",\n  \"shelfLifeDays\": 365,\n  \"gtin\": \"1234567890123\",\n  \"eanCode\": \"1234567890123\",\n  \"vendorItemNo\": \"V-ITEM-001\",\n  \"genProdPostingGroup\": \"DOMESTIC\",\n  \"vatProdPostingGroup\": \"VAT5\",\n  \"unitPrice\": 28.00,\n  \"priceCurrencyCode\": \"AED\",\n  \"block\": false,\n  \"status\": \"Created\"\n}"
+            },
+            "description": "Only allowed when item status = 'Created'. Includes vendorItemNo, genProdPostingGroup, vatProdPostingGroup."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Item request updated successfully\",\n  \"data\": { \"id\": 1, \"item_name\": \"Arabic Coffee — Updated\", \"vendor_item_no\": \"V-ITEM-001\", \"gen_prod_posting_group\": \"DOMESTIC\", \"vat_prod_posting_group\": \"VAT5\" }\n}"
+            },
+            {
+              "name": "Blocked — Wrong Status",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Cannot update item with status: Approved. Only 'Created' items can be updated\"\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Update Item Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/{{item_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "{{item_id}}", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"rejectionReason\": \"\"\n}"
+            },
+            "description": "Allowed values: Created | Pending | Approved | Rejected. rejectionReason required when status = Rejected."
+          },
+          "response": [
+            {
+              "name": "Approve",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Item status updated to Approved\",\n  \"data\": { \"id\": 1, \"status\": \"Approved\" }\n}"
+            },
+            {
+              "name": "Reject (with reason)",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Item status updated to Rejected\",\n  \"data\": { \"id\": 1, \"status\": \"Rejected\", \"rejection_reason\": \"Allergen info incomplete\" }\n}"
+            },
+            {
+              "name": "Reject — Missing Reason",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Rejection reason is required when rejecting an item\"\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Block Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/{{item_id}}/block",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "{{item_id}}", "block"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"block\": true\n}"
+            }
+          }
+        },
+
+        {
+          "name": "Unblock Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/{{item_id}}/block",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "{{item_id}}", "block"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"block\": false\n}"
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "DELETE",
+      "item": [
+
+        {
+          "name": "Delete Item Request",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/vendor/item/{{item_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vendor", "item", "{{item_id}}"]
+            },
+            "description": "Only allowed when item status = 'Created'."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Item request deleted successfully\",\n  \"data\": { \"id\": 1 }\n}"
+            },
+            {
+              "name": "Blocked — Wrong Status",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Cannot delete item with status: Approved. Only 'Created' items can be deleted\"\n}"
+            }
+          ]
+        }
+
+      ]
+    }
+
+  ]
+}

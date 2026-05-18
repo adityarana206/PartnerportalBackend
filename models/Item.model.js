@@ -8,10 +8,11 @@ const Item = {
         item_name, description, item_category_code,
         base_unit_of_measure, net_weight, gross_weight, specifications,
         ingredients, allergen_declaration, shelf_life_days, gtin,
-        ean_code, unit_price, price_currency_code,
+        ean_code, vendor_item_no, gen_prod_posting_group, vat_prod_posting_group,
+        unit_price, price_currency_code,
         block, status, rejection_reason, created_by
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25
       ) RETURNING *;
     `;
     const values = [
@@ -31,12 +32,15 @@ const Item = {
       data.shelfLifeDays || null, // $14 shelf_life_days
       data.gtin || null, // $15 gtin
       data.eanCode || null, // $16 ean_code
-      data.unitPrice || null, // $17 unit_price
-      data.priceCurrencyCode || null, // $18 price_currency_code
-      data.block || false, // $19 block
-      data.status || "Created", // $20 status
-      data.rejectionReason || null, // $21 rejection_reason
-      userId || null, // $22 created_by
+      data.vendorItemNo || null, // $17 vendor_item_no
+      data.genProdPostingGroup || null, // $18 gen_prod_posting_group
+      data.vatProdPostingGroup || null, // $19 vat_prod_posting_group
+      data.unitPrice || null, // $20 unit_price
+      data.priceCurrencyCode || null, // $21 price_currency_code
+      data.block || false, // $22 block
+      data.status || "Created", // $23 status
+      data.rejectionReason || null, // $24 rejection_reason
+      userId || null, // $25 created_by
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
@@ -111,10 +115,11 @@ const Item = {
         variant_code=$1, item_name=$2, description=$3, item_category_code=$4,
         base_unit_of_measure=$5, net_weight=$6, gross_weight=$7,
         specifications=$8, ingredients=$9, allergen_declaration=$10,
-        shelf_life_days=$11, gtin=$12, ean_code=$13, unit_price=$14,
-        price_currency_code=$15, block=$16,
-        status=$17, rejection_reason=$18, updated_at=NOW()
-      WHERE id=$19 RETURNING *;
+        shelf_life_days=$11, gtin=$12, ean_code=$13,
+        vendor_item_no=$14, gen_prod_posting_group=$15, vat_prod_posting_group=$16,
+        unit_price=$17, price_currency_code=$18, block=$19,
+        status=$20, rejection_reason=$21, updated_at=NOW()
+      WHERE id=$22 RETURNING *;
     `;
     const values = [
       data.variantCode || null, // $1  variant_code
@@ -130,12 +135,15 @@ const Item = {
       data.shelfLifeDays || null, // $11 shelf_life_days
       data.gtin || null, // $12 gtin
       data.eanCode || null, // $13 ean_code
-      data.unitPrice || null, // $14 unit_price
-      data.priceCurrencyCode || null, // $15 price_currency_code
-      data.block || false, // $16 block
-      data.status || "Created", // $17 status
-      data.rejectionReason || null, // $18 rejection_reason
-      id, // $19 id
+      data.vendorItemNo || null, // $14 vendor_item_no
+      data.genProdPostingGroup || null, // $15 gen_prod_posting_group
+      data.vatProdPostingGroup || null, // $16 vat_prod_posting_group
+      data.unitPrice || null, // $17 unit_price
+      data.priceCurrencyCode || null, // $18 price_currency_code
+      data.block || false, // $19 block
+      data.status || "Created", // $20 status
+      data.rejectionReason || null, // $21 rejection_reason
+      id, // $22 id
     ];
     const result = await pool.query(query, values);
     return result.rows[0] || null;
@@ -147,9 +155,11 @@ const Item = {
         variant_code=$1, item_name=$2, description=$3, item_category_code=$4,
         base_unit_of_measure=$5, net_weight=$6, gross_weight=$7,
         specifications=$8, ingredients=$9, allergen_declaration=$10,
-        shelf_life_days=$11, gtin=$12, ean_code=$13, unit_price=$14,
-        price_currency_code=$15, block=$16, status=$17, rejection_reason=$18, updated_at=NOW()
-      WHERE partner_portal_no=$19 AND partner_no=$20 AND batch_no=$21 RETURNING *;
+        shelf_life_days=$11, gtin=$12, ean_code=$13,
+        vendor_item_no=$14, gen_prod_posting_group=$15, vat_prod_posting_group=$16,
+        unit_price=$17, price_currency_code=$18, block=$19,
+        status=$20, rejection_reason=$21, updated_at=NOW()
+      WHERE partner_portal_no=$22 AND partner_no=$23 AND batch_no=$24 RETURNING *;
     `;
     const values = [
       data.variantCode || null,
@@ -165,6 +175,9 @@ const Item = {
       data.shelfLifeDays || null,
       data.gtin || null,
       data.eanCode || null,
+      data.vendorItemNo || null,
+      data.genProdPostingGroup || null,
+      data.vatProdPostingGroup || null,
       data.unitPrice || null,
       data.priceCurrencyCode || null,
       data.block || false,

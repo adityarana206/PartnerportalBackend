@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS users (
   role                  VARCHAR(50),
   vendor_name           VARCHAR(255),
   location_code         VARCHAR(50),
+  is_active             BOOLEAN DEFAULT true,
+  last_login            TIMESTAMP,
   created_at            TIMESTAMP DEFAULT NOW(),
   updated_at            TIMESTAMP DEFAULT NOW()
 );
@@ -36,6 +38,7 @@ CREATE TABLE IF NOT EXISTS login_users (
   password     VARCHAR(255) NOT NULL,
   role         VARCHAR(50) NOT NULL,
   is_active    BOOLEAN DEFAULT true,
+  last_login   TIMESTAMP,
   created_at   TIMESTAMP DEFAULT NOW(),
   updated_at   TIMESTAMP DEFAULT NOW()
 );
@@ -103,7 +106,7 @@ CREATE TABLE IF NOT EXISTS user_group_assignments (
   id          SERIAL PRIMARY KEY,
   user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   group_id    INTEGER NOT NULL REFERENCES permission_groups(id) ON DELETE CASCADE,
-  assigned_by INTEGER,
+  assigned_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   assigned_at TIMESTAMP DEFAULT NOW(),
   UNIQUE (user_id, group_id)
 );
@@ -400,6 +403,9 @@ CREATE TABLE IF NOT EXISTS item_requests (
   shelf_life_days      INTEGER,
   gtin                 VARCHAR(50),
   ean_code             VARCHAR(50),
+  vendor_item_no       VARCHAR(100),
+  gen_prod_posting_group VARCHAR(50),
+  vat_prod_posting_group VARCHAR(50),
   unit_price           NUMERIC(15,4),
   price_currency_code  VARCHAR(10),
   block                BOOLEAN DEFAULT false,
@@ -773,11 +779,9 @@ CREATE TABLE IF NOT EXISTS delivery_order_lines (
   item_no           VARCHAR(50),
   variant_code      VARCHAR(50),
   description       VARCHAR(255),
-  order_qty         NUMERIC(15,4) DEFAULT 0,
-  ordered_quantity  NUMERIC(15,4) DEFAULT 0,
-  to_be_shipped     NUMERIC(15,4) DEFAULT 0,
-  shipped_quantity  NUMERIC(15,4) DEFAULT 0,
-  remaining         NUMERIC(15,4) DEFAULT 0,
+  ordered_quantity   NUMERIC(15,4) DEFAULT 0,
+  to_be_shipped      NUMERIC(15,4) DEFAULT 0,
+  shipped_quantity   NUMERIC(15,4) DEFAULT 0,
   remaining_quantity NUMERIC(15,4) DEFAULT 0,
   unit_of_measure   VARCHAR(20) DEFAULT 'PCS',
   unit_price        NUMERIC(15,4),
@@ -913,7 +917,7 @@ CREATE INDEX IF NOT EXISTS idx_registration_invites_expires_at ON registration_i
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id         SERIAL PRIMARY KEY,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token      TEXT NOT NULL,
+  token      TEXT NOT NULL UNIQUE,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -936,6 +940,110 @@ CREATE TABLE IF NOT EXISTS system_settings (
   updated_by      INTEGER,
   updated_at      TIMESTAMP DEFAULT NOW()
 );
+
+-- ─── Indexes ─────────────────────────────────────────────────
+
+-- login_users
+CREATE INDEX IF NOT EXISTS idx_login_users_user_id             ON login_users(user_id);
+CREATE INDEX IF NOT EXISTS idx_login_users_partner_no          ON login_users(partner_no);
+
+-- permissions
+CREATE INDEX IF NOT EXISTS idx_permissions_screen_id           ON permissions(screen_id);
+
+-- user_permissions
+CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id        ON user_permissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_permissions_screen_id      ON user_permissions(screen_id);
+
+-- group_permissions
+CREATE INDEX IF NOT EXISTS idx_group_permissions_group_id      ON group_permissions(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_permissions_screen_id     ON group_permissions(screen_id);
+
+-- user_group_assignments
+CREATE INDEX IF NOT EXISTS idx_uga_user_id                     ON user_group_assignments(user_id);
+CREATE INDEX IF NOT EXISTS idx_uga_group_id                    ON user_group_assignments(group_id);
+
+-- bc_user_registrations
+CREATE INDEX IF NOT EXISTS idx_bc_reg_partner_no               ON bc_user_registrations(partner_no);
+CREATE INDEX IF NOT EXISTS idx_bc_reg_email                    ON bc_user_registrations(email);
+CREATE INDEX IF NOT EXISTS idx_bc_reg_status                   ON bc_user_registrations(status);
+CREATE INDEX IF NOT EXISTS idx_bc_reg_contacts_reg_id          ON bc_user_registration_contacts(registration_id);
+CREATE INDEX IF NOT EXISTS idx_bc_reg_banks_reg_id             ON bc_user_registration_banks(registration_id);
+CREATE INDEX IF NOT EXISTS idx_bc_reg_docs_reg_id              ON bc_user_registration_documents(registration_id);
+
+-- contacts
+CREATE INDEX IF NOT EXISTS idx_contacts_partner_no             ON contacts(partner_no);
+CREATE INDEX IF NOT EXISTS idx_contacts_email                  ON contacts(email);
+CREATE INDEX IF NOT EXISTS idx_contacts_company_no             ON contacts(company_no);
+
+-- complaints / message_staging
+CREATE INDEX IF NOT EXISTS idx_complaints_thread_id            ON complaints(thread_id);
+CREATE INDEX IF NOT EXISTS idx_complaints_sender_id            ON complaints(sender_id);
+CREATE INDEX IF NOT EXISTS idx_message_staging_thread_id       ON message_staging(thread_id);
+CREATE INDEX IF NOT EXISTS idx_message_staging_sender_id       ON message_staging(sender_id);
+
+-- invoices
+CREATE INDEX IF NOT EXISTS idx_invoices_partner_no             ON invoices(partner_no);
+CREATE INDEX IF NOT EXISTS idx_invoices_status                 ON invoices(status);
+CREATE INDEX IF NOT EXISTS idx_invoice_lines_invoice_id        ON invoice_lines(invoice_id);
+
+-- purchase_invoices
+CREATE INDEX IF NOT EXISTS idx_pi_partner_no                   ON purchase_invoices(partner_no);
+CREATE INDEX IF NOT EXISTS idx_pi_status                       ON purchase_invoices(status);
+CREATE INDEX IF NOT EXISTS idx_pil_invoice_id                  ON purchase_invoice_lines(invoice_id);
+
+-- purchase_orders
+CREATE INDEX IF NOT EXISTS idx_po_partner_no                   ON purchase_orders(partner_no);
+CREATE INDEX IF NOT EXISTS idx_po_no                           ON purchase_orders(no);
+CREATE INDEX IF NOT EXISTS idx_po_status                       ON purchase_orders(status);
+CREATE INDEX IF NOT EXISTS idx_pol_order_id                    ON purchase_order_lines(order_id);
+
+-- purchase_receipts
+CREATE INDEX IF NOT EXISTS idx_pr_partner_no                   ON purchase_receipts(partner_no);
+CREATE INDEX IF NOT EXISTS idx_pr_linked_order_no              ON purchase_receipts(linked_order_no);
+CREATE INDEX IF NOT EXISTS idx_prl_receipt_id                  ON purchase_receipt_lines(receipt_id);
+
+-- sales_orders
+CREATE INDEX IF NOT EXISTS idx_so_partner_no                   ON sales_orders(partner_no);
+CREATE INDEX IF NOT EXISTS idx_so_document_no                  ON sales_orders(document_no);
+CREATE INDEX IF NOT EXISTS idx_so_status                       ON sales_orders(status);
+CREATE INDEX IF NOT EXISTS idx_sol_order_id                    ON sales_order_lines(order_id);
+
+-- sales_shipments
+CREATE INDEX IF NOT EXISTS idx_ss_partner_no                   ON sales_shipments(partner_no);
+CREATE INDEX IF NOT EXISTS idx_ss_linked_order_no              ON sales_shipments(linked_order_no);
+CREATE INDEX IF NOT EXISTS idx_ssl_shipment_id                 ON sales_shipment_lines(shipment_id);
+
+-- delivery_orders
+CREATE INDEX IF NOT EXISTS idx_do_partner_no                   ON delivery_orders(partner_no);
+CREATE INDEX IF NOT EXISTS idx_do_delivery_order_no            ON delivery_orders(delivery_order_no);
+CREATE INDEX IF NOT EXISTS idx_do_status                       ON delivery_orders(status);
+CREATE INDEX IF NOT EXISTS idx_dol_delivery_order_id           ON delivery_order_lines(delivery_order_id);
+CREATE INDEX IF NOT EXISTS idx_dod_delivery_order_id           ON delivery_order_documents(delivery_order_id);
+
+-- payments
+CREATE INDEX IF NOT EXISTS idx_payments_partner_no             ON payments(partner_no);
+CREATE INDEX IF NOT EXISTS idx_payments_invoice_no             ON payments(invoice_no);
+CREATE INDEX IF NOT EXISTS idx_payments_payment_number         ON payments(payment_number);
+CREATE INDEX IF NOT EXISTS idx_payments_status                 ON payments(status);
+
+-- item_requests / purchase_item_requests / purchase_prices
+CREATE INDEX IF NOT EXISTS idx_ir_partner_no                   ON item_requests(partner_no);
+CREATE INDEX IF NOT EXISTS idx_ir_status                       ON item_requests(status);
+CREATE INDEX IF NOT EXISTS idx_pir_partner_no                  ON purchase_item_requests(partner_no);
+CREATE INDEX IF NOT EXISTS idx_pir_status                      ON purchase_item_requests(status);
+CREATE INDEX IF NOT EXISTS idx_pp_partner_no                   ON purchase_prices(partner_no);
+CREATE INDEX IF NOT EXISTS idx_pp_status                       ON purchase_prices(status);
+
+-- item_change_requests
+CREATE INDEX IF NOT EXISTS idx_icr_partner_no                  ON item_change_requests(partner_no);
+CREATE INDEX IF NOT EXISTS idx_icr_item_no                     ON item_change_requests(item_no);
+CREATE INDEX IF NOT EXISTS idx_icr_status                      ON item_change_requests(status);
+
+-- auth tokens
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id          ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at       ON refresh_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_blacklisted_tokens_expires_at   ON blacklisted_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_blacklisted_tokens_user_id      ON blacklisted_tokens(user_id);
 
 -- ─── Seed Data ────────────────────────────────────────────────
 

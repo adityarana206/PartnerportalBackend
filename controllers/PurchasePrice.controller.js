@@ -10,7 +10,7 @@ const fetchItemData = async (batchNo, partnerNo) => {
             specifications, ingredients, allergen_declaration,
             shelf_life_days, gtin, ean_code, unit_price, price_currency_code
      FROM item_requests
-     WHERE batch_no = $1 AND partner_no = $2 AND status = 'Approved' AND block = false`,
+     WHERE batch_no = $1 AND partner_no = $2 AND LOWER(status) = 'approved'`,
     [batchNo, partnerNo]
   );
   return result.rows[0] || null;
@@ -27,7 +27,7 @@ const getApprovedItemsForPartner = async (req, res) => {
               specifications, ingredients, allergen_declaration,
               shelf_life_days, gtin, ean_code, unit_price, price_currency_code
        FROM item_requests
-       WHERE partner_no = $1 AND status = 'Approved' AND block = false
+       WHERE partner_no = $1 AND LOWER(status) = 'approved'
        ORDER BY item_name`,
       [partnerNo]
     );

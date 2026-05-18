@@ -1,15 +1,15 @@
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  host: "aws-1-us-east-1.pooler.supabase.com",
-  port: 6543,
-  database: "postgres",
-  user: "postgres.lrvvggpucauzbqevwkeq",
-  password: "azdUbNPIZFKUbHJG",
-  ssl: { rejectUnauthorized: false },
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || "5432", 10),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: process.env.DB_SSL === "false" ? false : { rejectUnauthorized: false },
+  max: parseInt(process.env.DB_MAX_CONNECTIONS || "10", 10),
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MS || "30000", 10),
+  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || "5000", 10),
 });
 
 pool.on("error", (err) => {
