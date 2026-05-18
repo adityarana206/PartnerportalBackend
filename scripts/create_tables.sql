@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   currency_code         VARCHAR(10),
   payment_terms_code    VARCHAR(50),
   password              VARCHAR(255),
-  role                  VARCHAR(50),
+  role                  VARCHAR(50) CHECK (role IN ('super_admin','vendor_admin','customer_admin','vendor','customer')),
   vendor_name           VARCHAR(255),
   location_code         VARCHAR(50),
   is_active             BOOLEAN DEFAULT true,
@@ -925,7 +925,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 CREATE TABLE IF NOT EXISTS blacklisted_tokens (
   id         SERIAL PRIMARY KEY,
   token      TEXT UNIQUE NOT NULL,
-  user_id    INTEGER,
+  user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -942,6 +942,9 @@ CREATE TABLE IF NOT EXISTS system_settings (
 );
 
 -- ─── Indexes ─────────────────────────────────────────────────
+
+-- users
+CREATE INDEX IF NOT EXISTS idx_users_ref_no                    ON users(ref_no);
 
 -- login_users
 CREATE INDEX IF NOT EXISTS idx_login_users_user_id             ON login_users(user_id);
@@ -974,6 +977,7 @@ CREATE INDEX IF NOT EXISTS idx_bc_reg_docs_reg_id              ON bc_user_regist
 CREATE INDEX IF NOT EXISTS idx_contacts_partner_no             ON contacts(partner_no);
 CREATE INDEX IF NOT EXISTS idx_contacts_email                  ON contacts(email);
 CREATE INDEX IF NOT EXISTS idx_contacts_company_no             ON contacts(company_no);
+CREATE INDEX IF NOT EXISTS idx_contacts_portal_contact_no      ON contacts(portal_contact_no);
 
 -- complaints / message_staging
 CREATE INDEX IF NOT EXISTS idx_complaints_thread_id            ON complaints(thread_id);
@@ -993,7 +997,7 @@ CREATE INDEX IF NOT EXISTS idx_pil_invoice_id                  ON purchase_invoi
 
 -- purchase_orders
 CREATE INDEX IF NOT EXISTS idx_po_partner_no                   ON purchase_orders(partner_no);
-CREATE INDEX IF NOT EXISTS idx_po_no                           ON purchase_orders(no);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_po_no                    ON purchase_orders(no);
 CREATE INDEX IF NOT EXISTS idx_po_status                       ON purchase_orders(status);
 CREATE INDEX IF NOT EXISTS idx_pol_order_id                    ON purchase_order_lines(order_id);
 
@@ -1050,10 +1054,11 @@ CREATE INDEX IF NOT EXISTS idx_blacklisted_tokens_user_id      ON blacklisted_to
 -- Number series required by the app
 INSERT INTO no_series (code, description, starting_no, ending_no, last_no_used, increment_by_no)
 VALUES
-  ('DO',    'Delivery Order',         1, 999999, 0, 1),
-  ('PO',    'Purchase Order',         1, 999999, 0, 1),
-  ('SO',    'Sales Order',            1, 999999, 0, 1),
-  ('BATCH', 'Purchase Item Requests', 1, 999999, 0, 1)
+  ('DO',     'Delivery Order',         1, 999999, 0, 1),
+  ('PO',     'Purchase Order',         1, 999999, 0, 1),
+  ('SO',     'Sales Order',            1, 999999, 0, 1),
+  ('BATCH',  'Purchase Item Requests', 1, 999999, 0, 1),
+  ('PORTAL', 'Portal Item Requests',   1, 999999, 0, 1)
 ON CONFLICT (code) DO NOTHING;
 
 -- Default system settings row
@@ -1075,11 +1080,18 @@ DECLARE
 BEGIN
   v_hash := crypt('Admin@1234', gen_salt('bf', 10));
 
+  -- Insert into users; if row already exists, RETURNING returns nothing
   INSERT INTO users (name, email, password, role)
   VALUES ('Super Admin', 'admin@partnerportal.com', v_hash, 'super_admin')
   ON CONFLICT (email) DO NOTHING
   RETURNING id INTO v_user_id;
 
+  -- If user already existed, fetch their ID explicitly
+  IF v_user_id IS NULL THEN
+    SELECT id INTO v_user_id FROM users WHERE email = 'admin@partnerportal.com';
+  END IF;
+
+  -- Ensure login_users row exists (idempotent)
   IF v_user_id IS NOT NULL THEN
     INSERT INTO login_users (user_id, email, password, role)
     VALUES (v_user_id, 'admin@partnerportal.com', v_hash, 'super_admin')
