@@ -62,8 +62,8 @@ const generateInvite = async (req, res) => {
       [token, role, resolvedPartnerNo, resolvedEmail, expiresAt, payload ? JSON.stringify(payload) : null, regType || null]
     );
 
-    const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    // const baseUrl =  "http://localhost:5173";
+    // const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const baseUrl =  "http://localhost:5173";
     const registrationUrl = `${baseUrl}/register?token=${token}`;
 
     return res.status(201).json({
@@ -123,12 +123,40 @@ const createBCUserRegister = async (req, res) => {
     const partnerNo = invite.partner_no || req.body.partnerNo || "";
     const inviteEmail = invite.email || "";
 
+    // Merge invite payload header data as fallback
+    const headerData = invite.payload?.header || {};
+
     const registrationData = {
       ...req.body,
       partnerType: invite.role === "vendor" ? "Vendor" : "Customer",
       partnerNo,
       email: req.body.email || inviteEmail,
       partnerEmail: req.body.partnerEmail || inviteEmail,
+      // Map fields from invite payload header if not in req.body
+      tradeName: req.body.tradeName || headerData.tradeName || req.body.name || headerData.name || "",
+      tradeLicenseNumber: req.body.tradeLicenseNumber || headerData.tradeLicenseNumber || "",
+      tradeLicenseExpiryDate: req.body.tradeLicenseExpiryDate || headerData.tradeLicenseExpiryDate || "0001-01-01",
+      companyRegNumber: req.body.companyRegNumber || headerData.companyRegNumber || "",
+      entityType: req.body.entityType || headerData.entityType || "",
+      countryOfIncorporation: req.body.countryOfIncorporation || headerData.countryOfIncorporation || "",
+      placeOfRegistration: req.body.placeOfRegistration || headerData.placeOfRegistration || "",
+      website: req.body.website || headerData.website || "",
+      phoneNo: req.body.phoneNo || headerData.phoneNo || "",
+      address: req.body.address || headerData.address || "",
+      address2: req.body.address2 || headerData.address2 || "",
+      city: req.body.city || headerData.city || "",
+      postCode: req.body.postCode || headerData.postCode || "",
+      countryRegionCode: req.body.countryRegionCode || headerData.countryRegionCode || "",
+      vatRegistrationNo: req.body.vatRegistrationNo || headerData.vatRegistrationNo || "",
+      currencyCode: req.body.currencyCode || headerData.currencyCode || "",
+      paymentMethodCode: req.body.paymentMethodCode || headerData.paymentMethodCode || "",
+      paymentTermsCode: req.body.paymentTermsCode || headerData.paymentTermsCode || "",
+      partnerCategory: req.body.partnerCategory || headerData.partnerCategory || "",
+      businessJustification: req.body.businessJustification || headerData.businessJustification || "",
+      regType: req.body.regType || invite.reg_type || headerData.regType || "update",
+      // Map contactLines/bankLines from invite payload if not provided in req.body
+      partnerRegContactLines: req.body.partnerRegContactLines || req.body.contactLines || invite.payload?.contactLines || [],
+      partnerRegBankLines: req.body.partnerRegBankLines || req.body.bankLines || invite.payload?.bankLines || [],
     };
 
     console.log("📄 registrationData.documents exists:", !!registrationData.documents);
@@ -152,8 +180,16 @@ const createBCUserRegister = async (req, res) => {
 
     const isUpdate = invite.reg_type === "update";
 
+    // DEBUG: Log what we're sending to BC
+    console.log("🔍 DEBUG - Sending to BC:");
+    console.log("   partnerNo:", partnerNo);
+    console.log("   partnerRegContactLines count:", registrationData.partnerRegContactLines?.length || 0);
+    console.log("   partnerRegContactLines:", JSON.stringify(registrationData.partnerRegContactLines, null, 2));
+    console.log("   partnerRegBankLines count:", registrationData.partnerRegBankLines?.length || 0);
+    console.log("   partnerRegBankLines:", JSON.stringify(registrationData.partnerRegBankLines, null, 2));
+
     if (partnerNo) {
-      // ─── PATCH existing registration: fields + contacts + banks in one call ───
+      // ─── Update existing registration via custom action (handles header + contacts + banks) ───
       try {
         bcResult = await bcService.updateRegistration(partnerNo, registrationData);
         console.log("✅ BC updateRegistration succeeded for:", partnerNo);
@@ -183,12 +219,27 @@ const createBCUserRegister = async (req, res) => {
             [bcResult.no, local.id]
           );
           local.partner_no = bcResult.no;
+          const newPartnerNo = bcResult.no;
+
+          // ─── POST contacts and banks separately for new registration ───
+          if (registrationData.partnerRegContactLines?.length > 0 || registrationData.partnerRegBankLines?.length > 0) {
+            try {
+              await bcService.postContactsAndBanksForRegistration(
+                newPartnerNo,
+                registrationData.partnerRegContactLines || [],
+                registrationData.partnerRegBankLines || []
+              );
+              console.log("✅ Contacts/Banks posted for new registration:", newPartnerNo);
+            } catch (cbErr) {
+              console.error("⚠️  Failed to post contacts/banks:", cbErr.response?.data || cbErr.message);
+            }
+          }
 
           // ─── POST documents separately ───
           if (registrationData.documents?.length > 0) {
             try {
-              await bcService.postDocumentsForRegistration(bcResult.no, registrationData.documents, [], []);
-              console.log("✅ Documents posted for:", bcResult.no);
+              await bcService.postDocumentsForRegistration(newPartnerNo, registrationData.documents, [], []);
+              console.log("✅ Documents posted for:", newPartnerNo);
             } catch (docErr) {
               console.error("⚠️  Failed to post documents:", docErr.response?.data || docErr.message);
             }

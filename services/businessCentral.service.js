@@ -536,13 +536,18 @@ class BusinessCentralService {
   }
 
   // ─── Update Registration: PATCH directly using registration no ─
-  async updateRegistration(no, data) {
+  async updateRegistration(registrationNo, data) {
+    console.log("🔧 BC Service - updateRegistration received:");
+    console.log("   registrationNo:", registrationNo);
+    console.log("   data.partnerRegContactLines:", JSON.stringify(data.partnerRegContactLines, null, 2));
+    console.log("   data.partnerRegBankLines:", JSON.stringify(data.partnerRegBankLines, null, 2));
+
     const safeCountryCode = (val) =>
       val && /^[A-Z]{2}$/i.test(val.trim()) ? val.trim().toUpperCase() : "";
     const safePostCode = (val) =>
       val && val !== "000000" && val !== "00000" && val !== "0" ? val : "";
 
-    const updateData = {
+    const header = {
       partnerType:            data.partnerType            || "",
       tradeName:              data.tradeName              || "",
       partnerEmail:           data.partnerEmail           || "",
@@ -566,7 +571,7 @@ class BusinessCentralService {
       partnerCategory:        data.partnerCategory        || "",
     };
 
-    updateData.partnerRegContactLines = (data.partnerRegContactLines || []).map((c, i) => ({
+    const contactLines = (data.partnerRegContactLines || []).map((c, i) => ({
       lineNo:       c.lineNo       || (i + 1) * 10000,
       fullName:     c.fullName     || "",
       designation:  c.designation  || "",
@@ -574,33 +579,142 @@ class BusinessCentralService {
       emailAddress: c.emailAddress || "",
     }));
 
-    if (data.partnerRegBankLines && data.partnerRegBankLines.length > 0) {
-      updateData.partnerRegBankLines = data.partnerRegBankLines.map((b, i) => ({
-        lineNo:        b.lineNo        || (i + 1) * 10000,
-        bankCode:      b.bankCode      || "",
-        name:          b.name          || "",
-        bankBranchNo:  b.bankBranchNo  || "",
-        bankAccountNo: b.bankAccountNo || "",
-        iban:          b.iban          || "",
-        swiftCode:     b.swiftCode     || "",
-        currencyCode:  b.currencyCode  || "",
-        isPrimary:     b.isPrimary     || false,
-      }));
+    const bankLines = (data.partnerRegBankLines || []).map((b, i) => ({
+      lineNo:        b.lineNo        || (i + 1) * 10000,
+      bankCode:      b.bankCode      || "",
+      name:          b.name          || "",
+      bankBranchNo:  b.bankBranchNo  || "",
+      bankAccountNo: b.bankAccountNo || "",
+      iban:          b.iban          || "",
+      swiftCode:     b.swiftCode     || "",
+      currencyCode:  b.currencyCode  || "",
+      isPrimary:     b.isPrimary     || false,
+    }));
+
+    const payload = JSON.stringify({ header, contactLines, bankLines });
+    console.log("📤 BC Service - Custom Action payload:", payload);
+
+    return await this.callAPI(
+      `partnerRegistrations('${registrationNo}')/Microsoft.NAV.updateRegistration`,
+      "POST",
+      { payload }
+    );
+  }
+
+  // ─── Post/Patch Contacts and Banks for Registration ─────────────────────
+  async postContactsAndBanksForRegistration(regNo, contacts, banks) {
+    const token = await this.getAccessToken();
+    const results = { contacts: [], banks: [] };
+
+    // PATCH contacts individually (update existing)
+    if (contacts && contacts.length > 0) {
+      console.log("📇 Patching", contacts.length, "contacts...");
+      for (let i = 0; i < contacts.length; i++) {
+        const contact = contacts[i];
+        const lineNo = contact.lineNo || (i + 1) * 10000;
+        const contactPayload = {
+          fullName: contact.fullName || "",
+          designation: contact.designation || "",
+          mobileNumber: contact.mobileNumber || "",
+          emailAddress: contact.emailAddress || "",
+        };
+
+        try {
+          // POST as new record first
+          const postUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${regNo}')/partnerRegContactLines`;
+          const postPayload = { ...contactPayload, lineNo };
+          const response = await axios.post(postUrl, postPayload, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          });
+          console.log(`✅ Contact ${i + 1} created:`, lineNo);
+          results.contacts.push({ lineNo, status: 'created' });
+        } catch (postErr) {
+          // If record exists, fall back to PATCH
+          const errorCode = postErr.response?.data?.error?.code;
+          const errorMessage = postErr.response?.data?.error?.message || '';
+          if (errorCode === 'Internal_EntityWithSameKeyExists' || 
+              errorMessage.includes('already exists')) {
+            try {
+              // Use direct entity endpoint for PATCH
+              const patchUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegContactLines(regNo='${regNo}',lineNo=${lineNo})`;
+              const response = await axios.patch(patchUrl, contactPayload, {
+                headers: { 
+                  Authorization: `Bearer ${token}`, 
+                  "Content-Type": "application/json",
+                  "If-Match": "*"
+                },
+              });
+              console.log(`✅ Contact ${i + 1} patched:`, lineNo);
+              results.contacts.push({ lineNo, status: 'patched' });
+            } catch (patchErr) {
+              console.error(`❌ Contact ${i + 1} patch failed:`, patchErr.response?.data || patchErr.message);
+              results.contacts.push({ lineNo, status: 'failed', error: patchErr.response?.data });
+            }
+          } else {
+            console.error(`❌ Contact ${i + 1} failed:`, postErr.response?.data || postErr.message);
+            results.contacts.push({ lineNo, status: 'failed', error: postErr.response?.data });
+          }
+        }
+      }
     }
 
-    const expandParams = ["partnerRegContactLines"];
-    if (updateData.partnerRegBankLines) expandParams.push("partnerRegBankLines");
+    // PATCH banks individually (update existing)
+    if (banks && banks.length > 0) {
+      console.log("🏦 Patching", banks.length, "banks...");
+      for (let i = 0; i < banks.length; i++) {
+        const bank = banks[i];
+        const lineNo = bank.lineNo || (i + 1) * 10000;
+        const bankPayload = {
+          bankCode: bank.bankCode || "",
+          name: bank.name || "",
+          bankBranchNo: bank.bankBranchNo || "",
+          bankAccountNo: bank.bankAccountNo || "",
+          iban: bank.iban || "",
+          swiftCode: bank.swiftCode || "",
+          currencyCode: bank.currencyCode || "",
+          isPrimary: bank.isPrimary || false,
+        };
 
-    const token = await this.getAccessToken();
-    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${no}')?$expand=${expandParams.join(",")}`;
-    const response = await axios.patch(url, updateData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "If-Match": "*",
-      },
-    });
-    return response.data;
+        try {
+          // POST as new record first
+          const postUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegistrations('${regNo}')/partnerRegBankLines`;
+          const postPayload = { ...bankPayload, lineNo };
+          const response = await axios.post(postUrl, postPayload, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          });
+          console.log(`✅ Bank ${i + 1} created:`, lineNo);
+          results.banks.push({ lineNo, status: 'created' });
+        } catch (postErr) {
+          // If record exists, fall back to PATCH
+          const errorCode = postErr.response?.data?.error?.code;
+          const errorMessage = postErr.response?.data?.error?.message || '';
+          if (errorCode === 'Internal_EntityWithSameKeyExists' || 
+              errorMessage.includes('already exists')) {
+            try {
+              // Use direct entity endpoint for PATCH
+              const patchUrl = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/partnerRegBankLines(regNo='${regNo}',lineNo=${lineNo})`;
+              const response = await axios.patch(patchUrl, bankPayload, {
+                headers: { 
+                  Authorization: `Bearer ${token}`, 
+                  "Content-Type": "application/json",
+                  "If-Match": "*"
+                },
+              });
+              console.log(`✅ Bank ${i + 1} patched:`, lineNo);
+              results.banks.push({ lineNo, status: 'patched' });
+            } catch (patchErr) {
+              console.error(`❌ Bank ${i + 1} patch failed:`, patchErr.response?.data || patchErr.message);
+              results.banks.push({ lineNo, status: 'failed', error: patchErr.response?.data });
+            }
+          } else {
+            console.error(`❌ Bank ${i + 1} failed:`, postErr.response?.data || postErr.message);
+            results.banks.push({ lineNo, status: 'failed', error: postErr.response?.data });
+          }
+        }
+      }
+    }
+
+    return results;
   }
 
   // ─── Post Documents/Contacts/Banks for Registration ─────────────────────
@@ -721,6 +835,10 @@ class BusinessCentralService {
 
     const safePostCode = (val) =>
       val && val !== "000000" && val !== "00000" && val !== "0" ? val : "";
+
+    console.log("🔧 BC Service - createPartnerRegistration received:");
+    console.log("   data.partnerRegContactLines:", JSON.stringify(data.partnerRegContactLines, null, 2));
+    console.log("   data.partnerRegBankLines:", JSON.stringify(data.partnerRegBankLines, null, 2));
 
     const bcData = {
       no:                     data.partnerNo             || "",
