@@ -58,17 +58,20 @@ const PurchaseOrder = {
         const bcInclVat = parseFloat(line.lineAmountInclVat || line.lineAmountIncludingVat || 0);
         const lineAmountInclVat = bcInclVat || parseFloat((lineAmount + vatAmount).toFixed(4));
 
+        // Invoice discount from BC payload
+        const invDiscountAmount = parseFloat(line.InvDiscountAmount) || parseFloat(line.invDiscountAmount) || 0;
+
         const lineResult = await client.query(
           `INSERT INTO purchase_order_lines (
             order_id, line_document_no, line_no, item_no, description,
             quantity, unit_of_measure_code, unit_price,
-            line_discount_percent, line_discount_amount,
+            line_discount_percent, line_discount_amount, inv_discount_amount,
             line_amount, location_code, delivery_date, variant_code,
             vat_code, vat_percent, vat_amount, line_amount_incl_vat
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
           [
             order.id,
-            line.documentNo || null,
+            line.LinedocumentNo || line.lineDocumentNo || line.documentNo || null,
             line.lineNo || null,
             line.itemNo || null,
             line.description || null,
@@ -77,6 +80,7 @@ const PurchaseOrder = {
             unitPrice,
             discPct,
             discountAmt,
+            invDiscountAmount,
             lineAmount,
             line.locationCode || null,
             line.deliveryDate || null,
@@ -232,17 +236,20 @@ const PurchaseOrder = {
         const bcInclVat = parseFloat(line.lineAmountInclVat || line.lineAmountIncludingVat || 0);
         const lineAmountInclVat = bcInclVat || parseFloat((lineAmount + vatAmount).toFixed(4));
 
+        // Invoice discount from BC payload
+        const invDiscountAmount = parseFloat(line.InvDiscountAmount) || parseFloat(line.invDiscountAmount) || 0;
+
         const lineResult = await client.query(
           `INSERT INTO purchase_order_lines (
             order_id, line_document_no, line_no, item_no, description,
             quantity, unit_of_measure_code, unit_price,
-            line_discount_percent, line_discount_amount,
+            line_discount_percent, line_discount_amount, inv_discount_amount,
             line_amount, location_code, delivery_date, variant_code,
             vat_code, vat_percent, vat_amount, line_amount_incl_vat
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
           [
             id,
-            line.documentNo || null,
+            line.LinedocumentNo || line.lineDocumentNo || line.documentNo || null,
             line.lineNo || null,
             line.itemNo || null,
             line.description || null,
@@ -251,6 +258,7 @@ const PurchaseOrder = {
             unitPrice,
             discPct,
             discountAmt,
+            invDiscountAmount,
             lineAmount,
             line.locationCode || null,
             line.deliveryDate || null,

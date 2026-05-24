@@ -596,6 +596,7 @@ CREATE TABLE IF NOT EXISTS purchase_order_lines (
   unit_price            NUMERIC(15,4) DEFAULT 0,
   line_discount_percent NUMERIC(10,4) DEFAULT 0,
   line_discount_amount  NUMERIC(15,4) DEFAULT 0,
+  inv_discount_amount   NUMERIC(15,4) DEFAULT 0,
   line_amount           NUMERIC(15,4) DEFAULT 0,
   location_code         VARCHAR(50),
   delivery_date         DATE,
