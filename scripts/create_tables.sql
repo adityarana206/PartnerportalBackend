@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   vat_registration_no   VARCHAR(50),
   currency_code         VARCHAR(10),
   payment_terms_code    VARCHAR(50),
-  password              VARCHAR(255),
+  password              VARCHAR(255) NOT NULL,
   role                  VARCHAR(50) CHECK (role IN ('super_admin','vendor_admin','customer_admin','vendor','customer')),
   vendor_name           VARCHAR(255),
   location_code         VARCHAR(50),
@@ -161,7 +161,9 @@ CREATE TABLE IF NOT EXISTS bc_user_registration_contacts (
   full_name       VARCHAR(255),
   designation     VARCHAR(100),
   mobile_number   VARCHAR(50),
-  email_address   VARCHAR(255)
+  email_address   VARCHAR(255),
+  created_at      TIMESTAMP DEFAULT NOW(),
+  updated_at      TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS bc_user_registration_banks (
@@ -175,7 +177,9 @@ CREATE TABLE IF NOT EXISTS bc_user_registration_banks (
   iban            VARCHAR(50),
   swift_code      VARCHAR(20),
   currency_code   VARCHAR(10),
-  is_primary      BOOLEAN DEFAULT false
+  is_primary      BOOLEAN DEFAULT false,
+  created_at      TIMESTAMP DEFAULT NOW(),
+  updated_at      TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS bc_user_registration_documents (
@@ -208,7 +212,7 @@ CREATE TABLE IF NOT EXISTS vat_masters (
   vat_type     VARCHAR(50),
   is_inclusive BOOLEAN DEFAULT false,
   status       VARCHAR(50) DEFAULT 'Active',
-  created_by   INTEGER,
+  created_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at   TIMESTAMP DEFAULT NOW(),
   updated_at   TIMESTAMP DEFAULT NOW()
 );
@@ -255,7 +259,7 @@ CREATE TABLE IF NOT EXISTS no_series (
   increment_by_no INTEGER DEFAULT 1,
   allow_gaps      BOOLEAN DEFAULT false,
   date_order      BOOLEAN DEFAULT false,
-  created_by      INTEGER,
+  created_by      INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at      TIMESTAMP DEFAULT NOW(),
   updated_at      TIMESTAMP DEFAULT NOW()
 );
@@ -296,7 +300,7 @@ CREATE TABLE IF NOT EXISTS partner_location_links (
   use_as_in_transit    BOOLEAN DEFAULT false,
   is_default           BOOLEAN DEFAULT false,
   blocked              BOOLEAN DEFAULT false,
-  created_by           INTEGER,
+  created_by           INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at           TIMESTAMP DEFAULT NOW(),
   updated_at           TIMESTAMP DEFAULT NOW()
 );
@@ -332,12 +336,13 @@ CREATE TABLE IF NOT EXISTS contacts (
   home_page             VARCHAR(255),
   sync_status           VARCHAR(50) DEFAULT 'Pending',
   last_synced_date_time TIMESTAMP,
-  created_by            INTEGER,
+  created_by            INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at            TIMESTAMP DEFAULT NOW(),
   updated_at            TIMESTAMP DEFAULT NOW()
 );
 
 -- ─── Messages / Complaints ────────────────────────────────────
+-- DEFAULT ' ' on status/type fields mirrors Business Central's empty-string encoding.
 
 CREATE TABLE IF NOT EXISTS complaints (
   id                SERIAL PRIMARY KEY,
@@ -411,7 +416,7 @@ CREATE TABLE IF NOT EXISTS item_requests (
   block                BOOLEAN DEFAULT false,
   status               VARCHAR(50) DEFAULT 'Created',
   rejection_reason     TEXT,
-  created_by           INTEGER,
+  created_by           INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at           TIMESTAMP DEFAULT NOW(),
   updated_at           TIMESTAMP DEFAULT NOW()
 );
@@ -439,7 +444,7 @@ CREATE TABLE IF NOT EXISTS purchase_item_requests (
   status               VARCHAR(50) DEFAULT 'Submitted',
   rejection_reason     TEXT,
   price_effective_date DATE,
-  created_by           INTEGER,
+  created_by           INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at           TIMESTAMP DEFAULT NOW(),
   updated_at           TIMESTAMP DEFAULT NOW()
 );
@@ -471,7 +476,7 @@ CREATE TABLE IF NOT EXISTS purchase_prices (
   partner_no           VARCHAR(50),
   status               VARCHAR(50) DEFAULT '_x0020_',
   rejection_reason     TEXT,
-  created_by           INTEGER,
+  created_by           INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at           TIMESTAMP DEFAULT NOW(),
   updated_at           TIMESTAMP DEFAULT NOW()
 );
@@ -493,7 +498,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   bc_invoice_no      VARCHAR(100),
   linked_order_no    VARCHAR(100),
   location_code      VARCHAR(50),
-  created_by         INTEGER,
+  created_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at         TIMESTAMP DEFAULT NOW(),
   updated_at         TIMESTAMP DEFAULT NOW()
 );
@@ -533,7 +538,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoices (
   linked_order_no    VARCHAR(100),
   vendor_invoice_no  VARCHAR(100),
   location_code      VARCHAR(50),
-  created_by         INTEGER,
+  created_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at         TIMESTAMP DEFAULT NOW(),
   updated_at         TIMESTAMP DEFAULT NOW()
 );
@@ -560,7 +565,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_lines (
 CREATE TABLE IF NOT EXISTS purchase_orders (
   id                       SERIAL PRIMARY KEY,
   order_type               VARCHAR(50),
-  no                       VARCHAR(100),
+  no                       VARCHAR(100) UNIQUE,
   partner_no               VARCHAR(50),
   partner_type             VARCHAR(50),
   ship_to_code             VARCHAR(50),
@@ -574,7 +579,7 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
   submitted_date           DATE,
   portal_document_no       VARCHAR(100),
   portal_status            VARCHAR(50),
-  created_by               INTEGER,
+  created_by               INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at               TIMESTAMP DEFAULT NOW(),
   updated_at               TIMESTAMP DEFAULT NOW()
 );
@@ -622,7 +627,7 @@ CREATE TABLE IF NOT EXISTS purchase_receipts (
   status                  VARCHAR(50) DEFAULT 'Processed',
   direction               VARCHAR(50),
   bc_document_no          VARCHAR(100),
-  created_by              INTEGER,
+  created_by              INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at              TIMESTAMP DEFAULT NOW(),
   updated_at              TIMESTAMP DEFAULT NOW()
 );
@@ -662,7 +667,7 @@ CREATE TABLE IF NOT EXISTS sales_orders (
   submitted_date          DATE,
   partner_order_no        VARCHAR(100),
   partner_order_status    VARCHAR(50) DEFAULT 'Confirmed',
-  created_by              INTEGER,
+  created_by              INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at              TIMESTAMP DEFAULT NOW(),
   updated_at              TIMESTAMP DEFAULT NOW()
 );
@@ -735,7 +740,7 @@ CREATE TABLE IF NOT EXISTS sales_shipment_lines (
 
 CREATE TABLE IF NOT EXISTS delivery_orders (
   id                     SERIAL PRIMARY KEY,
-  delivery_order_no      VARCHAR(100),
+  delivery_order_no      VARCHAR(100) UNIQUE,
   partner_no             VARCHAR(50),
   partner_name           VARCHAR(255),
   partner_type           VARCHAR(50),
@@ -761,34 +766,34 @@ CREATE TABLE IF NOT EXISTS delivery_orders (
   remarks                TEXT,
   bc_synced              BOOLEAN DEFAULT false,
   bc_error               TEXT,
-  created_by             INTEGER,
+  created_by             INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at             TIMESTAMP DEFAULT NOW(),
   updated_at             TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS delivery_order_lines (
-  id                SERIAL PRIMARY KEY,
-  delivery_order_id INTEGER NOT NULL REFERENCES delivery_orders(id) ON DELETE CASCADE,
-  line_no           INTEGER,
-  po_id             INTEGER,
-  po_line_id        INTEGER,
-  po_no             VARCHAR(100),
-  po_line_no        INTEGER,
-  po_date_time      TIMESTAMP,
-  po_total_amount   NUMERIC(15,4),
-  item_no           VARCHAR(50),
-  variant_code      VARCHAR(50),
-  description       VARCHAR(255),
+  id                 SERIAL PRIMARY KEY,
+  delivery_order_id  INTEGER NOT NULL REFERENCES delivery_orders(id) ON DELETE CASCADE,
+  line_no            INTEGER,
+  po_id              INTEGER REFERENCES purchase_orders(id) ON DELETE SET NULL,
+  po_line_id         INTEGER REFERENCES purchase_order_lines(id) ON DELETE SET NULL,
+  po_no              VARCHAR(100),
+  po_line_no         INTEGER,
+  po_date_time       TIMESTAMP,
+  po_total_amount    NUMERIC(15,4),
+  item_no            VARCHAR(50),
+  variant_code       VARCHAR(50),
+  description        VARCHAR(255),
   ordered_quantity   NUMERIC(15,4) DEFAULT 0,
   to_be_shipped      NUMERIC(15,4) DEFAULT 0,
   shipped_quantity   NUMERIC(15,4) DEFAULT 0,
   remaining_quantity NUMERIC(15,4) DEFAULT 0,
-  unit_of_measure   VARCHAR(20) DEFAULT 'PCS',
-  unit_price        NUMERIC(15,4),
-  lot_no            VARCHAR(100),
-  serial_no         VARCHAR(100),
-  expiration_date   DATE,
-  created_at        TIMESTAMP DEFAULT NOW()
+  unit_of_measure    VARCHAR(20) DEFAULT 'PCS',
+  unit_price         NUMERIC(15,4),
+  lot_no             VARCHAR(100),
+  serial_no          VARCHAR(100),
+  expiration_date    DATE,
+  created_at         TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS delivery_order_documents (
@@ -806,6 +811,7 @@ CREATE TABLE IF NOT EXISTS delivery_order_documents (
 CREATE TABLE IF NOT EXISTS payments (
   id                   SERIAL PRIMARY KEY,
   payment_number       VARCHAR(100),
+  -- invoice_id is a soft reference; may point to invoices or purchase_invoices depending on partner_type
   invoice_id           INTEGER,
   invoice_no           VARCHAR(100),
   order_no             VARCHAR(100),
@@ -834,7 +840,7 @@ CREATE TABLE IF NOT EXISTS payments (
   closed_by_entry_no   VARCHAR(100),
   closed_at_date       DATE,
   bal_account_no       VARCHAR(100),
-  created_by           INTEGER,
+  created_by           INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at           TIMESTAMP DEFAULT NOW(),
   updated_at           TIMESTAMP DEFAULT NOW(),
   UNIQUE (payment_number, partner_no)
@@ -888,7 +894,7 @@ CREATE TABLE IF NOT EXISTS item_change_requests (
   rejection_reason   TEXT,
   submitted_date     TIMESTAMP,
   approved_date      TIMESTAMP,
-  created_by         INTEGER,
+  created_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at         TIMESTAMP DEFAULT NOW(),
   updated_at         TIMESTAMP DEFAULT NOW()
 );
@@ -937,7 +943,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
   theme_primary   VARCHAR(7)  DEFAULT '#1976d2',
   theme_secondary VARCHAR(7)  DEFAULT '#dc004e',
   logo_url        TEXT,
-  updated_by      INTEGER,
+  updated_by      INTEGER REFERENCES users(id) ON DELETE SET NULL,
   updated_at      TIMESTAMP DEFAULT NOW()
 );
 
@@ -995,9 +1001,8 @@ CREATE INDEX IF NOT EXISTS idx_pi_partner_no                   ON purchase_invoi
 CREATE INDEX IF NOT EXISTS idx_pi_status                       ON purchase_invoices(status);
 CREATE INDEX IF NOT EXISTS idx_pil_invoice_id                  ON purchase_invoice_lines(invoice_id);
 
--- purchase_orders
+-- purchase_orders (UNIQUE on no handled by column constraint above)
 CREATE INDEX IF NOT EXISTS idx_po_partner_no                   ON purchase_orders(partner_no);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_po_no                    ON purchase_orders(no);
 CREATE INDEX IF NOT EXISTS idx_po_status                       ON purchase_orders(status);
 CREATE INDEX IF NOT EXISTS idx_pol_order_id                    ON purchase_order_lines(order_id);
 
@@ -1022,6 +1027,7 @@ CREATE INDEX IF NOT EXISTS idx_do_partner_no                   ON delivery_order
 CREATE INDEX IF NOT EXISTS idx_do_delivery_order_no            ON delivery_orders(delivery_order_no);
 CREATE INDEX IF NOT EXISTS idx_do_status                       ON delivery_orders(status);
 CREATE INDEX IF NOT EXISTS idx_dol_delivery_order_id           ON delivery_order_lines(delivery_order_id);
+CREATE INDEX IF NOT EXISTS idx_dol_po_id                       ON delivery_order_lines(po_id);
 CREATE INDEX IF NOT EXISTS idx_dod_delivery_order_id           ON delivery_order_documents(delivery_order_id);
 
 -- payments

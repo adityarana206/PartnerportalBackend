@@ -43,7 +43,10 @@ const PurchaseOrder = {
         const unitPrice   = parseFloat(line.unitPrice) || 0;
         const discPct     = parseFloat(line.lineDiscountPercent) || 0;
         const subtotal    = qty * unitPrice;
-        const discountAmt = parseFloat(line.lineDiscountAmount) || parseFloat((subtotal * discPct / 100).toFixed(4));
+        // Use percent when set (avoids BC double-discount bug); fall back to stored amount only when percent is 0
+        const discountAmt = discPct > 0
+          ? parseFloat((subtotal * discPct / 100).toFixed(4))
+          : parseFloat(line.lineDiscountAmount) || 0;
         const lineAmount  = parseFloat((subtotal - discountAmt).toFixed(4));
 
         let vatPercent = 0;
@@ -66,13 +69,13 @@ const PurchaseOrder = {
             }
           } else {
             vatPercent        = parseFloat(line.vatPercent) || 0;
-            vatAmount         = parseFloat(line.vatAmount)  || 0;
-            lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
+            vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
+            lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
           }
         } else {
           vatPercent        = parseFloat(line.vatPercent) || 0;
-          vatAmount         = parseFloat(line.vatAmount)  || 0;
-          lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
+          vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
+          lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
         }
 
         const lineResult = await client.query(
@@ -234,7 +237,10 @@ const PurchaseOrder = {
         const unitPrice   = parseFloat(line.unitPrice) || 0;
         const discPct     = parseFloat(line.lineDiscountPercent) || 0;
         const subtotal    = qty * unitPrice;
-        const discountAmt = parseFloat(line.lineDiscountAmount) || parseFloat((subtotal * discPct / 100).toFixed(4));
+        // Use percent when set (avoids BC double-discount bug); fall back to stored amount only when percent is 0
+        const discountAmt = discPct > 0
+          ? parseFloat((subtotal * discPct / 100).toFixed(4))
+          : parseFloat(line.lineDiscountAmount) || 0;
         const lineAmount  = parseFloat((subtotal - discountAmt).toFixed(4));
 
         let vatPercent = 0;
@@ -257,13 +263,13 @@ const PurchaseOrder = {
             }
           } else {
             vatPercent        = parseFloat(line.vatPercent) || 0;
-            vatAmount         = parseFloat(line.vatAmount)  || 0;
-            lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
+            vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
+            lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
           }
         } else {
           vatPercent        = parseFloat(line.vatPercent) || 0;
-          vatAmount         = parseFloat(line.vatAmount)  || 0;
-          lineAmountInclVat = parseFloat(line.lineAmountInclVat) || parseFloat((lineAmount + vatAmount).toFixed(4));
+          vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
+          lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
         }
 
         const lineResult = await client.query(
