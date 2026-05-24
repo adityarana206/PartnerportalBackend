@@ -48,4 +48,21 @@ const syncItemCategories = async (req, res) => {
   }
 };
 
-module.exports = { getItemCategories, getItemCategoriesFromBC, syncItemCategories };
+// DELETE /api/item-categories/:code — delete a category from local DB
+const deleteItemCategory = async (req, res) => {
+  try {
+    const { code } = req.params;
+    if (!code) {
+      return res.status(400).json({ success: false, message: "Category code is required" });
+    }
+    const result = await pool.query("DELETE FROM item_categories WHERE code = $1 RETURNING *", [code]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, message: `Category '${code}' not found` });
+    }
+    res.status(200).json({ success: true, message: `Category '${code}' deleted`, data: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { getItemCategories, getItemCategoriesFromBC, syncItemCategories, deleteItemCategory };

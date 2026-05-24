@@ -1,0 +1,361 @@
+{
+  "info": {
+    "name": "Complaints Chat Channel",
+    "description": "All endpoints for the complaint chat system — thread summaries, portal replies, BC replies, and status management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",      "value": "http://localhost:3000" },
+    { "key": "token",         "value": "YOUR_JWT_TOKEN_HERE",      "description": "Bearer token from /api/auth/login" },
+    { "key": "register_token","value": "YOUR_REGISTER_TOKEN_HERE", "description": "Register token from /api/auth/get-register-token (used by BC endpoints)" },
+    { "key": "thread_id",     "value": "COMP-0001",               "description": "Complaint thread ID" },
+    { "key": "complaint_id",  "value": "1",                        "description": "Complaint row ID (integer)" },
+    { "key": "partner_no",    "value": "VEND001",                  "description": "Vendor or Customer partner number" }
+  ],
+  "item": [
+    {
+      "name": "Thread Summaries",
+      "description": "One entry per thread — used to populate the left-panel thread list in the chat UI.",
+      "item": [
+        {
+          "name": "Get All Thread Summaries (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/complaints/threads",
+            "description": "Super admin gets ALL threads. Returns the first message per thread enriched with message_count, latest_activity, latest_status, latest_message."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"count\": 2,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"thread_id\": \"COMP-0001\",\n      \"document_type\": \"Concern\",\n      \"category\": \"Invoice Dispute\",\n      \"partner_type\": \"Vendor\",\n      \"sender_id\": \"VEND001\",\n      \"sender_name\": \"John Doe\",\n      \"message_text\": \"My invoice #INV-123 is incorrect.\",\n      \"status\": \"Open\",\n      \"message_count\": \"3\",\n      \"latest_activity\": \"2026-05-24T10:30:00.000Z\",\n      \"latest_status\": \"In Progress\",\n      \"latest_message\": \"We are reviewing this now.\",\n      \"bc_synced\": true,\n      \"created_at\": \"2026-05-24T08:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Thread Summaries (Partner — by partner_no query)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/complaints/threads?partnerNo={{partner_no}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "complaints", "threads"],
+              "query": [{ "key": "partnerNo", "value": "{{partner_no}}" }]
+            },
+            "description": "For non-admin roles the backend auto-filters by the logged-in user's refNo. This query param is only honoured for admin callers."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"count\": 1,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"thread_id\": \"COMP-0001\",\n      \"category\": \"Quality Issue\",\n      \"message_count\": \"2\",\n      \"latest_activity\": \"2026-05-24T09:00:00.000Z\",\n      \"latest_status\": \"Sent\",\n      \"latest_message\": \"Product arrived damaged.\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Thread Messages",
+      "description": "Read all messages within a single thread.",
+      "item": [
+        {
+          "name": "Get All Messages in Thread",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/complaints/thread/{{thread_id}}",
+            "description": "Returns all messages for a thread in ascending timestamp order (oldest first). Used to populate the chat window."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"count\": 3,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"thread_id\": \"COMP-0001\",\n      \"document_type\": \"Concern\",\n      \"category\": \"Invoice Dispute\",\n      \"sender_type\": \"Partner\",\n      \"partner_type\": \"Vendor\",\n      \"sender_id\": \"VEND001\",\n      \"sender_name\": \"John Doe\",\n      \"message_text\": \"My invoice #INV-123 has wrong amount.\",\n      \"change_details\": null,\n      \"status\": \"Open\",\n      \"direction\": \"Portal-to-BC\",\n      \"bc_synced\": true,\n      \"message_timestamp\": \"2026-05-24T08:00:00.000Z\"\n    },\n    {\n      \"id\": 2,\n      \"thread_id\": \"COMP-0001\",\n      \"document_type\": \"Concern\",\n      \"category\": \"Invoice Dispute\",\n      \"sender_type\": \"Company\",\n      \"partner_type\": \"Vendor\",\n      \"sender_id\": null,\n      \"sender_name\": \"Admin\",\n      \"message_text\": \"We are reviewing the invoice. Please wait.\",\n      \"status\": \"In Progress\",\n      \"direction\": \"BC-to-Portal\",\n      \"bc_synced\": false,\n      \"message_timestamp\": \"2026-05-24T09:00:00.000Z\"\n    },\n    {\n      \"id\": 3,\n      \"thread_id\": \"COMP-0001\",\n      \"sender_type\": \"Partner\",\n      \"sender_name\": \"John Doe\",\n      \"message_text\": \"Thank you, please let me know.\",\n      \"direction\": \"Portal-to-BC\",\n      \"bc_synced\": true,\n      \"message_timestamp\": \"2026-05-24T10:30:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Create Complaint (New Thread)",
+      "description": "Portal user creates a brand-new complaint thread. Backend generates the thread_id via NoSeries, saves to local DB, and auto-syncs to BC via the `messages` endpoint.",
+      "item": [
+        {
+          "name": "Create New Complaint — Portal (saves + syncs to BC `messages`)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization",  "value": "Bearer {{token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/complaints",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentType\": \"Concern\",\n  \"category\": \"Invoice Dispute\",\n  \"linkedDocType\": \"Invoice\",\n  \"linkedDocNo\": \"INV-123\",\n  \"messageText\": \"My invoice #INV-123 has an incorrect amount. Expected 500 AED but billed 750 AED.\",\n  \"changeDetails\": \"Difference of 250 AED\",\n  \"direction\": \"Portal-to-BC\",\n  \"status\": \"Open\"\n}"
+            },
+            "description": "documentType: Message | Return Request | Amendment Request | Concern\ncategory: General | Pricing Dispute | Quality Issue | Delivery Concern | Invoice Dispute | Return Request | Amendment Request | Credit Request\nstatus: Sent | Delivered | Read | Open | In Progress | Resolved | Closed | Escalated"
+          },
+          "response": [
+            {
+              "name": "Success — BC synced",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Complaint created and synced to BC\",\n  \"bcSynced\": true,\n  \"data\": {\n    \"id\": 1,\n    \"thread_id\": \"COMP-0001\",\n    \"document_type\": \"Concern\",\n    \"category\": \"Invoice Dispute\",\n    \"linked_doc_type\": \"Invoice\",\n    \"linked_doc_no\": \"INV-123\",\n    \"sender_type\": \"Partner\",\n    \"partner_type\": \"Vendor\",\n    \"sender_id\": \"VEND001\",\n    \"sender_name\": \"John Doe\",\n    \"message_text\": \"My invoice #INV-123 has an incorrect amount.\",\n    \"change_details\": \"Difference of 250 AED\",\n    \"direction\": \"Portal-to-BC\",\n    \"status\": \"Open\",\n    \"bc_synced\": true,\n    \"bc_error\": null,\n    \"message_timestamp\": \"2026-05-24T08:00:00.000Z\",\n    \"created_at\": \"2026-05-24T08:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "BC sync failed",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Complaint created (BC sync failed)\",\n  \"bcSynced\": false,\n  \"bcError\": \"Failed to authenticate with Business Central\",\n  \"data\": { \"id\": 1, \"bc_synced\": false }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create New Complaint — From BC (BC-to-Portal, no sync back)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization",  "value": "Bearer {{register_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/complaints/businesscentral",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threadId\": \"COMP-BC-001\",\n  \"documentType\": \"Message\",\n  \"category\": \"General\",\n  \"senderType\": \"Company\",\n  \"partnerType\": \"Vendor\",\n  \"senderId\": \"VEND001\",\n  \"senderName\": \"BC System\",\n  \"messageText\": \"Your complaint has been received and is being processed.\",\n  \"direction\": \"BC-to-Portal\",\n  \"status\": \"Delivered\"\n}"
+            },
+            "description": "Called by Business Central to push a new complaint thread into the portal. Uses register token auth. Does NOT sync back to BC."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Complaint received from BC\",\n  \"data\": {\n    \"id\": 5,\n    \"thread_id\": \"COMP-BC-001\",\n    \"direction\": \"BC-to-Portal\",\n    \"bc_synced\": false\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reply to Thread",
+      "description": "Send a reply inside an existing thread. Portal replies sync to BC via `commentMessageLines`. BC replies are stored locally only.",
+      "item": [
+        {
+          "name": "Reply — Portal → BC (`commentMessageLines`)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization",  "value": "Bearer {{token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/complaints/thread/{{thread_id}}/reply",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messageText\": \"Thank you for your response. Could you please share the corrected invoice?\",\n  \"changeDetails\": \"\"\n}"
+            },
+            "description": "Saves reply to local DB then POSTs to BC `commentMessageLines` endpoint.\n\n- Partner users → sender_type = 'Partner'\n- Admin/vendor_admin/customer_admin → sender_type = 'Company'\n\nOnly messageText is required. All other metadata (documentType, category, linkedDoc, partnerType) is inherited from the parent message in the thread."
+          },
+          "response": [
+            {
+              "name": "Success — BC synced",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Reply sent and synced to BC\",\n  \"bcSynced\": true,\n  \"data\": {\n    \"id\": 4,\n    \"thread_id\": \"COMP-0001\",\n    \"document_type\": \"Concern\",\n    \"category\": \"Invoice Dispute\",\n    \"sender_type\": \"Partner\",\n    \"partner_type\": \"Vendor\",\n    \"sender_id\": \"VEND001\",\n    \"sender_name\": \"John Doe\",\n    \"message_text\": \"Thank you for your response.\",\n    \"direction\": \"Portal-to-BC\",\n    \"status\": \"Sent\",\n    \"bc_synced\": true,\n    \"bc_error\": null,\n    \"message_timestamp\": \"2026-05-24T10:30:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "Thread Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Thread not found\"\n}"
+            },
+            {
+              "name": "Validation Error",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"messageText is required\",\n  \"errors\": [\"messageText is required\"]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reply — BC → Portal (no sync back)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization",  "value": "Bearer {{register_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/complaints/thread/{{thread_id}}/reply/businesscentral",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messageText\": \"We have corrected the invoice and a revised copy has been sent to your email.\",\n  \"changeDetails\": \"Invoice amount corrected to 500 AED\",\n  \"senderName\": \"Accounts Team\",\n  \"status\": \"Resolved\"\n}"
+            },
+            "description": "Called by Business Central to post a reply into an existing thread.\n\nUses register token auth. Automatically sets:\n- sender_type = 'Company'\n- direction = 'BC-to-Portal'\n- partnerType inherited from original thread\n\nDoes NOT sync back to BC (no loop)."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"BC reply received\",\n  \"data\": {\n    \"id\": 5,\n    \"thread_id\": \"COMP-0001\",\n    \"sender_type\": \"Company\",\n    \"sender_name\": \"Accounts Team\",\n    \"message_text\": \"We have corrected the invoice.\",\n    \"direction\": \"BC-to-Portal\",\n    \"status\": \"Resolved\",\n    \"bc_synced\": false\n  }\n}"
+            },
+            {
+              "name": "Thread Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Thread not found\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Read Complaints",
+      "description": "Various GET endpoints for querying individual complaints.",
+      "item": [
+        {
+          "name": "Get All Complaints",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/complaints",
+            "description": "Returns all complaints (admin) or filtered by partnerNo/threadId query params."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Complaints — Filter by partnerNo",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/complaints?partnerNo={{partner_no}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "complaints"],
+              "query": [{ "key": "partnerNo", "value": "{{partner_no}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Complaints — Filter by threadId",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/complaints?threadId={{thread_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "complaints"],
+              "query": [{ "key": "threadId", "value": "{{thread_id}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Complaint by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": 1,\n    \"thread_id\": \"COMP-0001\",\n    \"document_type\": \"Concern\",\n    \"category\": \"Invoice Dispute\",\n    \"sender_type\": \"Partner\",\n    \"partner_type\": \"Vendor\",\n    \"sender_id\": \"VEND001\",\n    \"sender_name\": \"John Doe\",\n    \"message_text\": \"My invoice is incorrect.\",\n    \"status\": \"Open\",\n    \"bc_synced\": true,\n    \"bc_error\": null\n  }\n}"
+            },
+            {
+              "name": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Complaint not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Complaints by Partner",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/complaints/partner/{{partner_no}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Status & Sync",
+      "description": "Update status and manually re-trigger BC sync.",
+      "item": [
+        {
+          "name": "Update Complaint Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"In Progress\"\n}"
+            },
+            "description": "Allowed status values: Sent | Delivered | Read | Open | In Progress | Resolved | Closed | Escalated"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Status updated\",\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"In Progress\"\n  }\n}"
+            },
+            {
+              "name": "Invalid Status",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid status. Allowed: Sent, Delivered, Read, Open, In Progress, Resolved, Closed, Escalated\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Sync Complaint to BC (manual retry)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/sync-bc",
+            "description": "Manually re-syncs a complaint to BC `messages` endpoint. Useful when the original auto-sync failed."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Complaint synced to Business Central\",\n  \"data\": {\n    \"id\": 1,\n    \"bc_synced\": true,\n    \"bc_error\": null\n  }\n}"
+            },
+            {
+              "name": "BC Sync Failed",
+              "code": 502,
+              "body": "{\n  \"success\": false,\n  \"message\": \"BC sync failed\",\n  \"error\": \"Failed to authenticate with Business Central\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Delete",
+      "description": "Admin-only deletion.",
+      "item": [
+        {
+          "name": "Delete Complaint by ID",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}",
+            "description": "Hard-deletes a single complaint row. Admin only."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Complaint deleted\",\n  \"data\": { \"id\": 1 }\n}"
+            },
+            {
+              "name": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Complaint not found\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

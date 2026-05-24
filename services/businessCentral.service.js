@@ -343,7 +343,7 @@ class BusinessCentralService {
     return await this.callAPI("portalInvoices?$expand=portalInvoiceLine", "POST", bcData);
   }
 
-  // ─── Partner Messages ──────────────────────────────────
+  // ─── Partner Messages (new thread) ────────────────────
   async createMessage(messageData) {
     const bcData = {
       threadId:         messageData.threadId        || "",
@@ -363,6 +363,17 @@ class BusinessCentralService {
     };
 
     return await this.callAPI("messages", "POST", bcData);
+  }
+
+  // ─── Comment Message Lines (reply in existing thread) ─
+  async createCommentMessageLine(replyData) {
+    const bcData = {
+      threadId:    replyData.threadId    || "",
+      message:     replyData.messageText || replyData.message || "",
+      status:      replyData.status      || "Sent",
+    };
+
+    return await this.callAPI("commentMessageLines", "POST", bcData);
   }
 
   // ─── Notification Log ──────────────────────────────────

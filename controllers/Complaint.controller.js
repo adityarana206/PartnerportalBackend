@@ -157,6 +157,102 @@ const deleteComplaint = async (req, res) => {
   }
 };
 
+const getThreadSummaries = async (req, res) => {
+  try {
+    const role = req.user?.role || "";
+    const isAdmin = ["super_admin", "vendor_admin", "customer_admin"].includes(role);
+    const partnerNo = isAdmin ? null : (req.user?.refNo || sanitizeString(req.query.partnerNo) || null);
+    const data = await Complaint.findThreadSummaries(partnerNo);
+    res.status(200).json({ success: true, count: data.length, data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const replyToThread = async (req, res) => {
+  try {
+    const threadId = sanitizeString(req.params.threadId);
+    if (!threadId) return res.status(400).json({ success: false, message: "Invalid thread ID" });
+
+    const errors = validate(req.body);
+    if (errors.length) return res.status(400).json({ success: false, message: errors[0], errors });
+
+    const existing = await Complaint.findByThreadId(threadId);
+    if (!existing.length) return res.status(404).json({ success: false, message: "Thread not found" });
+
+    const parent = existing[0];
+    const user = req.user || {};
+    const role = user.role || "";
+    const isAdmin = ["super_admin", "vendor_admin", "customer_admin"].includes(role);
+
+    const data = {
+      threadId,
+      documentType: parent.document_type,
+      category: parent.category,
+      linkedDocType: parent.linked_doc_type || null,
+      linkedDocNo: parent.linked_doc_no || null,
+      senderType: isAdmin ? "Company" : "Partner",
+      partnerType: parent.partner_type,
+      senderId: user.refNo || req.body.senderId || null,
+      senderName: user.name || req.body.senderName || null,
+      messageText: req.body.messageText,
+      changeDetails: req.body.changeDetails || null,
+      direction: "Portal-to-BC",
+      status: req.body.status || "Sent",
+    };
+
+    const complaint = await Complaint.create(data);
+    const { row, bcSynced, bcError } = await Complaint.syncReplyToBC(complaint.id);
+
+    res.status(201).json({
+      success: true,
+      message: bcSynced ? "Reply sent and synced to BC" : "Reply sent (BC sync failed)",
+      data: row,
+      bcSynced,
+      ...(bcError && { bcError }),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Called by BC to post a reply into an existing thread (BC-to-Portal direction)
+const replyToThreadFromBC = async (req, res) => {
+  try {
+    const threadId = sanitizeString(req.params.threadId);
+    if (!threadId) return res.status(400).json({ success: false, message: "Invalid thread ID" });
+
+    const errors = validate(req.body, false);
+    if (errors.length) return res.status(400).json({ success: false, message: errors[0], errors });
+
+    const existing = await Complaint.findByThreadId(threadId);
+    if (!existing.length) return res.status(404).json({ success: false, message: "Thread not found" });
+
+    const parent = existing[0];
+
+    const data = {
+      threadId,
+      documentType: req.body.documentType  || parent.document_type,
+      category:     req.body.category      || parent.category,
+      linkedDocType: req.body.linkedDocType || parent.linked_doc_type || null,
+      linkedDocNo:   req.body.linkedDocNo   || parent.linked_doc_no   || null,
+      senderType:    "Company",
+      partnerType:   parent.partner_type,
+      senderId:      req.body.senderId   || null,
+      senderName:    req.body.senderName || null,
+      messageText:   req.body.messageText || null,
+      changeDetails: req.body.changeDetails || null,
+      direction:     "BC-to-Portal",
+      status:        req.body.status || "Sent",
+    };
+
+    const complaint = await Complaint.create(data);
+    res.status(201).json({ success: true, message: "BC reply received", data: complaint });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createComplaint,
   createComplaintFromBC,
@@ -167,4 +263,7 @@ module.exports = {
   updateComplaintStatus,
   syncComplaintToBC,
   deleteComplaint,
+  getThreadSummaries,
+  replyToThread,
+  replyToThreadFromBC,
 };

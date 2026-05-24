@@ -81,6 +81,27 @@ const Complaint = {
     return result.rows[0] || null;
   },
 
+  async findThreadSummaries(partnerNo = null) {
+    const query = `
+      SELECT * FROM (
+        SELECT DISTINCT ON (c.thread_id)
+          c.*,
+          (SELECT COUNT(*) FROM complaints WHERE thread_id = c.thread_id)::text AS message_count,
+          (SELECT MAX(message_timestamp) FROM complaints WHERE thread_id = c.thread_id) AS latest_activity,
+          (SELECT status FROM complaints WHERE thread_id = c.thread_id ORDER BY message_timestamp DESC LIMIT 1) AS latest_status,
+          (SELECT message_text FROM complaints WHERE thread_id = c.thread_id ORDER BY message_timestamp DESC LIMIT 1) AS latest_message
+        FROM complaints c
+        WHERE c.thread_id IS NOT NULL
+          AND ($1::text IS NULL OR c.thread_id IN (
+            SELECT DISTINCT thread_id FROM complaints WHERE sender_id = $1 AND thread_id IS NOT NULL
+          ))
+        ORDER BY c.thread_id, c.message_timestamp ASC
+      ) sub
+      ORDER BY latest_activity DESC`;
+    const result = await pool.query(query, [partnerNo || null]);
+    return result.rows;
+  },
+
   async syncToBC(id) {
     const bcService = require("../services/businessCentral.service");
     const complaint = await this.findById(id);
@@ -89,7 +110,6 @@ const Complaint = {
     let bcSynced = false;
     let bcError = null;
     try {
-      // Ensure partnerType is valid (Vendor or Customer), default to Vendor
       let partnerType = complaint.partner_type?.trim();
       if (!partnerType || !["Vendor", "Customer"].includes(partnerType)) {
         partnerType = "Vendor";
@@ -115,6 +135,44 @@ const Complaint = {
     } catch (err) {
       bcError = err.response?.data || err.message;
       console.error(`⚠️  Complaint ${id} BC sync failed:`, bcError);
+    }
+
+    const result = await pool.query(
+      `UPDATE complaints SET bc_synced=$1, bc_error=$2 WHERE id=$3 RETURNING *`,
+      [bcSynced, bcSynced ? null : JSON.stringify(bcError), id]
+    );
+    return { row: result.rows[0], bcSynced, bcError };
+  },
+
+  async syncReplyToBC(id) {
+    const bcService = require("../services/businessCentral.service");
+    const complaint = await this.findById(id);
+    if (!complaint) return null;
+
+    let bcSynced = false;
+    let bcError = null;
+    try {
+      let partnerType = complaint.partner_type?.trim();
+      if (!partnerType || !["Vendor", "Customer"].includes(partnerType)) {
+        partnerType = "Vendor";
+      }
+
+      await bcService.createCommentMessageLine({
+        threadId:         complaint.thread_id,
+        senderType:       complaint.sender_type,
+        PartnerType:      partnerType,
+        senderId:         complaint.sender_id,
+        senderName:       complaint.sender_name      || "",
+        messageText:      complaint.message_text     || "",
+        changeDetails:    complaint.change_details   || "",
+        messageTimestamp: complaint.message_timestamp,
+        direction:        complaint.direction,
+        status:           complaint.status,
+      });
+      bcSynced = true;
+    } catch (err) {
+      bcError = err.response?.data || err.message;
+      console.error(`⚠️  Reply ${id} BC sync failed:`, bcError);
     }
 
     const result = await pool.query(
