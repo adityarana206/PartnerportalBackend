@@ -180,6 +180,11 @@ const replyToThread = async (req, res) => {
     const existing = await Complaint.findByThreadId(threadId);
     if (!existing.length) return res.status(404).json({ success: false, message: "Thread not found" });
 
+    const latestStatus = existing[existing.length - 1].status?.trim();
+    if (latestStatus === "Closed") {
+      return res.status(400).json({ success: false, message: "Complaint is closed. Please create a new one." });
+    }
+
     const parent = existing[0];
     const user = req.user || {};
     const role = user.role || "";
