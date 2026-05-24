@@ -39,44 +39,24 @@ const PurchaseOrder = {
 
       const lines = [];
       for (const line of data.orderStagingLines || []) {
-        const qty         = parseFloat(line.quantity)  || 0;
-        const unitPrice   = parseFloat(line.unitPrice) || 0;
-        const discPct     = parseFloat(line.lineDiscountPercent) || 0;
-        const subtotal    = qty * unitPrice;
-        // Use percent when set (avoids BC double-discount bug); fall back to stored amount only when percent is 0
+        const qty      = parseFloat(line.quantity)  || 0;
+        const unitPrice = parseFloat(line.unitPrice) || 0;
+        const discPct  = parseFloat(line.lineDiscountPercent) || 0;
         const discountAmt = discPct > 0
-          ? parseFloat((subtotal * discPct / 100).toFixed(4))
+          ? parseFloat((qty * unitPrice * discPct / 100).toFixed(4))
           : parseFloat(line.lineDiscountAmount) || 0;
-        const lineAmount  = parseFloat((subtotal - discountAmt).toFixed(4));
 
-        let vatPercent = 0;
-        let vatAmount = 0;
-        let lineAmountInclVat = lineAmount;
+        // Trust BC's pre-computed lineAmount to avoid rounding drift
+        const lineAmount = parseFloat(line.lineAmount) || parseFloat((qty * unitPrice - discountAmt).toFixed(4));
 
-        if (line.vatCode) {
-          const vat = await client.query(
-            "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
-            [line.vatCode]
-          );
-          if (vat.rows[0]) {
-            vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
-            if (vat.rows[0].is_inclusive) {
-              vatAmount         = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
-              lineAmountInclVat = lineAmount;
-            } else {
-              vatAmount         = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
-              lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-            }
-          } else {
-            vatPercent        = parseFloat(line.vatPercent) || 0;
-            vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
-            lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-          }
-        } else {
-          vatPercent        = parseFloat(line.vatPercent) || 0;
-          vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
-          lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-        }
+        // BC's vatAmount can be negative when invoice discounts are present
+        // NEVER wrap in Math.abs() — the negative sign encodes the invoice discount
+        const vatPercent = parseFloat(line.vatPercent) || 0;
+        const vatAmount  = parseFloat(String(line.vatAmount ?? 0));
+
+        // Trust BC's lineAmountInclVat directly (already accounts for invoice discounts)
+        const bcInclVat = parseFloat(line.lineAmountInclVat || line.lineAmountIncludingVat || 0);
+        const lineAmountInclVat = bcInclVat || parseFloat((lineAmount + vatAmount).toFixed(4));
 
         const lineResult = await client.query(
           `INSERT INTO purchase_order_lines (
@@ -233,44 +213,24 @@ const PurchaseOrder = {
 
       const lines = [];
       for (const line of data.orderStagingLines || []) {
-        const qty         = parseFloat(line.quantity)  || 0;
-        const unitPrice   = parseFloat(line.unitPrice) || 0;
-        const discPct     = parseFloat(line.lineDiscountPercent) || 0;
-        const subtotal    = qty * unitPrice;
-        // Use percent when set (avoids BC double-discount bug); fall back to stored amount only when percent is 0
+        const qty      = parseFloat(line.quantity)  || 0;
+        const unitPrice = parseFloat(line.unitPrice) || 0;
+        const discPct  = parseFloat(line.lineDiscountPercent) || 0;
         const discountAmt = discPct > 0
-          ? parseFloat((subtotal * discPct / 100).toFixed(4))
+          ? parseFloat((qty * unitPrice * discPct / 100).toFixed(4))
           : parseFloat(line.lineDiscountAmount) || 0;
-        const lineAmount  = parseFloat((subtotal - discountAmt).toFixed(4));
 
-        let vatPercent = 0;
-        let vatAmount = 0;
-        let lineAmountInclVat = lineAmount;
+        // Trust BC's pre-computed lineAmount to avoid rounding drift
+        const lineAmount = parseFloat(line.lineAmount) || parseFloat((qty * unitPrice - discountAmt).toFixed(4));
 
-        if (line.vatCode) {
-          const vat = await client.query(
-            "SELECT vat_percent, is_inclusive FROM vat_masters WHERE vat_code = $1 AND status = 'Active'",
-            [line.vatCode]
-          );
-          if (vat.rows[0]) {
-            vatPercent = parseFloat(vat.rows[0].vat_percent) || 0;
-            if (vat.rows[0].is_inclusive) {
-              vatAmount         = parseFloat((lineAmount - lineAmount / (1 + vatPercent / 100)).toFixed(4));
-              lineAmountInclVat = lineAmount;
-            } else {
-              vatAmount         = parseFloat((lineAmount * vatPercent / 100).toFixed(4));
-              lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-            }
-          } else {
-            vatPercent        = parseFloat(line.vatPercent) || 0;
-            vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
-            lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-          }
-        } else {
-          vatPercent        = parseFloat(line.vatPercent) || 0;
-          vatAmount         = Math.abs(parseFloat(line.vatAmount) || 0);
-          lineAmountInclVat = parseFloat((lineAmount + vatAmount).toFixed(4));
-        }
+        // BC's vatAmount can be negative when invoice discounts are present
+        // NEVER wrap in Math.abs() — the negative sign encodes the invoice discount
+        const vatPercent = parseFloat(line.vatPercent) || 0;
+        const vatAmount  = parseFloat(String(line.vatAmount ?? 0));
+
+        // Trust BC's lineAmountInclVat directly (already accounts for invoice discounts)
+        const bcInclVat = parseFloat(line.lineAmountInclVat || line.lineAmountIncludingVat || 0);
+        const lineAmountInclVat = bcInclVat || parseFloat((lineAmount + vatAmount).toFixed(4));
 
         const lineResult = await client.query(
           `INSERT INTO purchase_order_lines (
