@@ -1,6 +1,7 @@
 const Complaint = require("../models/Complaint.model");
 const NoSeries = require("../models/NoSeris.model");
 const { sanitizeString } = require("../utils/validation.utils");
+const bcService = require("../services/businessCentral.service");
 
 const validate = (body, strict = true) => {
   const errors = [];
@@ -129,6 +130,15 @@ const updateComplaintStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: `Invalid status. Allowed: ${Complaint.VALID_STATUSES.filter(v => v.trim()).join(", ")}` });
     const updated = await Complaint.updateStatus(req.params.id, status);
     if (!updated) return res.status(404).json({ success: false, message: "Complaint not found" });
+
+    if (status === "Closed" && updated.thread_id) {
+      try {
+        await bcService.patchMessageStatus(updated.thread_id);
+      } catch (bcErr) {
+        console.error("BC messageStatus PATCH failed:", bcErr.response?.data || bcErr.message);
+      }
+    }
+
     res.status(200).json({ success: true, message: "Status updated", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

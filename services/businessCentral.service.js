@@ -376,6 +376,17 @@ class BusinessCentralService {
     return await this.callAPI("commentMessageLines", "POST", bcData);
   }
 
+  // ─── Update Message Status (close/resolve thread in BC) ─
+  async patchMessageStatus(threadId) {
+    return await this.callAPI(
+      `messageStatuses(threadId='${threadId}')`,
+      "PATCH",
+      { status: "Resolved" },
+      null,
+      "*"
+    );
+  }
+
   // ─── Notification Log ──────────────────────────────────
   async createNotification(notificationData) {
     const bcData = {
