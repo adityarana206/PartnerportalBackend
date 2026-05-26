@@ -35,4 +35,31 @@ const getPaymentMethodById = async (req, res) => {
   }
 };
 
-module.exports = { createPaymentMethod, getAllPaymentMethods, getPaymentMethodById };
+const updatePaymentMethod = async (req, res) => {
+  try {
+    const { code, description } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: "code is required" });
+
+    const method = await PaymentMethod.update(req.params.id, { code, description });
+    if (!method) return res.status(404).json({ success: false, message: "Payment method not found" });
+    res.status(200).json({ success: true, data: method });
+  } catch (err) {
+    const isDuplicate = err.code === "23505";
+    res.status(isDuplicate ? 409 : 500).json({
+      success: false,
+      message: isDuplicate ? "code already exists" : err.message,
+    });
+  }
+};
+
+const deletePaymentMethod = async (req, res) => {
+  try {
+    const method = await PaymentMethod.delete(req.params.id);
+    if (!method) return res.status(404).json({ success: false, message: "Payment method not found" });
+    res.status(200).json({ success: true, message: "Payment method deleted" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { createPaymentMethod, getAllPaymentMethods, getPaymentMethodById, updatePaymentMethod, deletePaymentMethod };

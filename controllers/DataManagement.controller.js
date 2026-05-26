@@ -57,34 +57,40 @@ const ALLOWED_TABLES = [
 // In-memory metadata cache
 let tableMetadataCache = null;
 
-// GET /api/data-management/tables — list all allowed tables
-const listTables = (req, res) => {
-  res.json({ success: true, tables: ALLOWED_TABLES });
+// GET /api/data-management/tables — return all public tables that actually exist in DB
+const listTables = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const r = await client.query(
+      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`
+    );
+    const tables = r.rows.map((row) => row.tablename);
+    res.json({ success: true, tables });
+  } catch (error) {
+    console.error("listTables error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  } finally {
+    client.release();
+  }
 };
 
-// POST /api/data-management/sync — refresh metadata cache and return live table list
+// POST /api/data-management/sync — refresh metadata cache and return live table list with row counts
 const syncTables = async (req, res) => {
   const client = await pool.connect();
   try {
-    // Clear cache
     tableMetadataCache = null;
 
-    // Refresh: fetch existing tables with row counts from DB
-    const placeholders = ALLOWED_TABLES.map((_, i) => `$${i + 1}`).join(", ");
     const r = await client.query(
-      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN (${placeholders})`,
-      ALLOWED_TABLES
+      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`
     );
-    const existingSet = new Set(r.rows.map((row) => row.tablename));
-    const existing = ALLOWED_TABLES.filter((t) => existingSet.has(t));
+    const existing = r.rows.map((row) => row.tablename);
 
     const counts = {};
     for (const table of existing) {
-      const cr = await client.query(`SELECT COUNT(*)::int AS n FROM ${table}`);
+      const cr = await client.query(`SELECT COUNT(*)::int AS n FROM "${table}"`);
       counts[table] = cr.rows[0].n;
     }
 
-    // Populate cache
     tableMetadataCache = { tables: existing, counts, refreshedAt: new Date().toISOString() };
 
     res.json({
@@ -117,20 +123,24 @@ const getExistingTables = async (client, tables) => {
 const getRowCounts = async (client, tables) => {
   const counts = {};
   for (const table of tables) {
-    const r = await client.query(`SELECT COUNT(*)::int AS n FROM ${table}`);
+    const r = await client.query(`SELECT COUNT(*)::int AS n FROM "${table}"`);
     counts[table] = r.rows[0].n;
   }
   return counts;
 };
 
-// DELETE /api/data-management/all — delete all allowed tables
+// DELETE /api/data-management/all — delete all public tables
 const deleteAllData = async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const existing = await getExistingTables(client, ALLOWED_TABLES);
+    const r = await client.query(
+      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`
+    );
+    const existing = r.rows.map((row) => row.tablename);
     const counts = await getRowCounts(client, existing);
-    await client.query(`TRUNCATE ${existing.join(", ")} CASCADE`);
+    const quoted = existing.map((t) => `"${t}"`).join(", ");
+    await client.query(`TRUNCATE ${quoted} CASCADE`);
     await client.query("COMMIT");
     res.json({ success: true, message: "All table data deleted", deleted: counts });
   } catch (error) {
@@ -151,19 +161,13 @@ const deleteSelectedTables = async (req, res) => {
     return res.status(400).json({ success: false, message: "Provide a non-empty 'tables' array" });
   }
 
-  const invalid = tables.filter((t) => !ALLOWED_TABLES.includes(t));
-  if (invalid.length > 0) {
-    return res.status(400).json({ success: false, message: `Invalid tables: ${invalid.join(", ")}` });
-  }
-
-  const ordered = ALLOWED_TABLES.filter((t) => tables.includes(t));
-
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const existing = await getExistingTables(client, ordered);
+    const existing = await getExistingTables(client, tables);
     const counts = await getRowCounts(client, existing);
-    await client.query(`TRUNCATE ${existing.join(", ")} CASCADE`);
+    const quoted = existing.map((t) => `"${t}"`).join(", ");
+    await client.query(`TRUNCATE ${quoted} CASCADE`);
     await client.query("COMMIT");
     res.json({ success: true, message: "Selected table data deleted", deleted: counts });
   } catch (error) {
