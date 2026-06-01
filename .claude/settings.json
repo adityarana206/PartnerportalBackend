@@ -4,10 +4,12 @@
       "Read(//Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices/**)",
       "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"tech@startupnews.fyi\",\"password\":\"admin123\"}')",
       "Bash(node scripts/seedUnitOfMeasures.js)",
-      "Bash(node scripts/seedNoSeries.js)"
+      "Bash(node scripts/seedNoSeries.js)",
+      "Bash(cd /Users/aditya/Desktop/Project/Novasoft/PartnerportalBackend/scripts && rm checkDatabaseHealth.js createSampleImportFile.js debugUserPermissions.js getCustomers.js getItems.js getPartnerLocations.js seedAllNumberSeries.js seedApprovedItems.js seedBCUserRegistrations.js seedContacts.js seedCountries.js seedCountries.sql seedCustomerItems.js seedDefaultPermissions.js seedNoSeries.js seedOrders.js seedPermissions.js seedPurchaseOrders.js seedSalesShipments.js seedUnitOfMeasures.js seedV00200PurchaseOrders.js seedVEN000002OpenOrders.js seedVRG000025PurchaseOrders.js seedVat.js seedVendorUsers.js testSystemSettings.js verifyPartnerLocationLinksTable.sql verifyPartnerLocationSetup.js verifySystemSettings.js && echo \"Done\")"
     ],
     "additionalDirectories": [
-      "/Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices"
+      "/Users/aditya/Desktop/Project/Novasoft/partner-portal-frontend/src/store/slices",
+      "/Users/aditya/Desktop/Project/Novasoft/PartnerportalBackend/scripts"
     ]
   }
 }
