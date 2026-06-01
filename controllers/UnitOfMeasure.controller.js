@@ -1,5 +1,6 @@
 const UnitOfMeasure = require("../models/UnitOfMeasure.model");
 const { isValidId, sanitizeString } = require("../utils/validation.utils");
+const bcService = require("../services/businessCentral.service");
 
 const getAllUOM = async (req, res) => {
   try {
@@ -66,4 +67,43 @@ const deleteUOM = async (req, res) => {
   }
 };
 
-module.exports = { getAllUOM, getUOMById, createUOM, updateUOM, deleteUOM };
+// POST /api/unit-of-measures/bc/sync — fetch all UOMs from BC and insert new ones
+const syncUOMFromBC = async (req, res) => {
+  try {
+    const bcUoms = await bcService.getUnitOfMeasures();
+    let inserted = 0, skipped = 0, failed = 0;
+
+    for (const item of bcUoms) {
+      try {
+        const code = (item.code || "").toUpperCase();
+        if (!code) { failed++; continue; }
+
+        const existing = await UnitOfMeasure.findByCode(code);
+        if (existing) { skipped++; continue; }
+
+        await UnitOfMeasure.create({
+          code,
+          description:               item.displayName || item.description || null,
+          international_standard_code: item.internationalStandardCode || null,
+        });
+        inserted++;
+      } catch (_) {
+        failed++;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `BC sync complete — ${inserted} inserted, ${skipped} skipped${failed ? `, ${failed} failed` : ""}`,
+      total: bcUoms.length,
+      inserted,
+      skipped,
+      failed,
+    });
+  } catch (error) {
+    console.error("[syncUOMFromBC]", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { getAllUOM, getUOMById, createUOM, updateUOM, deleteUOM, syncUOMFromBC };

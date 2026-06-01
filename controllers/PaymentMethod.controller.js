@@ -62,4 +62,45 @@ const deletePaymentMethod = async (req, res) => {
   }
 };
 
-module.exports = { createPaymentMethod, getAllPaymentMethods, getPaymentMethodById, updatePaymentMethod, deletePaymentMethod };
+const bcService = require("../services/businessCentral.service");
+
+// POST /api/payment-methods/bc/sync
+const syncPaymentMethodsFromBC = async (req, res) => {
+  try {
+    const bcMethods = await bcService.getPaymentMethods();
+    let inserted = 0, skipped = 0, failed = 0;
+
+    for (const item of bcMethods) {
+      try {
+        const code = (item.code || "").toUpperCase();
+        if (!code) { failed++; continue; }
+
+        const existing = await PaymentMethod.findByCode(code);
+        if (existing) { skipped++; continue; }
+
+        await PaymentMethod.create({
+          code,
+          name:        item.displayName || item.description || code,
+          description: item.description || item.displayName || null,
+        });
+        inserted++;
+      } catch (_) {
+        failed++;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `BC sync complete — ${inserted} inserted, ${skipped} skipped${failed ? `, ${failed} failed` : ""}`,
+      total: bcMethods.length,
+      inserted,
+      skipped,
+      failed,
+    });
+  } catch (error) {
+    console.error("[syncPaymentMethodsFromBC]", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { createPaymentMethod, getAllPaymentMethods, getPaymentMethodById, updatePaymentMethod, deletePaymentMethod, syncPaymentMethodsFromBC };

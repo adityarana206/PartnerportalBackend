@@ -451,6 +451,30 @@ class BusinessCentralService {
     return response.data.value || [];
   }
 
+  // ─── Unit of Measures API ──────────────────────────────
+  async getUnitOfMeasures() {
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/unitOfMeasures`;
+    const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    return response.data.value || [];
+  }
+
+  // ─── Payment Methods API ───────────────────────────────
+  async getPaymentMethods() {
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/paymentMethods`;
+    const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    return response.data.value || [];
+  }
+
+  // ─── Payment Terms API ─────────────────────────────────
+  async getPaymentTerms() {
+    const token = await this.getAccessToken();
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.tenantId}/${BC_CONFIG.environment}/api/partnerPortal/partnerPortal/v2.0/companies(${BC_CONFIG.companyId})/paymentTerms`;
+    const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    return response.data.value || [];
+  }
+
   // ─── Item Category API ─────────────────────────────────
   async getItemCategories() {
     const token = await this.getAccessToken();

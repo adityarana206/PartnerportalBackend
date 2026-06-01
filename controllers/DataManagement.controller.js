@@ -179,4 +179,115 @@ const deleteSelectedTables = async (req, res) => {
   }
 };
 
-module.exports = { listTables, syncTables, deleteAllData, deleteSelectedTables };
+// POST /api/data-management/seed-basic — insert default no_series and countries (ON CONFLICT DO NOTHING)
+const seedBasic = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // ── No Series ──────────────────────────────────────────────────────────
+    const noSeriesData = [
+      ["DO",     "Delivery Order",         1, 999999, 0, 1],
+      ["PO",     "Purchase Order",         1, 999999, 0, 1],
+      ["SO",     "Sales Order",            1, 999999, 0, 1],
+      ["BATCH",  "Purchase Item Requests", 1, 999999, 0, 1],
+      ["PORTAL", "Portal Item Requests",   1, 999999, 0, 1],
+    ];
+
+    let noSeriesInserted = 0;
+    for (const [code, description, startingNo, endingNo, lastNoUsed, incrementByNo] of noSeriesData) {
+      const r = await client.query(
+        `INSERT INTO no_series (code, description, starting_no, ending_no, last_no_used, increment_by_no)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (code) DO NOTHING`,
+        [code, description, startingNo, endingNo, lastNoUsed, incrementByNo]
+      );
+      noSeriesInserted += r.rowCount;
+    }
+
+    // ── Countries ──────────────────────────────────────────────────────────
+    const countriesData = [
+      ["AD","Andorra","EUR"],["AE","United Arab Emirates","AED"],["AL","Albania","ALL"],
+      ["AM","Armenia","AMD"],["AO","Angola","AOA"],["AR","Argentina","ARS"],
+      ["AT","Austria","EUR"],["AU","Australia","AUD"],["AZ","Azerbaijan","AZN"],
+      ["BA","Bosnia and Herzegovina","BAM"],["BD","Bangladesh","BDT"],["BE","Belgium","EUR"],
+      ["BG","Bulgaria","BGN"],["BH","Bahrain","BHD"],["BM","Bermuda","BMD"],
+      ["BN","Brunei Darussalam","BND"],["BO","Bolivia","BOB"],["BR","Brazil","BRL"],
+      ["BS","Bahamas","BSD"],["BW","Botswana","BWP"],["CA","Canada","CAD"],
+      ["CH","Switzerland","CHF"],["CL","Chile","CLP"],["CM","Cameroon","XAF"],
+      ["CN","China","CNY"],["CO","Colombia","COP"],["CR","Costa Rica","CRC"],
+      ["CY","Cyprus","EUR"],["CZ","Czechia","CZK"],["DE","Germany","EUR"],
+      ["DK","Denmark","DKK"],["DO","Dominican Republic","DOP"],["DZ","Algeria","DZD"],
+      ["EC","Ecuador","USD"],["EE","Estonia","EUR"],["EG","Egypt","EGP"],
+      ["EL","Greece","EUR"],["ES","Spain","EUR"],["ET","Ethiopia","ETB"],
+      ["FI","Finland","EUR"],["FJ","Fiji Islands","FJD"],["FO","Faroe Islands","DKK"],
+      ["FR","France","EUR"],["GB","Great Britain","GBP"],["GE","Georgia","GEL"],
+      ["GG","Guernsey","GBP"],["GH","Ghana","GHS"],["GL","Greenland","DKK"],
+      ["GT","Guatemala","GTQ"],["HK","Hong Kong","HKD"],["HN","Honduras","HNL"],
+      ["HR","Croatia","EUR"],["HU","Hungary","HUF"],["ID","Indonesia","IDR"],
+      ["IE","Ireland","EUR"],["IL","Israel","ILS"],["IM","Isle of Man","GBP"],
+      ["IN","India","INR"],["IS","Iceland","ISK"],["IT","Italy","EUR"],
+      ["JE","Jersey","GBP"],["JM","Jamaica","JMD"],["JO","Jordan","JOD"],
+      ["JP","Japan","JPY"],["KE","Kenya","KES"],["KH","Cambodia","KHR"],
+      ["KR","South Korea","KRW"],["KW","Kuwait","KWD"],["KY","Cayman Islands","KYD"],
+      ["KZ","Kazakhstan","KZT"],["LB","Lebanon","LBP"],["LI","Liechtenstein","CHF"],
+      ["LK","Sri Lanka","LKR"],["LT","Lithuania","EUR"],["LU","Luxembourg","EUR"],
+      ["LV","Latvia","EUR"],["MA","Morocco","MAD"],["MC","Monaco","EUR"],
+      ["ME","Montenegro","EUR"],["MG","Madagascar","MGA"],["MK","North Macedonia","MKD"],
+      ["MN","Mongolia","MNT"],["MO","Macao","MOP"],["MT","Malta","EUR"],
+      ["MU","Mauritius","MUR"],["MV","Maldives","MVR"],["MW","Malawi","MWK"],
+      ["MX","Mexico","MXN"],["MY","Malaysia","MYR"],["MZ","Mozambique","MZN"],
+      ["NA","Namibia","NAD"],["NG","Nigeria","NGN"],["NI","Nothern Ireland","GBP"],
+      ["NL","Netherlands","EUR"],["NO","Norway","NOK"],["NP","Nepal","NPR"],
+      ["NZ","New Zealand","NZD"],["OM","Oman","OMR"],["PA","Panama","PAB"],
+      ["PE","Peru","PEN"],["PH","Philippines","PHP"],["PK","Pakistan","PKR"],
+      ["PL","Poland","PLN"],["PR","Puerto Rico","USD"],["PT","Portugal","EUR"],
+      ["PY","Paraguay","PYG"],["QA","Qatar","QAR"],["RO","Romania","RON"],
+      ["RS","Serbia","RSD"],["RU","Russia","RUB"],["SA","Saudi Arabia","SAR"],
+      ["SB","Solomon Islands","SBD"],["SE","Sweden","SEK"],["SG","Singapore","SGD"],
+      ["SI","Slovenia","EUR"],["SK","Slovakia","EUR"],["SM","San Marino","EUR"],
+      ["SN","Senegal","XOF"],["ST","São Tomé and Príncipe","STN"],["SV","El Salvador","USD"],
+      ["SZ","Swaziland","SZL"],["TH","Thailand","THB"],["TN","Tunisia","TND"],
+      ["TR","Türkiye","TRY"],["TT","Trinidad and Tobago","TTD"],["TW","Taiwan","TWD"],
+      ["TZ","Tanzania","TZS"],["UA","Ukraine","UAH"],["UG","Uganda","UGX"],
+      ["US","USA","USD"],["UY","Uruguay","UYU"],["VG","British Virgin Islands","USD"],
+      ["VN","Vietnam","VND"],["VU","Vanuatu","VUV"],["WS","Samoa","WST"],
+      ["XK","Kosovo","EUR"],["ZA","South Africa","ZAR"],["ZM","Zambia","ZMW"],
+      ["ZW","Zimbabwe","ZWL"],
+    ];
+
+    let countriesInserted = 0;
+    for (const [code, name, currencyCode] of countriesData) {
+      const r = await client.query(
+        `INSERT INTO countries (code, name, currency_code, is_active)
+         VALUES ($1, $2, $3, false)
+         ON CONFLICT (code) DO NOTHING`,
+        [code, name, currencyCode]
+      );
+      countriesInserted += r.rowCount;
+    }
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "Basic seed complete",
+      inserted: {
+        noSeries: noSeriesInserted,
+        countries: countriesInserted,
+      },
+      skipped: {
+        noSeries: noSeriesData.length - noSeriesInserted,
+        countries: countriesData.length - countriesInserted,
+      },
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("seedBasic error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = { listTables, syncTables, deleteAllData, deleteSelectedTables, seedBasic };

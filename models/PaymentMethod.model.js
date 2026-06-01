@@ -16,6 +16,14 @@ const PaymentMethod = {
     return result.rows[0] || null;
   },
 
+  async findByCode(code) {
+    const result = await pool.query(
+      "SELECT * FROM payment_methods WHERE code = $1",
+      [code]
+    );
+    return result.rows[0] || null;
+  },
+
   async update(id, data) {
     const result = await pool.query(
       `UPDATE payment_methods SET name = $1, code = $2, description = $3, updated_at = NOW()

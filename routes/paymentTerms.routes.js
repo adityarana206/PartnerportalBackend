@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { createPaymentTerm, getAllPaymentTerms, getPaymentTermById, updatePaymentTerm, deletePaymentTerm } = require("../controllers/PaymentTerms.controller");
-const { protect } = require("../middleware/auth.middleware");
+const { createPaymentTerm, getAllPaymentTerms, getPaymentTermById, updatePaymentTerm, deletePaymentTerm, syncPaymentTermsFromBC } = require("../controllers/PaymentTerms.controller");
+const { protect, isSuperAdmin } = require("../middleware/auth.middleware");
 
+router.post("/bc/sync", protect, isSuperAdmin, syncPaymentTermsFromBC);
 router.post("/", protect, createPaymentTerm);
 router.get("/", getAllPaymentTerms);
 router.get("/:id", getPaymentTermById);

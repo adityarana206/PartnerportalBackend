@@ -64,4 +64,48 @@ const deletePaymentTerm = async (req, res) => {
   }
 };
 
-module.exports = { createPaymentTerm, getAllPaymentTerms, getPaymentTermById, updatePaymentTerm, deletePaymentTerm };
+const bcService = require("../services/businessCentral.service");
+
+// POST /api/payment-terms/bc/sync
+const syncPaymentTermsFromBC = async (req, res) => {
+  try {
+    const bcTerms = await bcService.getPaymentTerms();
+    let inserted = 0, skipped = 0, failed = 0;
+
+    for (const item of bcTerms) {
+      try {
+        const code = (item.code || "").toUpperCase();
+        if (!code) { failed++; continue; }
+
+        const existing = await PaymentTerms.findByCode(code);
+        if (existing) { skipped++; continue; }
+
+        await PaymentTerms.create({
+          code,
+          description:          item.displayName || item.description || code,
+          due_date_calculation: item.dueDateCalculation || "",
+          dueDays:              item.dueDateCalculation ? 0 : 0,
+          discountDays:         item.discountDateCalculation ? 0 : 0,
+          discountPct:          item.discountPercent ?? 0,
+        });
+        inserted++;
+      } catch (_) {
+        failed++;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `BC sync complete — ${inserted} inserted, ${skipped} skipped${failed ? `, ${failed} failed` : ""}`,
+      total: bcTerms.length,
+      inserted,
+      skipped,
+      failed,
+    });
+  } catch (error) {
+    console.error("[syncPaymentTermsFromBC]", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { createPaymentTerm, getAllPaymentTerms, getPaymentTermById, updatePaymentTerm, deletePaymentTerm, syncPaymentTermsFromBC };

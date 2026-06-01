@@ -812,8 +812,8 @@ CREATE TABLE IF NOT EXISTS delivery_order_documents (
 CREATE TABLE IF NOT EXISTS payments (
   id                   SERIAL PRIMARY KEY,
   payment_number       VARCHAR(100),
-  -- invoice_id is a soft reference; may point to invoices or purchase_invoices depending on partner_type
-  invoice_id           INTEGER,
+  -- invoice_id is a soft reference; stores BC document numbers (e.g. "PPI/26/00195") as strings
+  invoice_id           VARCHAR(255),
   invoice_no           VARCHAR(100),
   order_no             VARCHAR(100),
   partner_no           VARCHAR(50),
