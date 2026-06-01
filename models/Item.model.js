@@ -216,6 +216,179 @@ const Item = {
     );
     return result.rows[0] || null;
   },
+
+  async patchByBatchNo(batchNo, data) {
+    const fields = [];
+    const values = [];
+    let idx = 1;
+    
+    const mapping = {
+      variantCode: 'variant_code',
+      itemName: 'item_name',
+      description: 'description',
+      itemCategoryCode: 'item_category_code',
+      baseUnitOfMeasure: 'base_unit_of_measure',
+      netWeight: 'net_weight',
+      grossWeight: 'gross_weight',
+      specifications: 'specifications',
+      ingredients: 'ingredients',
+      allergenDeclaration: 'allergen_declaration',
+      shelfLifeDays: 'shelf_life_days',
+      gtin: 'gtin',
+      eanCode: 'ean_code',
+      vendorItemNo: 'vendor_item_no',
+      genProdPostingGroup: 'gen_prod_posting_group',
+      vatProdPostingGroup: 'vat_prod_posting_group',
+      unitPrice: 'unit_price',
+      priceCurrencyCode: 'price_currency_code',
+      block: 'block',
+      status: 'status',
+      rejectionReason: 'rejection_reason'
+    };
+
+    for (const [key, dbField] of Object.entries(mapping)) {
+      if (data[key] !== undefined) {
+        fields.push(`${dbField}=$${idx}`);
+        values.push(data[key]);
+        idx++;
+      }
+    }
+
+    if (fields.length === 0) {
+      const res = await pool.query("SELECT * FROM item_requests WHERE batch_no=$1", [batchNo]);
+      return res.rows[0] || null;
+    }
+
+    fields.push(`updated_at=NOW()`);
+    values.push(batchNo);
+
+    const query = `UPDATE item_requests SET ${fields.join(', ')} WHERE batch_no=$${idx} RETURNING *`;
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  },
+
+  async findByBatchEanUOM(batchNo, eanCode, baseUnitOfMeasure) {
+    const result = await pool.query(
+      "SELECT * FROM item_requests WHERE batch_no=$1 AND ean_code=$2 AND base_unit_of_measure=$3 LIMIT 1",
+      [batchNo, eanCode, baseUnitOfMeasure],
+    );
+    return result.rows[0] || null;
+  },
+
+  async patchByBatchEanUOM(batchNo, eanCode, baseUnitOfMeasure, data) {
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    const mapping = {
+      variantCode: 'variant_code',         variant_code: 'variant_code',
+      itemName: 'item_name',               item_name: 'item_name',
+      description: 'description',
+      itemCategoryCode: 'item_category_code', item_category_code: 'item_category_code',
+      netWeight: 'net_weight',             net_weight: 'net_weight',
+      grossWeight: 'gross_weight',         gross_weight: 'gross_weight',
+      specifications: 'specifications',
+      ingredients: 'ingredients',
+      allergenDeclaration: 'allergen_declaration', allergen_declaration: 'allergen_declaration',
+      shelfLifeDays: 'shelf_life_days',    shelf_life_days: 'shelf_life_days',
+      gtin: 'gtin',
+      vendorItemNo: 'vendor_item_no',      vendor_item_no: 'vendor_item_no',
+      genProdPostingGroup: 'gen_prod_posting_group', gen_prod_posting_group: 'gen_prod_posting_group',
+      vatProdPostingGroup: 'vat_prod_posting_group', vat_prod_posting_group: 'vat_prod_posting_group',
+      unitPrice: 'unit_price',             unit_price: 'unit_price',
+      priceCurrencyCode: 'price_currency_code', price_currency_code: 'price_currency_code',
+      block: 'block',
+      status: 'status',
+      rejectionReason: 'rejection_reason', rejection_reason: 'rejection_reason',
+    };
+
+    const seen = new Set();
+    for (const [key, dbField] of Object.entries(mapping)) {
+      if (data[key] !== undefined && !seen.has(dbField)) {
+        seen.add(dbField);
+        fields.push(`${dbField}=$${idx}`);
+        values.push(data[key]);
+        idx++;
+      }
+    }
+
+    if (fields.length === 0) {
+      return await this.findByBatchEanUOM(batchNo, eanCode, baseUnitOfMeasure);
+    }
+
+    fields.push(`updated_at=NOW()`);
+    values.push(batchNo, eanCode, baseUnitOfMeasure);
+
+    const query = `UPDATE item_requests SET ${fields.join(', ')} WHERE batch_no=$${idx} AND ean_code=$${idx + 1} AND base_unit_of_measure=$${idx + 2} RETURNING *`;
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  },
+
+  async updateByBatchNo(batchNo, data) {
+    const query = `
+      UPDATE item_requests SET
+        variant_code=$1, item_name=$2, description=$3, item_category_code=$4,
+        base_unit_of_measure=$5, net_weight=$6, gross_weight=$7,
+        specifications=$8, ingredients=$9, allergen_declaration=$10,
+        shelf_life_days=$11, gtin=$12, ean_code=$13,
+        vendor_item_no=$14, gen_prod_posting_group=$15, vat_prod_posting_group=$16,
+        unit_price=$17, price_currency_code=$18, block=$19,
+        status=$20, rejection_reason=$21, updated_at=NOW()
+      WHERE batch_no=$22 RETURNING *;
+    `;
+    const values = [
+      data.variantCode || null,
+      data.itemName,
+      data.description || null,
+      data.itemCategoryCode || null,
+      data.baseUnitOfMeasure || null,
+      data.netWeight || null,
+      data.grossWeight || null,
+      data.specifications || null,
+      data.ingredients || null,
+      data.allergenDeclaration || null,
+      data.shelfLifeDays || null,
+      data.gtin || null,
+      data.eanCode || null,
+      data.vendorItemNo || null,
+      data.genProdPostingGroup || null,
+      data.vatProdPostingGroup || null,
+      data.unitPrice || null,
+      data.priceCurrencyCode || null,
+      data.block || false,
+      data.status || "Created",
+      data.rejectionReason || null,
+      batchNo,
+    ];
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  },
+
+  async updateStatusByBatchNo(batchNo, status, rejectionReason = null) {
+    const result = await pool.query(
+      `UPDATE item_requests SET status=$1, rejection_reason=$2, updated_at=NOW()
+       WHERE batch_no=$3 RETURNING *`,
+      [status, rejectionReason, batchNo],
+    );
+    return result.rows[0] || null;
+  },
+
+  async updateBlockByBatchNo(batchNo, block) {
+    const result = await pool.query(
+      `UPDATE item_requests SET block=$1, updated_at=NOW()
+       WHERE batch_no=$2 RETURNING *`,
+      [block, batchNo],
+    );
+    return result.rows[0] || null;
+  },
+
+  async deleteByBatchNo(batchNo) {
+    const result = await pool.query(
+      "DELETE FROM item_requests WHERE batch_no = $1 RETURNING *",
+      [batchNo],
+    );
+    return result.rows[0] || null;
+  },
 };
 
 module.exports = Item;

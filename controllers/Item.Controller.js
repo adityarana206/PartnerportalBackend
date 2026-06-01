@@ -36,6 +36,19 @@ const createItemRequestfrombc = async (req, res) => {
       data: item,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -68,6 +81,19 @@ const createItemRequest = async (req, res) => {
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -94,17 +120,29 @@ const getAllItemRequests = async (req, res) => {
       data: items,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // ─── Get Item Request by ID ────────────────────────────────
 // GET /api/items/:id
-const getItemRequestById = async (req, res) => {
+const getItemRequestByBatchNo = async (req, res) => {
   try {
-    if (!isValidId(req.params.id))
-      return res.status(400).json({ success: false, message: "Invalid ID" });
-    const item = await ItemRequest.findById(req.params.id);
+    const batchNo = req.params.batchNo;
+    const item = await ItemRequest.findByBatchNo(batchNo);
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -113,6 +151,19 @@ const getItemRequestById = async (req, res) => {
     }
     res.status(200).json({ success: true, data: item });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -131,6 +182,19 @@ const getItemsByPartner = async (req, res) => {
       data: items,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -147,6 +211,19 @@ const getItemsByPartnerPortalNo = async (req, res) => {
       data: items,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -163,17 +240,39 @@ const getItemByKey = async (req, res) => {
     }
     res.status(200).json({ success: true, data: item });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // ─── Update Item Request ───────────────────────────────────
 // PUT /api/items/:id
-const updateItemRequest = async (req, res) => {
+
+const updateItemFromBC = async (req, res) => {
   try {
-    if (!isValidId(req.params.id))
-      return res.status(400).json({ success: false, message: "Invalid ID" });
-    const item = await ItemRequest.findById(req.params.id);
+    const parts = req.params.itemKey.split(":");
+    if (parts.length !== 3) {
+      return res.status(400).json({
+        success: false,
+        message: "itemKey must be in format partnerNo:eanCode:baseUnitOfMeasure",
+      });
+    }
+    const [batchNo, eanCode, baseUnitOfMeasure] = parts;
+
+    const item = await ItemRequest.findByBatchEanUOM(batchNo, eanCode, baseUnitOfMeasure);
+
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -181,11 +280,39 @@ const updateItemRequest = async (req, res) => {
       });
     }
 
-    // ─── Only allow update if status is Created ────────────
-    if (item.status !== "Created") {
-      return res.status(400).json({
+    const updated = await ItemRequest.patchByBatchEanUOM(batchNo, eanCode, baseUnitOfMeasure, req.body);
+
+    res.status(200).json({
+      success: true,
+      message: "Item updated successfully from BC",
+      data: updated,
+    });
+  } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateItemRequest = async (req, res) => {
+  try {
+    const batchNo = req.params.batchNo;
+    const item = await ItemRequest.findByBatchNo(batchNo);
+    if (!item) {
+      return res.status(404).json({
         success: false,
-        message: `Cannot update item with status: ${item.status}. Only 'Created' items can be updated`,
+        message: "Item request not found",
       });
     }
 
@@ -200,13 +327,26 @@ const updateItemRequest = async (req, res) => {
       }
     }
 
-    const updated = await ItemRequest.update(req.params.id, req.body);
+    const updated = await ItemRequest.updateByBatchNo(batchNo, req.body);
     res.status(200).json({
       success: true,
       message: "Item request updated successfully",
       data: updated,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -215,8 +355,7 @@ const updateItemRequest = async (req, res) => {
 // PATCH /api/items/:id/status
 const updateItemStatus = async (req, res) => {
   try {
-    if (!isValidId(req.params.id))
-      return res.status(400).json({ success: false, message: "Invalid ID" });
+    const batchNo = req.params.batchNo;
     const { status, rejectionReason } = req.body;
 
     // ─── Validate status ───────────────────────────────────
@@ -244,7 +383,7 @@ const updateItemStatus = async (req, res) => {
     }
 
     // ─── Check item exists ─────────────────────────────────
-    const item = await ItemRequest.findById(req.params.id);
+    const item = await ItemRequest.findByBatchNo(batchNo);
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -252,8 +391,8 @@ const updateItemStatus = async (req, res) => {
       });
     }
 
-    const updated = await ItemRequest.updateStatus(
-      req.params.id,
+    const updated = await ItemRequest.updateStatusByBatchNo(
+      batchNo,
       status,
       rejectionReason || null,
     );
@@ -264,6 +403,19 @@ const updateItemStatus = async (req, res) => {
       data: updated,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -272,8 +424,7 @@ const updateItemStatus = async (req, res) => {
 // PATCH /api/items/:id/block
 const updateItemBlock = async (req, res) => {
   try {
-    if (!isValidId(req.params.id))
-      return res.status(400).json({ success: false, message: "Invalid ID" });
+    const batchNo = req.params.batchNo;
     const { block } = req.body;
 
     if (typeof block !== "boolean") {
@@ -283,7 +434,7 @@ const updateItemBlock = async (req, res) => {
       });
     }
 
-    const item = await ItemRequest.findById(req.params.id);
+    const item = await ItemRequest.findByBatchNo(batchNo);
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -291,13 +442,26 @@ const updateItemBlock = async (req, res) => {
       });
     }
 
-    const updated = await ItemRequest.updateBlock(req.params.id, block);
+    const updated = await ItemRequest.updateBlockByBatchNo(batchNo, block);
     res.status(200).json({
       success: true,
       message: `Item ${block ? "blocked" : "unblocked"} successfully`,
       data: updated,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -306,9 +470,8 @@ const updateItemBlock = async (req, res) => {
 // DELETE /api/items/:id
 const deleteItemRequest = async (req, res) => {
   try {
-    if (!isValidId(req.params.id))
-      return res.status(400).json({ success: false, message: "Invalid ID" });
-    const item = await ItemRequest.findById(req.params.id);
+    const batchNo = req.params.batchNo;
+    const item = await ItemRequest.findByBatchNo(batchNo);
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -316,21 +479,26 @@ const deleteItemRequest = async (req, res) => {
       });
     }
 
-    // ─── Only allow delete if status is Created ────────────
-    if (item.status !== "Created") {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot delete item with status: ${item.status}. Only 'Created' items can be deleted`,
-      });
-    }
-
-    const deleted = await ItemRequest.delete(req.params.id);
+    const deleted = await ItemRequest.deleteByBatchNo(batchNo);
     res.status(200).json({
       success: true,
       message: "Item request deleted successfully",
       data: deleted,
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -340,6 +508,19 @@ const getUnitOfMeasures = async (req, res) => {
     const units = await UnitOfMeasure.findAll();
     res.status(200).json({ success: true, count: units.length, data: units });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -347,12 +528,14 @@ const getUnitOfMeasures = async (req, res) => {
 const createItemChangeRequest = async (req, res) => {
   try {
     const {
-      itemNo, changeType, changeDescription,
+      batchNo, itemNo, changeType, changeDescription,
       oldValue, newValue, partnerType, rejectionReason,
     } = req.body;
 
-    if (!itemNo)
-      return res.status(400).json({ success: false, message: "itemNo is required" });
+    const resolvedItemNo = batchNo || itemNo;
+
+    if (!resolvedItemNo)
+      return res.status(400).json({ success: false, message: "batchNo or itemNo is required" });
     if (!newValue)
       return res.status(400).json({ success: false, message: "newValue is required" });
 
@@ -369,7 +552,7 @@ const createItemChangeRequest = async (req, res) => {
         approved_date, created_by
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,'_x0020_',$8,$9,'0001-01-01T00:00:00Z',$10) RETURNING *`,
       [
-        itemNo,
+        resolvedItemNo,
         changeType || "",
         changeDescription || "",
         oldValue || "",
@@ -387,7 +570,7 @@ const createItemChangeRequest = async (req, res) => {
     let bcError = null;
     try {
       bcResponse = await bcService.createItemChangeRequest({
-        itemNo,
+        itemNo: resolvedItemNo,
         changeType: changeType || "",
         changeDescription: changeDescription || "",
         oldValue: oldValue || "",
@@ -412,6 +595,19 @@ const createItemChangeRequest = async (req, res) => {
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -419,14 +615,16 @@ const createItemChangeRequest = async (req, res) => {
 const createPriceChange = async (req, res) => {
   try {
     const {
-      itemNo, variantCode, newPrice, oldPrice,
+      batchNo, itemNo, variantCode, newPrice, oldPrice,
       effectiveDate, endingDate, currencyCode,
       unitOfMeasureCode, minimumQuantity,
       partnerNo, rejectionReason,
     } = req.body;
 
-    if (!itemNo)
-      return res.status(400).json({ success: false, message: "itemNo is required" });
+    const resolvedItemNo = batchNo || itemNo;
+
+    if (!resolvedItemNo)
+      return res.status(400).json({ success: false, message: "batchNo or itemNo is required" });
     if (newPrice === undefined || newPrice === null)
       return res.status(400).json({ success: false, message: "newPrice is required" });
 
@@ -436,7 +634,7 @@ const createPriceChange = async (req, res) => {
     let bcError = null;
     try {
       bcResponse = await bcService.createPriceSubmission({
-        itemNo,
+        itemNo: resolvedItemNo,
         variantCode: variantCode || "",
         newPrice,
         oldPrice: oldPrice || 0,
@@ -461,6 +659,19 @@ const createPriceChange = async (req, res) => {
       businessCentral: { synced: !!bcResponse, response: bcResponse, error: bcError },
     });
   } catch (error) {
+    if (error.code === '23503') {
+      const match = error.message.match(/constraint "([^"]+)"/);
+      const constraint = match ? match[1] : 'foreign key';
+      let field = 'Field';
+      if (constraint.includes('item_category')) field = 'itemCategoryCode';
+      else if (constraint.includes('unit_of_measure')) field = 'baseUnitOfMeasure / purchUnitOfMeasure';
+      else if (constraint.includes('vat')) field = 'vatProdPostingGroup';
+      
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid value provided. The ${field} does not exist in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -468,11 +679,13 @@ const createPriceChange = async (req, res) => {
 module.exports = {
   createItemRequest,
   getAllItemRequests,
-  getItemRequestById,
+  getItemRequestByBatchNo,
   getItemsByPartner,
   getItemsByPartnerPortalNo,
   getItemByKey,
   updateItemRequest,
+  updateItemFromBC,
+  updateItemFromBC,
   updateItemStatus,
   updateItemBlock,
   deleteItemRequest,
@@ -740,11 +953,12 @@ const downloadImportTemplate = async (req, res) => {
 module.exports = {
   createItemRequest,
   getAllItemRequests,
-  getItemRequestById,
+  getItemRequestByBatchNo,
   getItemsByPartner,
   getItemsByPartnerPortalNo,
   getItemByKey,
   updateItemRequest,
+  updateItemFromBC,
   updateItemStatus,
   updateItemBlock,
   deleteItemRequest,
